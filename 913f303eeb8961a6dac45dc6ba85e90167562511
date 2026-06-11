@@ -1,0 +1,131 @@
+src/weekly_us_stock/steps/step3_standardize.py
+  0c561210d93e16cc 1-83
+tests/test_providers.py
+  0c561210d93e16cc 1-189
+src/weekly_us_stock/utils/calendar.py
+  0c561210d93e16cc 1-152
+src/weekly_us_stock/providers/fred.py
+  0c561210d93e16cc 1-81
+tests/test_hard_filters.py
+  0c561210d93e16cc 1-163
+tests/test_workflows.py
+  0c561210d93e16cc 1-64
+tests/test_result_check.py
+  0c561210d93e16cc 1-70
+src/weekly_us_stock/__init__.py
+  0c561210d93e16cc 1-7
+src/weekly_us_stock/tools/expected_as_of.py
+  0c561210d93e16cc 1-16
+scripts/generate_sample_data.py
+  0c561210d93e16cc 1-589
+src/weekly_us_stock/valuation/normalize.py
+  0c561210d93e16cc 1-157
+src/weekly_us_stock/models/screening.py
+  0c561210d93e16cc 1-58
+README.md
+  0c561210d93e16cc 1-123
+src/weekly_us_stock/providers/base.py
+  0c561210d93e16cc 1-116
+src/weekly_us_stock/steps/step2_hard_filters.py
+  0c561210d93e16cc 1-182
+.gitignore
+  0c561210d93e16cc 1-15
+src/weekly_us_stock/cli.py
+  0c561210d93e16cc 1-88
+src/weekly_us_stock/valuation/wacc.py
+  0c561210d93e16cc 1-49
+.github/workflows/ci.yml
+  0c561210d93e16cc 1-38
+src/weekly_us_stock/tools/__init__.py
+  0c561210d93e16cc 1
+tests/test_normalization.py
+  0c561210d93e16cc 1-119
+src/weekly_us_stock/steps/step5_quality.py
+  0c561210d93e16cc 1-135
+tests/test_pipeline_e2e.py
+  0c561210d93e16cc 1-169
+src/weekly_us_stock/reports/compare.py
+  0c561210d93e16cc 1-114
+src/weekly_us_stock/valuation/ranking.py
+  0c561210d93e16cc 1-63
+src/weekly_us_stock/providers/sec.py
+  0c561210d93e16cc 1-87
+pyproject.toml
+  0c561210d93e16cc 1-43
+src/weekly_us_stock/logging.py
+  0c561210d93e16cc 1-11
+src/weekly_us_stock/config.py
+  0c561210d93e16cc 1-150
+config/default.yaml
+  0c561210d93e16cc 1-87
+src/weekly_us_stock/models/valuation.py
+  0c561210d93e16cc 1-78
+tests/conftest.py
+  0c561210d93e16cc 1-40
+tests/test_ranking.py
+  0c561210d93e16cc 1-76
+src/weekly_us_stock/pipeline.py
+  0c561210d93e16cc 1-485
+src/weekly_us_stock/valuation/industry.py
+  0c561210d93e16cc 1-110
+.env.example
+  0c561210d93e16cc 1-22
+src/weekly_us_stock/tools/verify_result_metadata.py
+  0c561210d93e16cc 1-95
+.gitattributes
+  0c561210d93e16cc 1-4
+src/weekly_us_stock/valuation/irr.py
+  0c561210d93e16cc 1-45
+src/weekly_us_stock/steps/step1_universe.py
+  0c561210d93e16cc 1-67
+src/weekly_us_stock/providers/sample.py
+  0c561210d93e16cc 1-95
+src/weekly_us_stock/valuation/scenarios.py
+  0c561210d93e16cc 1-358
+tests/test_calendar.py
+  0c561210d93e16cc 1-106
+src/weekly_us_stock/providers/polygon.py
+  0c561210d93e16cc 1-88
+src/weekly_us_stock/reports/feishu.py
+  0c561210d93e16cc 1-111
+src/weekly_us_stock/steps/step4_normalized.py
+  0c561210d93e16cc 1-154
+.github/workflows/weekly_run.yml
+  0c561210d93e16cc 1-231
+scripts/openclaw_wait_for_scheduled_result.sh
+  0c561210d93e16cc 1-62
+scripts/openclaw_trigger_actions.sh
+  0c561210d93e16cc 1-84
+src/weekly_us_stock/providers/fmp.py
+  0c561210d93e16cc 1-391
+src/weekly_us_stock/providers/composite.py
+  0c561210d93e16cc 1-111
+src/weekly_us_stock/reports/exporters.py
+  0c561210d93e16cc 1-31
+src/weekly_us_stock/reports/dashboard.py
+  0c561210d93e16cc 1-200
+tests/test_scenarios.py
+  0c561210d93e16cc 1-149
+src/weekly_us_stock/steps/step6_valuation.py
+  0c561210d93e16cc 1-179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.22",
+  "base_commit_sha": "913f303eeb8961a6dac45dc6ba85e90167562511",
+  "prompts": {
+    "0c561210d93e16cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad8549ce-f2a1-43ff-9548-5a819eb2ab3f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "qizy",
+      "messages": [],
+      "total_additions": 6642,
+      "total_deletions": 50,
+      "accepted_lines": 6591,
+      "overriden_lines": 0
+    }
+  }
+}
