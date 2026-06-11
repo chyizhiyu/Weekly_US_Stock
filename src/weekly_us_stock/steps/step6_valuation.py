@@ -1,0 +1,179 @@
+"""Step 6: run the scenario engine for every modeled company.
+
+Emits two frames: one scenario-level (3 rows per company, fully auditable
+assumptions) and one company-level metrics frame consumed by the ranking.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import pandas as pd
+
+from weekly_us_stock.config import RiskPreferenceSettings, ScenarioSettings
+from weekly_us_stock.models.valuation import CompanyInputs
+from weekly_us_stock.valuation.scenarios import value_company
+
+_CARRY_COLUMNS = [
+    "name",
+    "sector",
+    "industry",
+    "model_family",
+    "market_cap",
+    "moat_score",
+    "roic",
+    "incremental_roic",
+    "wacc",
+    "roic_minus_wacc",
+    "normalized_operating_margin",
+    "current_operating_margin",
+    "revenue_cagr",
+    "net_debt_to_ebitda",
+    "sbc_intensity",
+    "net_share_change_cagr",
+    "risk_flags",
+    "years_of_data",
+    "latest_fiscal_year",
+    "latest_filing_date",
+    "price_as_of",
+    "is_price_fresh",
+]
+
+
+@dataclass(slots=True)
+class ValuationStepResult:
+    metrics: pd.DataFrame
+    scenario_rows: pd.DataFrame
+    skipped: pd.DataFrame
+
+
+def run_scenario_valuations(
+    quality_frame: pd.DataFrame,
+    scenario_settings: ScenarioSettings,
+    risk_preferences: RiskPreferenceSettings,
+    hurdle_rate: float | None = None,
+) -> ValuationStepResult:
+    hurdle = hurdle_rate if hurdle_rate is not None else risk_preferences.hurdle_rate
+    metric_rows: list[dict] = []
+    scenario_rows: list[dict] = []
+    skipped_rows: list[dict] = []
+
+    for _, row in quality_frame.iterrows():
+        inputs = _to_inputs(row)
+        if inputs is None:
+            skipped_rows.append(
+                {"ticker": row.get("ticker"), "skip_reason": "incomplete_valuation_inputs"}
+            )
+            continue
+        valuation = value_company(inputs, scenario_settings, risk_preferences)
+
+        for scenario in valuation.scenarios:
+            assumption = scenario.assumptions
+            scenario_rows.append(
+                {
+                    "ticker": inputs.ticker,
+                    "scenario": assumption.name,
+                    "probability": assumption.probability,
+                    "revenue_growth_y1": assumption.revenue_growth_y1,
+                    "terminal_growth": assumption.terminal_growth,
+                    "operating_margin": assumption.operating_margin,
+                    "forward_roic": assumption.forward_roic,
+                    "terminal_roic": assumption.terminal_roic,
+                    "share_change_rate": assumption.share_change_rate,
+                    "reinvestment_rate_y1": scenario.reinvestment_rate_y1,
+                    "intrinsic_value_per_share": scenario.intrinsic_value_per_share,
+                    "irr_3y": scenario.irr_3y,
+                    "irr_5y": scenario.irr_5y,
+                    "exit_value_per_share": scenario.exit_value_per_share,
+                    "total_return_5y": scenario.total_return_5y,
+                }
+            )
+
+        metric = {
+            "ticker": inputs.ticker,
+            "price": inputs.price,
+            "expected_irr": valuation.expected_irr,
+            "median_irr": valuation.median_irr,
+            "p10_irr": valuation.p10_irr,
+            "p90_irr": valuation.p90_irr,
+            "prob_above_hurdle": valuation.prob_above_hurdle,
+            "hurdle_rate": hurdle,
+            "permanent_loss_probability": valuation.permanent_loss_probability,
+            "expected_shortfall": valuation.expected_shortfall,
+            "intrinsic_value_low": valuation.intrinsic_value_low,
+            "intrinsic_value_base": valuation.intrinsic_value_base,
+            "intrinsic_value_high": valuation.intrinsic_value_high,
+            "upside_to_base": valuation.intrinsic_value_base / inputs.price - 1.0
+            if inputs.price
+            else None,
+            "model_confidence": valuation.model_confidence,
+            "data_confidence": valuation.data_confidence,
+            "model_uncertainty": valuation.model_uncertainty,
+        }
+        for column in _CARRY_COLUMNS:
+            if column in row.index:
+                metric[column] = row[column]
+        metric_rows.append(metric)
+
+    return ValuationStepResult(
+        metrics=pd.DataFrame(metric_rows),
+        scenario_rows=pd.DataFrame(scenario_rows),
+        skipped=pd.DataFrame(skipped_rows),
+    )
+
+
+def _to_inputs(row: pd.Series) -> CompanyInputs | None:
+    required = [
+        "ticker",
+        "price",
+        "shares_diluted",
+        "net_debt",
+        "revenue",
+        "normalized_operating_margin",
+        "current_operating_margin",
+        "tax_rate",
+        "revenue_cagr",
+        "roic",
+        "wacc",
+        "cost_of_debt_after_tax",
+    ]
+    for column in required:
+        value = row.get(column)
+        if value is None or (isinstance(value, float) and pd.isna(value)):
+            return None
+    if float(row["price"]) <= 0 or float(row["shares_diluted"]) <= 0:
+        return None
+
+    return CompanyInputs(
+        ticker=str(row["ticker"]),
+        price=float(row["price"]),
+        shares_outstanding=float(row["shares_diluted"]),
+        net_debt=float(row["net_debt"]),
+        latest_revenue=float(row["revenue"]),
+        normalized_operating_margin=float(row["normalized_operating_margin"]),
+        current_operating_margin=float(row["current_operating_margin"]),
+        tax_rate=float(row["tax_rate"]),
+        hist_revenue_cagr=float(row["revenue_cagr"]),
+        analyst_growth=_optional_float(row.get("analyst_growth")),
+        analyst_dispersion=_optional_float(row.get("analyst_dispersion")),
+        roic=float(row["roic"]),
+        incremental_roic=_optional_float(row.get("incremental_roic")),
+        wacc=float(row["wacc"]),
+        cost_of_debt_after_tax=float(row["cost_of_debt_after_tax"]),
+        moat_score=float(row.get("moat_score") or 0.5),
+        cyclicality=float(row.get("cyclicality") or 0.0),
+        margin_volatility=float(row.get("margin_volatility") or 0.0),
+        net_share_change_rate=float(row.get("net_share_change_cagr") or 0.0),
+        data_confidence=float(row.get("data_confidence") or 1.0),
+        model_confidence=float(row.get("model_confidence") or 1.0),
+    )
+
+
+def _optional_float(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        result = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    return None if pd.isna(result) else result

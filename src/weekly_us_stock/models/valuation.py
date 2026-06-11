@@ -1,0 +1,78 @@
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+ScenarioName = Literal["bear", "base", "bull"]
+
+
+class CompanyInputs(BaseModel):
+    """Everything the scenario engine needs for one company.
+
+    All monetary fields share one currency unit (the pipeline uses USD
+    millions); price and per-share values are in USD per share.
+    """
+
+    ticker: str
+    price: float
+    shares_outstanding: float
+    net_debt: float
+    latest_revenue: float
+    normalized_operating_margin: float
+    current_operating_margin: float
+    tax_rate: float
+    hist_revenue_cagr: float
+    analyst_growth: float | None = None
+    analyst_dispersion: float | None = None
+    roic: float
+    incremental_roic: float | None = None
+    wacc: float
+    cost_of_debt_after_tax: float
+    moat_score: float = 0.5  # 0..1, derived from return persistence evidence
+    cyclicality: float = 0.0  # stdev of yoy revenue growth
+    margin_volatility: float = 0.0  # stdev of operating margin
+    net_share_change_rate: float = 0.0  # historical net share count CAGR (+ dilutes)
+    data_confidence: float = 1.0
+    model_confidence: float = 1.0
+
+
+class ScenarioAssumptions(BaseModel):
+    name: ScenarioName
+    probability: float
+    revenue_growth_y1: float
+    terminal_growth: float
+    operating_margin: float
+    forward_roic: float
+    terminal_roic: float
+    share_change_rate: float
+
+
+class ScenarioValuation(BaseModel):
+    assumptions: ScenarioAssumptions
+    intrinsic_value_per_share: float
+    irr_3y: float | None
+    irr_5y: float | None
+    exit_value_per_share: float
+    total_return_5y: float
+    reinvestment_rate_y1: float
+    projected_fcf: list[float] = Field(default_factory=list)
+
+
+class CompanyValuation(BaseModel):
+    ticker: str
+    price: float
+    scenarios: list[ScenarioValuation]
+    expected_irr: float
+    median_irr: float
+    p10_irr: float
+    p90_irr: float
+    prob_above_hurdle: float
+    permanent_loss_probability: float
+    expected_shortfall: float
+    intrinsic_value_low: float
+    intrinsic_value_base: float
+    intrinsic_value_high: float
+    model_confidence: float
+    data_confidence: float
+    model_uncertainty: float

@@ -1,0 +1,189 @@
+"""Provider contracts: point-in-time discipline and pure payload transforms."""
+
+from __future__ import annotations
+
+from datetime import date
+
+import pandas as pd
+
+from tests.conftest import AS_OF
+from weekly_us_stock.providers.fmp import (
+    classify_security,
+    normalize_exchange,
+    transform_screener,
+    transform_statements,
+)
+from weekly_us_stock.providers.fred import transform_observations
+from weekly_us_stock.providers.polygon import transform_grouped
+from weekly_us_stock.providers.sample import SampleDataProvider
+from weekly_us_stock.steps.step3_standardize import standardize_fundamentals
+
+
+class TestNoLookAheadBias:
+    """The sample CSVs deliberately contain future-dated rows; every loader
+    must hide them at the requested as_of."""
+
+    def test_prices_never_leak_past_as_of(self, sample_provider: SampleDataProvider) -> None:
+        prices = sample_provider.load_prices(None, AS_OF, lookback_days=60)
+        assert not prices.empty
+        assert prices["trade_date"].max() <= pd.Timestamp(AS_OF)
+        # The same CSV does contain later sessions, visible at a later as_of.
+        later = sample_provider.load_prices(None, date(2026, 1, 16), lookback_days=60)
+        assert later["trade_date"].max() > pd.Timestamp(AS_OF)
+
+    def test_unfiled_fiscal_year_is_invisible(
+        self, sample_provider: SampleDataProvider
+    ) -> None:
+        # FY2025 was filed 2026-02-20: invisible on 2026-01-09, visible later.
+        before = sample_provider.load_fundamentals(["STBL"], AS_OF)
+        assert before["fiscal_year"].max() == 2024
+        after = sample_provider.load_fundamentals(["STBL"], date(2026, 3, 1))
+        assert after["fiscal_year"].max() == 2025
+
+    def test_future_estimate_snapshot_is_invisible(
+        self, sample_provider: SampleDataProvider
+    ) -> None:
+        # STBL has a second estimate snapshot dated 2026-01-14 with 5x revenue.
+        estimates = sample_provider.load_estimates(["STBL"], AS_OF)
+        assert (estimates["as_of"] <= pd.Timestamp(AS_OF)).all()
+        fy2025 = estimates.loc[estimates["fiscal_year"] == 2025, "revenue_mean"].iloc[0]
+        assert fy2025 < 50e9  # the 5x-scaled future snapshot would be ~46e9 * 5
+
+    def test_future_macro_observation_is_invisible(
+        self, sample_provider: SampleDataProvider
+    ) -> None:
+        macro = sample_provider.load_macro(AS_OF)
+        value = macro.loc[macro["series"] == "risk_free_10y", "value"].iloc[0]
+        assert value == 0.043  # not the 0.099 row dated 2026-01-12
+
+    def test_standardize_re_enforces_filing_dates(
+        self, sample_provider: SampleDataProvider
+    ) -> None:
+        # Even if a provider misbehaved, step 3 re-applies the filing gate.
+        leaked = sample_provider.load_fundamentals(["STBL"], date(2026, 3, 1))
+        cleaned = standardize_fundamentals(leaked, AS_OF)
+        assert cleaned["fiscal_year"].max() == 2024
+
+    def test_provenance_columns_present(self, sample_provider: SampleDataProvider) -> None:
+        for frame in [
+            sample_provider.fetch_universe(AS_OF),
+            sample_provider.load_prices(["STBL"], AS_OF, 10),
+            sample_provider.load_fundamentals(["STBL"], AS_OF),
+        ]:
+            for column in ["as_of", "source", "fetched_at"]:
+                assert column in frame.columns
+
+
+class TestFMPTransforms:
+    def test_classify_security(self) -> None:
+        assert classify_security("AAPL", "Apple Inc.", is_etf=False, is_fund=False) == (
+            "common_stock"
+        )
+        assert classify_security("SPY", "SPDR S&P 500", is_etf=True, is_fund=False) == "etf"
+        assert (
+            classify_security("ACQ", "Horizon Acquisition Corp", is_etf=False, is_fund=False)
+            == "spac"
+        )
+        assert classify_security("ABC-WT", "ABC Warrant", is_etf=False, is_fund=False) == (
+            "warrant"
+        )
+        assert (
+            classify_security("XYZ-PA", "XYZ Preferred Series A", is_etf=False, is_fund=False)
+            == "preferred"
+        )
+
+    def test_normalize_exchange(self) -> None:
+        assert normalize_exchange("NYSE American") == "AMEX"
+        assert normalize_exchange("PNK") == "OTC"
+        assert normalize_exchange("NASDAQ Global Select") == "NASDAQ"
+
+    def test_transform_screener_and_statements(self) -> None:
+        screener = transform_screener(
+            [
+                {
+                    "symbol": "AAPL",
+                    "companyName": "Apple Inc.",
+                    "exchangeShortName": "NASDAQ",
+                    "sector": "Technology",
+                    "industry": "Consumer Electronics",
+                    "country": "US",
+                    "marketCap": 3e12,
+                    "beta": 1.2,
+                    "isEtf": False,
+                    "isFund": False,
+                }
+            ],
+            "2026-01-09T00:00:00+00:00",
+            AS_OF,
+        )
+        assert screener.iloc[0]["security_type"] == "common_stock"
+        assert not screener.iloc[0]["is_adr"]
+
+        statements = transform_statements(
+            income=[
+                {
+                    "symbol": "AAPL",
+                    "calendarYear": "2024",
+                    "date": "2024-09-28",
+                    "fillingDate": "2024-11-01",
+                    "revenue": 391e9,
+                    "grossProfit": 180e9,
+                    "operatingIncome": 123e9,
+                    "netIncome": 93e9,
+                    "incomeBeforeTax": 110e9,
+                    "incomeTaxExpense": 17e9,
+                    "interestExpense": 0,
+                    "weightedAverageShsOutDil": 15.4e9,
+                }
+            ],
+            balance=[
+                {
+                    "calendarYear": "2024",
+                    "totalDebt": 106e9,
+                    "cashAndShortTermInvestments": 65e9,
+                    "totalStockholdersEquity": 57e9,
+                }
+            ],
+            cashflow=[
+                {
+                    "calendarYear": "2024",
+                    "operatingCashFlow": 118e9,
+                    "capitalExpenditure": -9.4e9,
+                    "depreciationAndAmortization": 11.4e9,
+                    "stockBasedCompensation": 11.7e9,
+                    "dividendsPaid": -15.2e9,
+                    "commonStockRepurchased": -94.9e9,
+                }
+            ],
+            fetched_at="2026-01-09T00:00:00+00:00",
+            as_of=AS_OF,
+        )
+        row = statements.iloc[0]
+        assert row["filing_date"] == "2024-11-01"
+        assert row["capex"] == 9.4e9  # absolute value
+        assert row["buybacks"] == 94.9e9  # sign flipped to positive spend
+        assert row["effective_tax_rate"] == 17e9 / 110e9
+
+
+def test_polygon_grouped_transform() -> None:
+    frame = transform_grouped(
+        {"results": [{"T": "AAPL", "c": 230.0, "v": 50_000_000}]},
+        trade_date=date(2026, 1, 9),
+        fetched_at="2026-01-09T21:30:00+00:00",
+        as_of=AS_OF,
+    )
+    row = frame.iloc[0]
+    assert row["dollar_volume"] == 230.0 * 50_000_000
+    assert row["source"] == "polygon:grouped-daily"
+
+
+def test_fred_observation_transform() -> None:
+    observations = [
+        {"date": "2026-01-08", "value": "4.30"},
+        {"date": "2026-01-09", "value": "."},
+    ]
+    frame = transform_observations(
+        {"observations": observations}, series="risk_free_10y", fetched_at="now"
+    )
+    assert len(frame) == 1  # the "." placeholder is dropped
+    assert frame.iloc[0]["value"] == 0.043

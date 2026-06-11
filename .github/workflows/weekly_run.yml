@@ -1,0 +1,231 @@
+name: Weekly US Stock Run
+
+"on":
+  schedule:
+    # Saturday 08:00 Beijing time. GitHub Actions cron is UTC: Sat 00:00 UTC.
+    # The run date is NOT "today": the pipeline resolves the latest COMPLETED
+    # NYSE trading day (Friday, or earlier around holidays) via the calendar
+    # in weekly_us_stock.utils.calendar, which is DST-correct by construction.
+    - cron: "0 0 * * 6"
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "Run date YYYY-MM-DD. Empty = latest completed US trading day."
+        required: false
+        type: string
+      provider:
+        description: "Data source (auto | fmp | sample)."
+        required: false
+        default: "auto"
+        type: string
+  push:
+    tags:
+      # Lets OpenClaw hosts with a write deploy key trigger this workflow
+      # by pushing a disposable tag (see scripts/openclaw_trigger_actions.sh).
+      - "weekly-us-stock-*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-us-stock-run
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+  FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+  POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+  FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+  SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+
+jobs:
+  full-market-screen:
+    name: Full Market Screen
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Resolve as_of from the NYSE calendar
+        env:
+          AS_OF_INPUT: ${{ github.event.inputs.as_of }}
+          PROVIDER_INPUT: ${{ github.event.inputs.provider }}
+        run: |
+          if [ -n "$AS_OF_INPUT" ]; then
+            AS_OF="$AS_OF_INPUT"
+          else
+            AS_OF="$(PYTHONPATH=src python -m weekly_us_stock.tools.expected_as_of)"
+          fi
+          echo "WEEKLY_AS_OF=$AS_OF" >> "$GITHUB_ENV"
+          echo "WEEKLY_PROVIDER=${PROVIDER_INPUT:-auto}" >> "$GITHUB_ENV"
+          echo "Resolved as_of=$AS_OF provider=${PROVIDER_INPUT:-auto}"
+
+      - name: Restore previous rankings for the week-over-week diff
+        run: |
+          git fetch origin weekly-us-stock-results || true
+          mkdir -p previous_results
+          for f in robust_ranking.csv upside_ranking.csv run_metadata.json; do
+            git show "origin/weekly-us-stock-results:latest/$f" \
+              > "previous_results/$f" 2>/dev/null || rm -f "previous_results/$f"
+          done
+          ls -la previous_results || true
+
+      - name: Run weekly screen (with data-readiness retries)
+        run: |
+          set +e
+          ATTEMPTS=0
+          MAX_ATTEMPTS=4
+          while [ "$ATTEMPTS" -lt "$MAX_ATTEMPTS" ]; do
+            ATTEMPTS=$((ATTEMPTS + 1))
+            echo "::group::Attempt $ATTEMPTS/$MAX_ATTEMPTS"
+            weekly-us-stock run \
+              --as-of "$WEEKLY_AS_OF" \
+              --provider "$WEEKLY_PROVIDER" \
+              --previous-dir previous_results \
+              --strict-freshness
+            CODE=$?
+            echo "::endgroup::"
+            if [ "$CODE" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$CODE" -ne 75 ]; then
+              exit "$CODE"
+            fi
+            echo "Data not ready (exit 75); sleeping 15 minutes before retry."
+            sleep 900
+          done
+          echo "Data still not ready after $MAX_ATTEMPTS attempts; running degraded" \
+               "without the strict freshness gate (the report flags staleness)."
+          weekly-us-stock run \
+            --as-of "$WEEKLY_AS_OF" \
+            --provider "$WEEKLY_PROVIDER" \
+            --previous-dir previous_results
+
+      - name: Prepare report artifact
+        if: always()
+        run: |
+          RUN_KEY="${WEEKLY_AS_OF//-/}"
+          RUN_DIR="runs/$RUN_KEY"
+          if [ ! -d "$RUN_DIR" ]; then
+            echo "No run directory $RUN_DIR produced." >&2
+            exit 0
+          fi
+          mkdir -p reports
+          cp -R "$RUN_DIR/." reports/
+          find reports -maxdepth 1 -type f -print
+
+      - name: Attach GitHub run metadata
+        if: always()
+        run: |
+          if [ ! -f reports/run_metadata.json ]; then
+            echo "No run metadata to annotate."
+            exit 0
+          fi
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          metadata_path = Path("reports/run_metadata.json")
+          metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+          run_url = (
+              f"{os.environ['GITHUB_SERVER_URL']}/"
+              f"{os.environ['GITHUB_REPOSITORY']}/actions/runs/"
+              f"{os.environ['GITHUB_RUN_ID']}"
+          )
+          ref_type = os.environ.get("GITHUB_REF_TYPE", "")
+          ref_name = os.environ.get("GITHUB_REF_NAME", "")
+          metadata.update(
+              {
+                  "tag": ref_name if ref_type == "tag" else "",
+                  "ref": os.environ.get("GITHUB_REF", ""),
+                  "source_sha": os.environ.get("GITHUB_SHA", ""),
+                  "run_id": os.environ.get("GITHUB_RUN_ID", ""),
+                  "run_number": os.environ.get("GITHUB_RUN_NUMBER", ""),
+                  "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", ""),
+                  "run_url": run_url,
+              }
+          )
+          metadata_path.write_text(
+              json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
+          )
+
+          summary_path = Path("reports/feishu_summary.md")
+          if summary_path.exists():
+              summary = summary_path.read_text(encoding="utf-8").rstrip()
+              summary_path.write_text(
+                  f"{summary}\n\n完整结果：GitHub Actions #{metadata['run_number']} {run_url}\n",
+                  encoding="utf-8",
+              )
+          PY
+
+      - name: Print Feishu-readable summary
+        if: always()
+        run: |
+          if [ -f reports/feishu_summary.md ]; then
+            cat reports/feishu_summary.md
+            cat reports/feishu_summary.md >> "$GITHUB_STEP_SUMMARY"
+          elif [ -f reports/dashboard.md ]; then
+            cat reports/dashboard.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No summary produced." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-us-stock-reports
+          path: reports/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Publish results branch
+        if: always()
+        run: |
+          if [ ! -f reports/feishu_summary.md ]; then
+            echo "No Feishu summary to publish."
+            exit 0
+          fi
+
+          TMP_REPORT_DIR="$(mktemp -d)"
+          cp -R reports "$TMP_REPORT_DIR/reports"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin weekly-us-stock-results || true
+          if git show-ref --verify --quiet refs/remotes/origin/weekly-us-stock-results; then
+            git checkout -B weekly-us-stock-results origin/weekly-us-stock-results
+          else
+            git checkout --orphan weekly-us-stock-results
+            git rm -rf . || true
+          fi
+
+          RUN_KEY="${WEEKLY_AS_OF//-/}"
+          mkdir -p latest "history/$RUN_KEY"
+          for f in feishu_summary.md dashboard.md result.json run_metadata.json \
+                   robust_ranking.csv upside_ranking.csv watchlist.csv; do
+            cp "$TMP_REPORT_DIR/reports/$f" "latest/$f" 2>/dev/null || true
+          done
+          cp -R latest/. "history/$RUN_KEY/"
+
+          git add latest "history/$RUN_KEY"
+          git commit -m "chore: publish Weekly US Stock report $WEEKLY_AS_OF" || {
+            echo "No report changes to publish."
+            exit 0
+          }
+          git push origin weekly-us-stock-results

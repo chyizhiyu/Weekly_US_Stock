@@ -1,0 +1,87 @@
+# Weekly US Stock screener configuration.
+# Every threshold here is a research preference, not a trading instruction.
+
+app:
+  timezone: Asia/Shanghai
+  market_timezone: America/New_York
+  data_source: sample        # sample | fmp | auto
+  output_dir: runs
+  sample_data_dir: data/samples
+
+universe:
+  exchanges: [NYSE, NASDAQ, AMEX]   # AMEX == NYSE American
+  include_adrs: false               # flip to true to let US-listed ADRs into the pool
+  allowed_security_types: [common_stock]
+
+hard_filters:
+  min_listing_years: 3
+  min_market_cap: 500000000          # USD
+  min_avg_dollar_volume: 5000000     # USD, trailing window
+  liquidity_window_days: 60
+  max_consecutive_loss_years: 3      # >= this many trailing loss years -> reject
+  max_negative_fcf_years: 4          # >= this many trailing negative-FCF years -> reject
+  min_financial_years: 5             # fail closed when fewer filed fiscal years are known
+  min_interest_coverage: 2.0         # only enforced when net debt > 0
+  max_net_debt_to_ebitda: 6.0
+  max_share_dilution_cagr_3y: 0.07
+  min_ocf_to_net_income: 0.5         # accounting-quality floor when net income > 0
+
+normalization:
+  lookback_years: 8
+  min_years_for_normalization: 5
+  default_tax_rate: 0.21
+  min_tax_rate: 0.10
+  max_tax_rate: 0.35
+
+wacc:
+  equity_risk_premium: 0.05
+  default_beta: 1.0
+  fallback_risk_free: 0.042
+  base_credit_spread: 0.015
+  stressed_credit_spread: 0.04      # applied when interest coverage < 4
+  min_wacc: 0.065
+  max_wacc: 0.14
+
+scenarios:
+  horizon_years: 5
+  exit_year: 3                       # secondary IRR horizon
+  terminal_growth: 0.025
+  probabilities:
+    bear: 0.25
+    base: 0.50
+    bull: 0.25
+  base_growth_cap: 0.25
+  base_growth_floor: -0.05
+  base_growth_spread: 0.04           # widened by cyclicality/dispersion, narrowed by moat
+  bear_spread_skew: 1.25             # bear deviates further than bull
+  bear_margin_haircut: 0.15          # fraction of normalized margin at risk when moat is weak
+  bull_margin_uplift: 0.06
+  max_reinvestment_rate: 1.20   # >1 lets capital hogs burn cash instead of growing for free
+  price_anchor_growth: 0.05          # price path used to translate buyback spend into share count
+  max_share_change_rate: 0.08
+  min_share_change_rate: -0.05
+
+risk_preferences:
+  # Investor risk preferences. These shape the Robust Ranking; they are NOT factor weights.
+  hurdle_rate: 0.12
+  downside_aversion: 1.0             # penalty per unit of expected shortfall (CVaR)
+  ambiguity_aversion: 0.5            # penalty per unit of model uncertainty
+  permanent_loss_penalty: 0.5        # penalty per unit of permanent-loss probability
+  cvar_alpha: 0.25
+  permanent_loss_threshold: -0.30    # 5y total return below this counts as permanent loss
+  uncertainty_per_missing_confidence: 0.03
+
+confidence:
+  min_model_confidence: 0.2
+  min_data_confidence: 0.2
+  watchlist_data_confidence: 0.45    # below this the name goes to the watchlist, not the ranking
+
+ranking:
+  top_n: 20
+
+report:
+  feishu_top_n: 10
+
+freshness:
+  max_price_staleness_days: 3
+  min_fresh_price_coverage: 0.8      # below this --strict-freshness exits with retry code 75
