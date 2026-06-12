@@ -1,0 +1,67 @@
+src/weekly_us_stock/providers/fmp.py
+  0c561210d93e16cc 41,49-52,220-294,427,499-512,514,545-554
+src/weekly_us_stock/valuation/ranking.py
+  0c561210d93e16cc 5-6,8,12,14-22,41-49
+src/weekly_us_stock/reports/dashboard.py
+  0c561210d93e16cc 28,30-32,121-122,127
+src/weekly_us_stock/cli.py
+  0c561210d93e16cc 12,80-83
+scripts/generate_sample_data.py
+  0c561210d93e16cc 88-89,139-140,510-587,666
+src/weekly_us_stock/config.py
+  0c561210d93e16cc 88-91,98
+tests/test_providers.py
+  0c561210d93e16cc 11,13-14,177-254
+tests/test_hard_filters.py
+  0c561210d93e16cc 78-96
+src/weekly_us_stock/steps/step4_normalized.py
+  0c561210d93e16cc 37,44-46,60-62
+tests/test_normalization.py
+  0c561210d93e16cc 120-180
+tests/test_pipeline_e2e.py
+  0c561210d93e16cc 10-11,154,157-158,168-196
+src/weekly_us_stock/steps/step6_valuation.py
+  0c561210d93e16cc 37
+src/weekly_us_stock/providers/sample.py
+  0c561210d93e16cc 57-71
+src/weekly_us_stock/steps/step2_hard_filters.py
+  0c561210d93e16cc 72-78
+tests/test_ranking.py
+  0c561210d93e16cc 65-74
+README.md
+  0c561210d93e16cc 13-25,30-34,125,127-142,144-146
+config/default.yaml
+  0c561210d93e16cc 69,73-76,82
+src/weekly_us_stock/providers/composite.py
+  0c561210d93e16cc 74-81
+src/weekly_us_stock/valuation/normalize.py
+  0c561210d93e16cc 13,20-69,75,78,80-84,97-99,114,120,128-130,133-134,136,150-151,155-158,172-173,195-198
+src/weekly_us_stock/pipeline.py
+  0c561210d93e16cc 31,193-198,210,246-260,368-371,386-394,397,400
+src/weekly_us_stock/providers/base.py
+  0c561210d93e16cc 95-101,119-125
+src/weekly_us_stock/valuation/industry.py
+  0c561210d93e16cc 19-21,30-32,60-73
+src/weekly_us_stock/reports/feishu.py
+  0c561210d93e16cc 48-50,74-75,106-108,111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.22",
+  "base_commit_sha": "c89e18cb9e59c3642a36cc35a699483ea49c2e26",
+  "prompts": {
+    "0c561210d93e16cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad8549ce-f2a1-43ff-9548-5a819eb2ab3f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "qizy",
+      "messages": [],
+      "total_additions": 683,
+      "total_deletions": 75,
+      "accepted_lines": 683,
+      "overriden_lines": 0
+    }
+  }
+}
