@@ -1,0 +1,23 @@
+README.md
+  0c561210d93e16cc 57-59,63-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.22",
+  "base_commit_sha": "3f163b45c291bdebd78d807a8f1c26a241aea8e7",
+  "prompts": {
+    "0c561210d93e16cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad8549ce-f2a1-43ff-9548-5a819eb2ab3f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "qizy",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 3,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
