@@ -42,6 +42,16 @@ wacc:
   min_wacc: 0.065
   max_wacc: 0.14
 
+events:
+  # Material-event gate: price shocks proxy contract losses, guidance cuts,
+  # regulatory hits etc. until 8-K/news ingestion lands. Flagged names go to
+  # the event watchlist for manual re-underwriting instead of being ranked
+  # on stale (pre-event) earning power.
+  enabled: true
+  weekly_drop_threshold: 0.25     # 1-week drop of 25%+
+  drawdown_threshold: 0.40        # 40%+ below the 60-session high
+  lookback_high_days: 60
+
 scenarios:
   horizon_years: 5
   exit_year: 3                       # secondary IRR horizon
@@ -70,10 +80,12 @@ risk_preferences:
   cvar_alpha: 0.25
   permanent_loss_threshold: -0.30    # 5y total return below this counts as permanent loss
   uncertainty_per_missing_confidence: 0.03
-  # penalized_expected: E[IRR] - all three penalties (spec decomposition).
-  # median_cvar: Median IRR - downside_aversion x CVaR; uncertainty and
-  # permanent-loss weights are reported alongside but not subtracted again.
-  formula: penalized_expected
+  # hurdle_cvar (default): confidence x max(median IRR - hurdle, 0)
+  #   - downside_aversion x hurdle-relative CVaR. A bear case earning 7%
+  #   against a 12% hurdle is penalized; no double-counted penalties.
+  # penalized_expected: E[IRR] - all three penalties (original spec form).
+  # median_cvar: Median IRR - downside_aversion x zero-anchored CVaR.
+  formula: hurdle_cvar
 
 confidence:
   min_model_confidence: 0.2

@@ -32,7 +32,7 @@ def _inputs(**overrides) -> CompanyInputs:
         "incremental_roic": 0.18,
         "wacc": 0.09,
         "cost_of_debt_after_tax": 0.04,
-        "moat_score": 0.7,
+        "financial_persistence": 0.7,
         "cyclicality": 0.03,
         "margin_volatility": 0.01,
         "net_share_change_rate": 0.0,
@@ -115,8 +115,8 @@ class TestValueCreationMechanics:
         assert scenarios["bull"].operating_margin < 0.16
 
     def test_weak_moat_widens_scenario_spread(self) -> None:
-        narrow = build_scenarios(_inputs(moat_score=0.9), CFG)
-        wide = build_scenarios(_inputs(moat_score=0.1), CFG)
+        narrow = build_scenarios(_inputs(financial_persistence=0.9), CFG)
+        wide = build_scenarios(_inputs(financial_persistence=0.1), CFG)
 
         def spread(scenarios) -> float:
             by_name = {a.name: a for a in scenarios}
@@ -134,9 +134,10 @@ class TestAggregation:
     def test_distribution_metrics(self) -> None:
         valuation = value_company(_inputs(), CFG, PREFS)
         assert valuation.p10_irr <= valuation.median_irr <= valuation.p90_irr
-        assert 0.0 <= valuation.prob_above_hurdle <= 1.0
-        assert 0.0 <= valuation.permanent_loss_probability <= 1.0
+        assert 0.0 <= valuation.above_hurdle_weight <= 1.0
+        assert 0.0 <= valuation.permanent_loss_weight <= 1.0
         assert valuation.expected_shortfall >= 0.0
+        assert valuation.hurdle_cvar >= 0.0
         assert valuation.intrinsic_value_low <= valuation.intrinsic_value_high
         probabilities = [s.assumptions.probability for s in valuation.scenarios]
         assert sum(probabilities) == pytest.approx(1.0)

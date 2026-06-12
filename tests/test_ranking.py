@@ -8,47 +8,79 @@ import pytest
 from weekly_us_stock.config import RiskPreferenceSettings
 from weekly_us_stock.valuation.ranking import add_robust_components, build_rankings
 
-PREFS = RiskPreferenceSettings()
+PREFS = RiskPreferenceSettings()  # default formula: hurdle_cvar
 
 
 def _metrics() -> pd.DataFrame:
     return pd.DataFrame(
         [
             {
-                # Steady compounder: decent IRR, almost no tail risk.
+                # Steady compounder: modest excess over the hurdle, shallow tail.
                 "ticker": "COMPOUND",
                 "expected_irr": 0.13,
-                "median_irr": 0.13,
+                "median_irr": 0.14,
+                "hurdle_rate": 0.12,
                 "expected_shortfall": 0.00,
+                "hurdle_cvar": 0.02,  # bear lands at 10% vs the 12% hurdle
                 "model_uncertainty": 0.05,
-                "permanent_loss_probability": 0.0,
+                "permanent_loss_weight": 0.0,
+                "data_confidence": 0.95,
+                "model_confidence": 0.90,
             },
             {
-                # Lottery ticket: higher expected IRR, fat left tail, wide range.
+                # Lottery ticket: higher expected IRR, deep hurdle-relative tail.
                 "ticker": "LOTTERY",
                 "expected_irr": 0.20,
                 "median_irr": 0.18,
+                "hurdle_rate": 0.12,
                 "expected_shortfall": 0.30,
+                "hurdle_cvar": 0.42,  # bear at -30% vs the 12% hurdle
                 "model_uncertainty": 0.30,
-                "permanent_loss_probability": 0.25,
+                "permanent_loss_weight": 0.25,
+                "data_confidence": 0.70,
+                "model_confidence": 0.45,
             },
         ]
     )
 
 
-def test_robust_return_formula_is_transparent() -> None:
+def test_hurdle_cvar_formula_is_transparent() -> None:
     scored = add_robust_components(_metrics(), PREFS)
+    row = scored.set_index("ticker").loc["LOTTERY"]
+    expected = (0.70 * 0.45) * max(0.18 - 0.12, 0.0) - PREFS.downside_aversion * 0.42
+    assert row["robust_return"] == pytest.approx(expected)
+    # A bear case below the hurdle is penalized even when its IRR is positive.
+    compound = scored.set_index("ticker").loc["COMPOUND"]
+    assert compound["hurdle_penalty"] > 0
+    # Every component stays visible: no opaque composite score.
+    for column in [
+        "hurdle_penalty",
+        "downside_penalty",
+        "ambiguity_penalty",
+        "permanent_loss_penalty",
+        "evidence_confidence",
+    ]:
+        assert column in scored.columns
+
+
+def test_penalized_expected_formula_matches_spec_decomposition() -> None:
+    prefs = RiskPreferenceSettings(formula="penalized_expected")
+    scored = add_robust_components(_metrics(), prefs)
     row = scored.set_index("ticker").loc["LOTTERY"]
     expected = (
         0.20
-        - PREFS.downside_aversion * 0.30
-        - PREFS.ambiguity_aversion * 0.30
-        - PREFS.permanent_loss_penalty * 0.25
+        - prefs.downside_aversion * 0.30
+        - prefs.ambiguity_aversion * 0.30
+        - prefs.permanent_loss_penalty * 0.25
     )
     assert row["robust_return"] == pytest.approx(expected)
-    # Every penalty stays visible in the output: no opaque composite score.
-    for column in ["downside_penalty", "ambiguity_penalty", "permanent_loss_penalty"]:
-        assert column in scored.columns
+
+
+def test_median_cvar_formula_uses_a_single_penalty() -> None:
+    prefs = RiskPreferenceSettings(formula="median_cvar", downside_aversion=1.5)
+    scored = add_robust_components(_metrics(), prefs)
+    row = scored.set_index("ticker").loc["LOTTERY"]
+    assert row["robust_return"] == pytest.approx(0.18 - 1.5 * 0.30)
 
 
 def test_high_variance_name_is_downweighted_in_robust_ranking_only() -> None:
@@ -62,21 +94,10 @@ def test_high_variance_name_is_downweighted_in_robust_ranking_only() -> None:
     assert robust_ranks["LOTTERY"] > robust_ranks["COMPOUND"]
 
 
-def test_median_cvar_formula_uses_a_single_penalty() -> None:
-    prefs = RiskPreferenceSettings(formula="median_cvar", downside_aversion=1.5)
-    scored = add_robust_components(_metrics(), prefs)
-    row = scored.set_index("ticker").loc["LOTTERY"]
-    assert row["robust_return"] == pytest.approx(0.18 - 1.5 * 0.30)
-    # The other risk measures stay visible for position sizing.
-    assert "ambiguity_penalty" in scored.columns
-    assert "permanent_loss_penalty" in scored.columns
-
-
 def test_risk_preferences_change_the_ordering() -> None:
-    # An investor with no downside aversion ranks purely on expected return.
-    neutral = RiskPreferenceSettings(
-        downside_aversion=0.0, ambiguity_aversion=0.0, permanent_loss_penalty=0.0
-    )
+    # An investor with no downside aversion ranks on confidence-scaled excess:
+    # the lottery stock's bigger excess wins once tail risk stops mattering.
+    neutral = RiskPreferenceSettings(downside_aversion=0.0)
     robust, _ = build_rankings(_metrics(), neutral)
     assert robust.iloc[0]["ticker"] == "LOTTERY"
 

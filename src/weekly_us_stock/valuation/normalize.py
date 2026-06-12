@@ -32,7 +32,7 @@ class _Anchor:
     cash: float
     total_equity: float
     depreciation: float
-    interest_expense: float
+    interest_expense: float | None  # None == unknown, never assumed zero
     dividends_paid: float
     buybacks: float
     filing_date: str
@@ -62,7 +62,7 @@ class _Anchor:
             cash=_value("cash") or 0.0,
             total_equity=_value("total_equity") or 0.0,
             depreciation=_value("depreciation") or 0.0,
-            interest_expense=_value("interest_expense") or 0.0,
+            interest_expense=_value("interest_expense", None),
             dividends_paid=_value("dividends_paid") or 0.0,
             buybacks=_value("buybacks") or 0.0,
             filing_date=filing_text,
@@ -133,7 +133,9 @@ def normalize_company(
     net_debt = anchor.total_debt - anchor.cash
     ebitda = anchor_adj_op + anchor.depreciation
     interest_coverage = (
-        anchor_adj_op / anchor.interest_expense if anchor.interest_expense > 0 else None
+        anchor_adj_op / anchor.interest_expense
+        if anchor.interest_expense is not None and anchor.interest_expense > 0
+        else None
     )
     net_debt_to_ebitda = net_debt / ebitda if ebitda > 0 else None
 
@@ -166,6 +168,8 @@ def normalize_company(
         "roic": roic,
         "incremental_roic": incremental_roic,
         "net_debt": net_debt,
+        "total_debt": anchor.total_debt,
+        "interest_expense_known": anchor.interest_expense is not None,
         "interest_coverage": interest_coverage,
         "net_debt_to_ebitda": net_debt_to_ebitda,
         "sbc_intensity": sbc_intensity,

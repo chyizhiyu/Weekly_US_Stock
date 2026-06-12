@@ -18,9 +18,13 @@ def cost_of_debt_after_tax(
     interest_coverage: float | None,
     tax_rate: float,
     settings: WaccSettings,
+    has_debt: bool = False,
 ) -> float:
     spread = settings.base_credit_spread
     if interest_coverage is not None and interest_coverage < 4:
+        spread = settings.stressed_credit_spread
+    elif interest_coverage is None and has_debt:
+        # Unknown coverage on a levered balance sheet prices conservatively.
         spread = settings.stressed_credit_spread
     return (risk_free + spread) * (1.0 - tax_rate)
 
@@ -38,7 +42,9 @@ def compute_wacc(
     """Return (wacc, after-tax cost of debt), both clamped to configured bounds."""
 
     ke = cost_of_equity(risk_free, beta, settings)
-    kd = cost_of_debt_after_tax(risk_free, interest_coverage, tax_rate, settings)
+    kd = cost_of_debt_after_tax(
+        risk_free, interest_coverage, tax_rate, settings, has_debt=total_debt > 0
+    )
     capital = max(market_cap, 0.0) + max(total_debt, 0.0)
     if capital <= 0:
         wacc = ke

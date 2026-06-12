@@ -38,8 +38,10 @@ from weekly_us_stock.reports.dashboard import build_dashboard
 from weekly_us_stock.reports.exporters import export_dataframe, export_json, export_text
 from weekly_us_stock.reports.feishu import build_feishu_summary
 from weekly_us_stock.steps.step1_universe import build_market_snapshot, fetch_universe
+from weekly_us_stock.steps.step2_events import detect_material_events
 from weekly_us_stock.steps.step2_hard_filters import (
     combine_results,
+    drop_duplicate_share_classes,
     run_financial_hard_filters,
     run_market_filters,
     run_security_type_filters,
@@ -128,16 +130,33 @@ class WeeklyUSStockPipeline:
         )
         fundamentals = standardize_fundamentals(raw_fundamentals, as_of)
         started = time.perf_counter()
+        # One economic entity, one slot (GOOG/GOOGL, BRK-A/BRK-B).
+        dedupe_result = drop_duplicate_share_classes(market_result.candidates)
         # Banks/insurers/REITs/pre-profit biotech leave for the watchlist here:
         # the non-financial solvency gates below must not judge them.
         routed_candidates, early_watchlist = route_unsupported_industries(
-            market_result.candidates, fundamentals
+            dedupe_result.candidates, fundamentals
         )
         financial_result = run_financial_hard_filters(
             routed_candidates, fundamentals, self.settings.hard_filters
         )
+        # Material-event gate (the VRRM trap): a price already reflecting bad
+        # news must not be ranked against pre-event earning power.
+        event_result = detect_material_events(
+            financial_result.candidates, prices, self.settings.events
+        )
+        financial_result = FilterFrameResult(
+            candidates=event_result.candidates,
+            rejected=financial_result.rejected,
+            rejection_counts=financial_result.rejection_counts,
+        )
         rejected = pd.concat(
-            [type_result.rejected, market_result.rejected, financial_result.rejected],
+            [
+                type_result.rejected,
+                market_result.rejected,
+                dedupe_result.rejected,
+                financial_result.rejected,
+            ],
             ignore_index=True,
         )
         summary = StepSummary(
@@ -145,11 +164,18 @@ class WeeklyUSStockPipeline:
             input_count=len(universe),
             output_count=len(financial_result.candidates),
             elapsed_seconds=time.perf_counter() - started,
-            rejection_counts=combine_results(type_result, market_result, financial_result),
+            rejection_counts=combine_results(
+                type_result, market_result, dedupe_result, financial_result, event_result
+            ),
         )
         if not early_watchlist.empty:
             summary.notes.append(
                 f"routed {len(early_watchlist)} unsupported-industry names to the watchlist"
+            )
+        if not event_result.rejected.empty:
+            summary.notes.append(
+                f"moved {len(event_result.rejected)} names to the event watchlist "
+                "pending re-underwriting"
             )
         self._export(
             run_dir, "hard_filter_candidates", financial_result.candidates, summary, artifacts
@@ -208,6 +234,7 @@ class WeeklyUSStockPipeline:
                 self.settings.normalization,
                 self.settings.wacc,
                 ttm=ttm,
+                as_of=as_of,
             ),
             output_count=lambda result: len(result.modeled),
         )
@@ -215,6 +242,8 @@ class WeeklyUSStockPipeline:
         watchlist_frames = []
         if not early_watchlist.empty:
             watchlist_frames.append(early_watchlist)
+        if not event_result.rejected.empty:
+            watchlist_frames.append(event_result.rejected)
         if not normalized.watchlist.empty:
             watchlist_frames.append(normalized.watchlist)
         modeled = normalized.modeled
@@ -351,6 +380,7 @@ class WeeklyUSStockPipeline:
             artifacts=artifacts,
         )
         metadata = self._run_metadata(request, provider, freshness, steps)
+        metadata["time_consistency"] = _time_consistency(request, estimates, modeled)
         artifacts.append(str(export_json(metadata, run_dir / "run_metadata.json")))
         result_path = run_dir / "result.json"
         result.artifacts.append(str(result_path))
@@ -506,6 +536,35 @@ def _log_step(summary: StepSummary) -> None:
         summary.rejection_counts or {},
         summary.notes or [],
     )
+
+
+def _time_consistency(
+    request: PipelineRequest, estimates: pd.DataFrame, modeled: pd.DataFrame
+) -> dict[str, Any]:
+    """Audit block proving price, filings, estimates and the event check all
+    refer to the same point in time."""
+
+    block: dict[str, Any] = {
+        "price_as_of": request.as_of.isoformat(),
+        "material_event_checked_at": request.as_of.isoformat(),
+        "estimate_as_of": None,
+        "filing_age_days_median": None,
+        "filing_age_days_max": None,
+        "ttm_anchor_coverage": None,
+    }
+    if not estimates.empty and "as_of" in estimates:
+        block["estimate_as_of"] = str(pd.to_datetime(estimates["as_of"]).max().date())
+    if not modeled.empty:
+        if "filing_age_days" in modeled:
+            ages = pd.to_numeric(modeled["filing_age_days"], errors="coerce").dropna()
+            if not ages.empty:
+                block["filing_age_days_median"] = int(ages.median())
+                block["filing_age_days_max"] = int(ages.max())
+        if "anchor_source" in modeled:
+            block["ttm_anchor_coverage"] = float(
+                (modeled["anchor_source"] == "ttm").mean()
+            )
+    return block
 
 
 def _records(frame: pd.DataFrame) -> list[dict[str, Any]]:

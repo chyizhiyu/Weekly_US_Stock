@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Literal
 
@@ -29,7 +29,7 @@ class CompanyInputs(BaseModel):
     incremental_roic: float | None = None
     wacc: float
     cost_of_debt_after_tax: float
-    moat_score: float = 0.5  # 0..1, derived from return persistence evidence
+    financial_persistence: float = 0.5  # 0..1, HISTORICAL persistence evidence only
     cyclicality: float = 0.0  # stdev of yoy revenue growth
     margin_volatility: float = 0.0  # stdev of operating margin
     net_share_change_rate: float = 0.0  # historical net share count CAGR (+ dilutes)
@@ -60,6 +60,12 @@ class ScenarioValuation(BaseModel):
 
 
 class CompanyValuation(BaseModel):
+    """Scenario-weighted valuation metrics.
+
+    All *_weight fields are weighted by the ANALYST-SET bear/base/bull
+    scenario weights - they are stress labels, not calibrated probabilities.
+    """
+
     ticker: str
     price: float
     scenarios: list[ScenarioValuation]
@@ -67,9 +73,10 @@ class CompanyValuation(BaseModel):
     median_irr: float
     p10_irr: float
     p90_irr: float
-    prob_above_hurdle: float
-    permanent_loss_probability: float
+    above_hurdle_weight: float
+    permanent_loss_weight: float
     expected_shortfall: float
+    hurdle_cvar: float  # tail mean of max(0, hurdle - irr): shortfall vs the hurdle
     intrinsic_value_low: float
     intrinsic_value_base: float
     intrinsic_value_high: float

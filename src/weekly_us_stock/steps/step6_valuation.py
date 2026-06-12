@@ -20,7 +20,7 @@ _CARRY_COLUMNS = [
     "industry",
     "model_family",
     "market_cap",
-    "moat_score",
+    "financial_persistence_score",
     "roic",
     "incremental_roic",
     "wacc",
@@ -97,10 +97,11 @@ def run_scenario_valuations(
             "median_irr": valuation.median_irr,
             "p10_irr": valuation.p10_irr,
             "p90_irr": valuation.p90_irr,
-            "prob_above_hurdle": valuation.prob_above_hurdle,
+            "above_hurdle_weight": valuation.above_hurdle_weight,
             "hurdle_rate": hurdle,
-            "permanent_loss_probability": valuation.permanent_loss_probability,
+            "permanent_loss_weight": valuation.permanent_loss_weight,
             "expected_shortfall": valuation.expected_shortfall,
+            "hurdle_cvar": valuation.hurdle_cvar,
             "intrinsic_value_low": valuation.intrinsic_value_low,
             "intrinsic_value_base": valuation.intrinsic_value_base,
             "intrinsic_value_high": valuation.intrinsic_value_high,
@@ -110,6 +111,12 @@ def run_scenario_valuations(
             "model_confidence": valuation.model_confidence,
             "data_confidence": valuation.data_confidence,
             "model_uncertainty": valuation.model_uncertainty,
+            # Three separate lenses, never compressed into one score:
+            # quality of the business, attractiveness of the price, and how
+            # much the evidence behind both can be trusted.
+            "business_quality": inputs.financial_persistence,
+            "valuation_excess": valuation.median_irr - hurdle,
+            "evidence_confidence": valuation.data_confidence * valuation.model_confidence,
         }
         for column in _CARRY_COLUMNS:
             if column in row.index:
@@ -161,7 +168,7 @@ def _to_inputs(row: pd.Series) -> CompanyInputs | None:
         incremental_roic=_optional_float(row.get("incremental_roic")),
         wacc=float(row["wacc"]),
         cost_of_debt_after_tax=float(row["cost_of_debt_after_tax"]),
-        moat_score=float(row.get("moat_score") or 0.5),
+        financial_persistence=float(row.get("financial_persistence_score") or 0.5),
         cyclicality=float(row.get("cyclicality") or 0.0),
         margin_volatility=float(row.get("margin_volatility") or 0.0),
         net_share_change_rate=float(row.get("net_share_change_cagr") or 0.0),

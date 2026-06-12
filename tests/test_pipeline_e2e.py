@@ -51,6 +51,19 @@ def test_hard_filter_audit_trail(pipeline_runs: dict[str, Path]) -> None:
     assert reasons["MISS"] == "insufficient_financial_history"
     assert reasons["SDIL"] == "severe_dilution"
     assert reasons["ACCT"] == "earnings_cash_mismatch"
+    assert reasons["STBL.B"] == "duplicate_share_class"
+
+
+def test_material_event_goes_to_watchlist_not_ranking(pipeline_runs: dict[str, Path]) -> None:
+    # EVNT lost its anchor contract in the week before as_of: the price has
+    # repriced but the filings have not. It must be pulled for re-underwriting.
+    watchlist = pd.read_csv(pipeline_runs["first"] / "watchlist.csv")
+    reasons = dict(zip(watchlist["ticker"], watchlist["watchlist_reason"], strict=True))
+    assert reasons["EVNT"] == "material_event_requires_reunderwriting"
+    robust = pd.read_csv(pipeline_runs["first"] / "robust_ranking.csv")
+    assert "EVNT" not in set(robust["ticker"])
+    flags = watchlist.set_index("ticker").loc["EVNT", "event_flags"]
+    assert "weekly_drop" in str(flags)
 
 
 def test_watchlist_routing(pipeline_runs: dict[str, Path]) -> None:
@@ -109,10 +122,15 @@ def test_rankings_keep_raw_metrics_no_opaque_score(pipeline_runs: dict[str, Path
         "median_irr",
         "p10_irr",
         "p90_irr",
-        "prob_above_hurdle",
-        "permanent_loss_probability",
+        "above_hurdle_weight",
+        "permanent_loss_weight",
         "expected_shortfall",
+        "hurdle_cvar",
         "model_uncertainty",
+        "business_quality",
+        "valuation_excess",
+        "evidence_confidence",
+        "hurdle_penalty",
         "downside_penalty",
         "ambiguity_penalty",
         "permanent_loss_penalty",
@@ -142,16 +160,16 @@ def test_run_metadata_provenance(pipeline_runs: dict[str, Path]) -> None:
     assert metadata["hurdle_rate"] == 0.12
     assert "generated_at" in metadata
     assert metadata["fresh_price_coverage"] == 1.0
-    assert metadata["funnel"]["step1_universe"] == 27
+    assert metadata["funnel"]["step1_universe"] == 29
 
 
 def test_feishu_summary_content(pipeline_runs: dict[str, Path]) -> None:
     summary = (pipeline_runs["first"] / "feishu_summary.md").read_text("utf-8")
     assert "2026-01-09" in summary
-    assert "扫描 27 只" in summary
+    assert "扫描 29 只" in summary
     assert "Robust Top" in summary and "Upside Top" in summary
     assert "预期IRR" in summary and "P10" in summary
-    assert "永亏权重" in summary
+    assert "门槛CVaR" in summary and "质量" in summary and "置信" in summary
     assert "观察名单" in summary
     assert "不构成交易指令" in summary
     # Scenario weights must never masquerade as calibrated probabilities.

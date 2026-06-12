@@ -42,6 +42,18 @@ class NormalizationSettings(BaseModel):
     default_tax_rate: float = 0.21
     min_tax_rate: float = 0.10
     max_tax_rate: float = 0.35
+    max_filing_age_days: int = 150  # older anchor filings cut data confidence
+
+
+class EventGateSettings(BaseModel):
+    """Price-shock proxies for material events (contract loss, guidance cut,
+    regulatory action...). Flagged names go to the event watchlist for manual
+    re-underwriting instead of being ranked on stale earning power."""
+
+    enabled: bool = True
+    weekly_drop_threshold: float = 0.25
+    drawdown_threshold: float = 0.40
+    lookback_high_days: int = 60
 
 
 class WaccSettings(BaseModel):
@@ -85,10 +97,11 @@ class RiskPreferenceSettings(BaseModel):
     cvar_alpha: float = 0.25
     permanent_loss_threshold: float = -0.30
     uncertainty_per_missing_confidence: float = 0.03
-    # "penalized_expected": E[IRR] minus all three penalties (the project
-    # spec's decomposition). "median_cvar": Median IRR - downside_aversion x
-    # CVaR, with uncertainty/permanent-loss shown but not double-subtracted.
-    formula: str = "penalized_expected"
+    # hurdle_cvar (default): confidence-scaled positive excess over the hurdle
+    # minus the hurdle-relative tail shortfall. "penalized_expected": E[IRR]
+    # minus all three penalties (the original spec decomposition).
+    # "median_cvar": Median IRR - downside_aversion x zero-anchored CVaR.
+    formula: str = "hurdle_cvar"
 
 
 class ConfidenceSettings(BaseModel):
@@ -118,6 +131,7 @@ class Settings(BaseModel):
     normalization: NormalizationSettings = Field(default_factory=NormalizationSettings)
     wacc: WaccSettings = Field(default_factory=WaccSettings)
     scenarios: ScenarioSettings = Field(default_factory=ScenarioSettings)
+    events: EventGateSettings = Field(default_factory=EventGateSettings)
     risk_preferences: RiskPreferenceSettings = Field(default_factory=RiskPreferenceSettings)
     confidence: ConfidenceSettings = Field(default_factory=ConfidenceSettings)
     ranking: RankingSettings = Field(default_factory=RankingSettings)

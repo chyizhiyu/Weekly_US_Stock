@@ -10,6 +10,7 @@ normalized earning power cannot be estimated are rejected (fail closed).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 
 import pandas as pd
 
@@ -35,6 +36,7 @@ def run_normalized_model(
     normalization: NormalizationSettings,
     wacc_settings: WaccSettings,
     ttm: pd.DataFrame | None = None,
+    as_of: date | None = None,
 ) -> NormalizedResult:
     grouped = (
         {ticker: group for ticker, group in fundamentals.groupby("ticker")}
@@ -92,7 +94,9 @@ def run_normalized_model(
             risk_free=risk_free,
             beta=candidate.get("beta"),
             market_cap=float(row.get("market_cap") or 0.0),
-            total_debt=max(float(row["net_debt"]), 0.0),
+            # GROSS debt: netting cash out of the capital structure understates
+            # the debt weight and the true cost of leverage.
+            total_debt=float(row.get("total_debt") or 0.0),
             interest_coverage=row["interest_coverage"],
             tax_rate=row["tax_rate"],
             settings=wacc_settings,
@@ -101,7 +105,8 @@ def run_normalized_model(
         row["wacc"] = wacc
         row["cost_of_debt_after_tax"] = cost_of_debt
         row["roic_minus_wacc"] = (row["roic"] - wacc) if row["roic"] is not None else None
-        row["data_confidence"] = _data_confidence(row)
+        row["filing_age_days"] = _filing_age_days(row, as_of)
+        row["data_confidence"] = _data_confidence(row, normalization)
 
         modeled_rows.append(row)
 
@@ -147,8 +152,25 @@ def _estimate_growth_map(estimates: pd.DataFrame) -> dict[str, dict[str, float]]
     return result
 
 
-def _data_confidence(row: dict) -> float:
-    """0.2..1.0 — how complete and fresh the inputs behind this company are."""
+def _filing_age_days(row: dict, as_of: date | None) -> int | None:
+    if as_of is None:
+        return None
+    raw = row.get("latest_filing_date")
+    if not raw:
+        return None
+    try:
+        filing = pd.Timestamp(raw).date()
+    except (TypeError, ValueError):
+        return None
+    return (as_of - filing).days
+
+
+def _data_confidence(row: dict, normalization: NormalizationSettings) -> float:
+    """0.2..1.0 — how complete and FRESH the inputs behind this company are.
+
+    Time-consistency rules: an anchor filing older than max_filing_age_days,
+    or a missing TTM window, means the model may be valuing a company that no
+    longer looks like its statements — confidence drops accordingly."""
 
     confidence = 1.0
     years = int(row.get("years_of_data") or 0)
@@ -161,6 +183,13 @@ def _data_confidence(row: dict) -> float:
         confidence -= 0.05
     if not bool(row.get("is_price_fresh", True)):
         confidence -= 0.20
-    if row.get("interest_coverage") is None and float(row.get("net_debt") or 0.0) > 0:
+    if row.get("interest_coverage") is None and float(row.get("total_debt") or 0.0) > 0:
         confidence -= 0.05
+    if not bool(row.get("interest_expense_known", True)):
+        confidence -= 0.05
+    filing_age = row.get("filing_age_days")
+    if filing_age is not None and filing_age > normalization.max_filing_age_days:
+        confidence -= 0.15
+    if row.get("anchor_source") != "ttm":
+        confidence -= 0.15  # no TTM window: anchored on a possibly stale annual
     return max(confidence, 0.2)

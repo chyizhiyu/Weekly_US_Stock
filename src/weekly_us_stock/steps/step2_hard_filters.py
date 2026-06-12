@@ -79,6 +79,31 @@ def run_market_filters(
     return _split(frame, reasons)
 
 
+def drop_duplicate_share_classes(candidates: pd.DataFrame) -> FilterFrameResult:
+    """One economic entity, one ranking slot: GOOG/GOOGL or BRK-A/BRK-B style
+    duplicate listings keep only the most liquid line (exact company-name
+    match); the rest are rejected as duplicate_share_class."""
+
+    if candidates.empty or "name" not in candidates:
+        return FilterFrameResult(candidates=candidates)
+    frame = candidates.copy()
+    named = frame["name"].fillna("").astype(str).str.strip()
+    duplicated = named.ne("") & named.duplicated(keep=False)
+    if not duplicated.any():
+        return FilterFrameResult(candidates=frame.reset_index(drop=True))
+
+    liquidity = pd.to_numeric(frame.get("avg_dollar_volume"), errors="coerce").fillna(0.0)
+    keep_index = (
+        frame.assign(_name=named, _liquidity=liquidity)
+        .sort_values("_liquidity", ascending=False)
+        .drop_duplicates(subset=["_name"])
+        .index
+    )
+    reasons = pd.Series("", index=frame.index, dtype=str)
+    reasons.loc[duplicated & ~frame.index.isin(keep_index)] = "duplicate_share_class"
+    return _split(frame, reasons)
+
+
 def run_financial_hard_filters(
     candidates: pd.DataFrame,
     fundamentals: pd.DataFrame,
@@ -130,7 +155,12 @@ def _financial_reason(history: pd.DataFrame | None, settings: HardFilterSettings
     if len(loss_window) >= settings.max_consecutive_loss_years and (loss_window < 0).all():
         return "consecutive_losses"
 
-    fcf = history["ocf"].astype(float) - history["capex"].fillna(0.0).astype(float)
+    # Owner cash flow: SBC is a real expense (the OCF add-back is stripped).
+    fcf = (
+        history["ocf"].astype(float)
+        - history["capex"].fillna(0.0).astype(float)
+        - history["sbc"].fillna(0.0).astype(float)
+    )
     fcf_window = fcf.tail(settings.max_negative_fcf_years)
     if len(fcf_window) >= settings.max_negative_fcf_years and (fcf_window < 0).all():
         return "persistent_negative_fcf"

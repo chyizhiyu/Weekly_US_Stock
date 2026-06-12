@@ -1,4 +1,4 @@
-"""Probabilistic scenario valuation (Layer 3).
+﻿"""Probabilistic scenario valuation (Layer 3).
 
 For each company three auditable scenarios (bear/base/bull) project revenue,
 margins, reinvestment and share count to derive per-share cash flows, a
@@ -9,9 +9,9 @@ terminal value and implied IRRs. Design properties the tests pin down:
 - Reinvestment is growth/ROIC and terminal value uses
   NOPAT*(1-g/ROIC_terminal)/(WACC-g). When ROIC fades to WACC the terminal
   value collapses to NOPAT/WACC: growth only creates value while ROIC > WACC.
-- Moat evidence widens or narrows the scenario spread, sets how long high
-  returns persist (terminal ROIC persistence), and feeds model confidence —
-  it is never a score bonus.
+- Financial-persistence evidence widens or narrows the scenario spread, sets
+  how long high returns persist (terminal ROIC persistence), and feeds model
+  confidence - it is never a score bonus.
 - Share dilution shrinks per-share cash flows; buybacks shrink the share
   count but their cash cost is charged against distributable FCF, so they
   only add value when executed below intrinsic value.
@@ -44,7 +44,7 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
         cfg.max_share_change_rate,
     )
 
-    moat = min(max(inputs.moat_score, 0.0), 1.0)
+    moat = min(max(inputs.financial_persistence, 0.0), 1.0)
     margin = inputs.normalized_operating_margin
     bear_margin = margin * (1.0 - cfg.bear_margin_haircut * (1.5 - moat)) - 0.5 * (
         inputs.margin_volatility
@@ -216,13 +216,20 @@ def aggregate_valuation(
     median_irr = _quantile(distribution, 0.50)
     p10_irr = _quantile(distribution, 0.10)
     p90_irr = _quantile(distribution, 0.90)
-    prob_above_hurdle = sum(p for irr, p in distribution if irr > prefs.hurdle_rate)
-    permanent_loss_probability = sum(
+    above_hurdle_weight = sum(p for irr, p in distribution if irr > prefs.hurdle_rate)
+    permanent_loss_weight = sum(
         s.assumptions.probability
         for s in scenarios
         if s.total_return_5y < prefs.permanent_loss_threshold
     )
     expected_shortfall = _expected_shortfall(distribution, prefs.cvar_alpha)
+    # Shortfall measured against the investor's hurdle, not just zero: a bear
+    # case earning 7% against a 12% hurdle is still a 5-point miss.
+    hurdle_cvar = _tail_mean(
+        [(max(0.0, prefs.hurdle_rate - irr), p) for irr, p in distribution],
+        prefs.cvar_alpha,
+        worst="largest",
+    )
 
     half_spread = max(p90_irr - p10_irr, 0.0) / 2.0
     model_uncertainty = half_spread + prefs.uncertainty_per_missing_confidence * (
@@ -238,9 +245,10 @@ def aggregate_valuation(
         median_irr=median_irr,
         p10_irr=p10_irr,
         p90_irr=p90_irr,
-        prob_above_hurdle=prob_above_hurdle,
-        permanent_loss_probability=permanent_loss_probability,
+        above_hurdle_weight=above_hurdle_weight,
+        permanent_loss_weight=permanent_loss_weight,
         expected_shortfall=expected_shortfall,
+        hurdle_cvar=hurdle_cvar,
         intrinsic_value_low=by_name["bear"].intrinsic_value_per_share,
         intrinsic_value_base=by_name["base"].intrinsic_value_per_share,
         intrinsic_value_high=by_name["bull"].intrinsic_value_per_share,
@@ -273,7 +281,7 @@ def _blend_growth(inputs: CompanyInputs, cfg: ScenarioSettings) -> float:
 
 def _growth_spread(inputs: CompanyInputs, cfg: ScenarioSettings) -> float:
     dispersion = inputs.analyst_dispersion if inputs.analyst_dispersion is not None else 0.10
-    moat = min(max(inputs.moat_score, 0.0), 1.0)
+    moat = min(max(inputs.financial_persistence, 0.0), 1.0)
     raw = cfg.base_growth_spread + 0.5 * inputs.cyclicality + 0.25 * dispersion
     return raw * (1.5 - moat)
 
@@ -345,7 +353,21 @@ def _expected_shortfall(distribution: list[tuple[float, float]], alpha: float) -
     """CVaR of the IRR distribution: mean of the worst alpha tail, reported as
     a non-negative loss magnitude."""
 
-    ordered = sorted(distribution, key=lambda item: item[0])
+    return max(0.0, -_tail_mean(distribution, alpha, worst="smallest"))
+
+
+def _tail_mean(
+    distribution: list[tuple[float, float]],
+    alpha: float,
+    *,
+    worst: str,
+) -> float:
+    """Mean of the worst alpha tail of a discrete (value, weight) distribution.
+
+    worst="smallest" treats LOW values as bad (IRRs); worst="largest" treats
+    HIGH values as bad (shortfalls)."""
+
+    ordered = sorted(distribution, key=lambda item: item[0], reverse=worst == "largest")
     remaining = alpha
     weighted = 0.0
     for value, probability in ordered:
@@ -354,5 +376,4 @@ def _expected_shortfall(distribution: list[tuple[float, float]], alpha: float) -
         remaining -= take
         if remaining <= 1e-12:
             break
-    tail_mean = weighted / alpha
-    return max(0.0, -tail_mean)
+    return weighted / alpha

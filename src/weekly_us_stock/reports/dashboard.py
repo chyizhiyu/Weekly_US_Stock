@@ -118,8 +118,8 @@ def _ranking_section(
         return lines + ["- No candidates survived to ranking."]
     if robust_columns:
         lines += [
-            "| # | Ticker | Robust | E[IRR] | P10 | P90 | W(IRR>hurdle) | ES "
-            "| W(perm loss) | Conf (model/data) |",
+            "| # | Ticker | Robust | Med IRR | P10 | P90 | Hurdle CVaR "
+            "| W(perm loss) | Quality | Evidence |",
             "|---|---|---|---|---|---|---|---|---|---|",
         ]
     else:
@@ -131,10 +131,9 @@ def _ranking_section(
         if robust_columns:
             lines.append(
                 f"| {int(row['rank'])} | {row['ticker']} | {row['robust_return']:.1%} "
-                f"| {row['expected_irr']:.1%} | {row['p10_irr']:.1%} | {row['p90_irr']:.1%} "
-                f"| {row['prob_above_hurdle']:.0%} | {row['expected_shortfall']:.1%} "
-                f"| {row['permanent_loss_probability']:.0%} "
-                f"| {row['model_confidence']:.2f}/{row['data_confidence']:.2f} |"
+                f"| {row['median_irr']:.1%} | {row['p10_irr']:.1%} | {row['p90_irr']:.1%} "
+                f"| {row['hurdle_cvar']:.1%} | {row['permanent_loss_weight']:.0%} "
+                f"| {row['business_quality']:.2f} | {row['evidence_confidence']:.2f} |"
             )
         else:
             upside = row.get("upside_to_base")
@@ -142,7 +141,7 @@ def _ranking_section(
             lines.append(
                 f"| {int(row['rank'])} | {row['ticker']} | {row['expected_irr']:.1%} "
                 f"| {row['median_irr']:.1%} | {row['p10_irr']:.1%} | {row['p90_irr']:.1%} "
-                f"| {row['prob_above_hurdle']:.0%} | {upside_text} |"
+                f"| {row['above_hurdle_weight']:.0%} | {upside_text} |"
             )
     return lines
 

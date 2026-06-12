@@ -1,7 +1,11 @@
-"""Step 5: moat evidence, earnings quality and risk flags.
+﻿"""Step 5: financial persistence, earnings quality and risk flags.
 
-Moat is NOT a score bonus. The evidence (return persistence, margin
-stability) feeds exactly the channels the thesis says it should:
+``financial_persistence_score`` is deliberately NOT called a moat score: it
+measures only HISTORICAL financial persistence (years of ROIC above WACC,
+margin stability, excess-return size). It cannot see regulatory change,
+substitution, customer concentration or any other structural threat —
+structural-moat evidence with explicit failure conditions is roadmapped.
+The score is not a bonus; it feeds exactly these channels:
 - how long excess returns persist (terminal ROIC persistence in scenarios),
 - margin stability (bear-case margin haircut scaling),
 - scenario spread width,
@@ -27,7 +31,7 @@ def run_quality_assessment(modeled: pd.DataFrame, fundamentals: pd.DataFrame) ->
         else {}
     )
 
-    moat_scores: list[float] = []
+    financial_persistence_scores: list[float] = []
     persistence_years: list[int] = []
     model_confidences: list[float] = []
     cyclicality: list[float] = []
@@ -37,14 +41,14 @@ def run_quality_assessment(modeled: pd.DataFrame, fundamentals: pd.DataFrame) ->
         history = grouped.get(row["ticker"])
         roic_years = _years_roic_above_wacc(history, row)
         margin_stability = _margin_stability(row)
-        moat = _moat_score(roic_years, margin_stability, row)
-        moat_scores.append(moat)
+        moat = _financial_persistence_score(roic_years, margin_stability, row)
+        financial_persistence_scores.append(moat)
         persistence_years.append(roic_years)
         cyclicality.append(float(row.get("revenue_volatility") or 0.0))
         model_confidences.append(_model_confidence(row, moat))
         flags.append(";".join(_risk_flags(row)))
 
-    frame["moat_score"] = moat_scores
+    frame["financial_persistence_score"] = financial_persistence_scores
     frame["roic_above_wacc_years"] = persistence_years
     frame["cyclicality"] = cyclicality
     frame["model_confidence"] = model_confidences
@@ -85,7 +89,7 @@ def _margin_stability(row: pd.Series) -> float:
     return max(0.0, 1.0 - volatility / abs(margin))
 
 
-def _moat_score(roic_years: int, margin_stability: float, row: pd.Series) -> float:
+def _financial_persistence_score(roic_years: int, margin_stability: float, row: pd.Series) -> float:
     """0..1 from observable persistence evidence only."""
 
     persistence = min(roic_years / 8.0, 1.0)

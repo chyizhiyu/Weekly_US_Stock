@@ -205,7 +205,9 @@ def transform_statements(
                 "shares_diluted": _f(item.get("weightedAverageShsOutDil")),
                 "total_debt": _f(bal.get("totalDebt")),
                 "cash": _f(bal.get("cashAndShortTermInvestments")),
-                "interest_expense": _f(item.get("interestExpense"), 0.0),
+                # None, not 0: a missing interest line must read as "unknown
+                # debt cost", never as "debt-free" (fails conservative downstream).
+                "interest_expense": _f(item.get("interestExpense"), None),
                 "total_equity": _f(bal.get("totalStockholdersEquity")),
                 "effective_tax_rate": effective_tax,
                 "is_estimate": False,
@@ -251,6 +253,11 @@ def build_ttm_row(
     def _sum_income(field: str) -> float:
         return sum(_f(row.get(field), 0.0) or 0.0 for row in quarters)
 
+    def _sum_income_or_none(field: str) -> float | None:
+        values = [_f(row.get(field), None) for row in quarters]
+        present = [value for value in values if value is not None]
+        return sum(present) if present else None
+
     def _sum_cash(field: str) -> float:
         return sum(
             _f(cash_by_date.get(str(row.get("date")), {}).get(field), 0.0) or 0.0
@@ -280,7 +287,7 @@ def build_ttm_row(
         "shares_diluted": _f(latest.get("weightedAverageShsOutDil")),
         "total_debt": _f(latest_balance.get("totalDebt")),
         "cash": _f(latest_balance.get("cashAndShortTermInvestments")),
-        "interest_expense": _sum_income("interestExpense"),
+        "interest_expense": _sum_income_or_none("interestExpense"),
         "total_equity": _f(latest_balance.get("totalStockholdersEquity")),
         "effective_tax_rate": tax / pretax if pretax and pretax > 0 else None,
         "is_estimate": False,

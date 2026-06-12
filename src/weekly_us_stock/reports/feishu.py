@@ -69,10 +69,11 @@ def _candidate_lines(robust: pd.DataFrame, top_n: int) -> list[str]:
     for _, row in robust.head(top_n).iterrows():
         lines.append(
             f"{int(row['rank'])}. {row['ticker']}"
-            f"｜预期IRR {row['expected_irr']:.1%}"
+            f"｜中位IRR {row['median_irr']:.1%}"
             f"｜P10 {row['p10_irr']:.1%}"
-            f"｜达标权重 {row['prob_above_hurdle']:.0%}"
-            f"｜永亏权重 {row['permanent_loss_probability']:.0%}"
+            f"｜门槛CVaR {row['hurdle_cvar']:.1%}"
+            f"｜质量 {row['business_quality']:.2f}"
+            f"｜置信 {row['evidence_confidence']:.2f}"
         )
     return lines
 
@@ -109,6 +110,7 @@ _REASON_CN = {
     "preprofit_biotech_not_supported": "未盈利生物科技",
     "insufficient_confidence": "数据置信度不足",
     "insufficient_model_confidence": "模型置信度不足",
+    "material_event_requires_reunderwriting": "重大事件待复核",
 }
 
 

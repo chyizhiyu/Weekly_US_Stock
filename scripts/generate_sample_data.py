@@ -87,6 +87,9 @@ class Company:
     num_analysts: int = 12
     # TTM window growth override (None -> half of the latest annual growth)
     ttm_growth: float | None = None
+    # Cumulative price drop applied over the five sessions ending 2026-01-09
+    # (material-event simulation: the market repriced, filings did not).
+    price_shock: float | None = None
 
     @property
     def shares_latest(self) -> float:
@@ -225,6 +228,27 @@ COMPANIES: list[Company] = [
         debt_start=2000, cash=2500, interest_rate=0.04,
         equity_start=9000, equity_end=14000, payout=0.30,
         estimate_growth=0.06,
+    ),
+    Company(
+        ticker="EVNT", name="Contract Cliff Logistics", exchange="NYSE",
+        security_type="common_stock", listing_date="2007-09-19",
+        sector="Industrials", industry="Specialty Business Services",
+        price=30.0, dollar_volume=40e6, beta=1.05,
+        first_fiscal_year=2017, revenue0=2500, revenue_growth=0.06,
+        operating_margin=0.17, gross_margin=0.40, sbc_pct=0.01,
+        capex_pct=0.04, dep_pct=0.04, shares0=200, share_growth=-0.005,
+        debt_start=800, cash=500, interest_rate=0.05,
+        equity_start=3000, equity_end=4200, payout=0.25,
+        estimate_growth=0.05,
+        price_shock=0.30,  # lost its anchor contract in the week before as_of
+    ),
+    Company(
+        # Second share class of STBL: same company, less liquid line. Must be
+        # deduplicated, never ranked alongside its sibling.
+        ticker="STBL.B", name="Steadfast Compounders Inc", exchange="NYSE",
+        security_type="common_stock", listing_date="1998-05-12",
+        sector="Consumer Defensive", industry="Household Products",
+        price=52.0, dollar_volume=5.5e6, beta=0.9,
     ),
     # --- hard-filter rejects ------------------------------------------------
     Company(
@@ -373,7 +397,7 @@ COMPANIES: list[Company] = [
 # we still need a share count consistent with the intended market cap.
 _SNAPSHOT_SHARES: dict[str, float] = {
     "SPCX": 50, "ETFX": 100, "WRNT": 10, "PREF": 20, "OTCP": 60,
-    "NEWIPO": 80, "BNKA": 120, "INSU": 150, "RLTY": 100,
+    "NEWIPO": 80, "BNKA": 120, "INSU": 150, "RLTY": 100, "STBL.B": 200,
 }
 
 
@@ -410,11 +434,19 @@ def _price_rows() -> list[dict]:
         if day.weekday() < 5:
             days.append(day)
         day += timedelta(days=1)
+    shock_window = [d for d in days if date(2026, 1, 5) <= d <= date(2026, 1, 9)]
     for company in COMPANIES:
         volume = company.dollar_volume / company.price
         for index, trade_date in enumerate(days):
             wiggle = 1.0 + 0.003 * ((index % 7) - 3)
-            close = round(company.price * wiggle, 4)
+            shock = 1.0
+            if company.price_shock:
+                if trade_date in shock_window:
+                    step = shock_window.index(trade_date) + 1
+                    shock = 1.0 - company.price_shock * step / len(shock_window)
+                elif trade_date > shock_window[-1]:
+                    shock = 1.0 - company.price_shock  # stays repriced afterwards
+            close = round(company.price * wiggle * shock, 4)
             rows.append(
                 {
                     "ticker": company.ticker,
