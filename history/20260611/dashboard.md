@@ -10,172 +10,170 @@ are scenario-weighted figures, to be read as stress labels.
 ## Data Freshness
 
 - Expected market data date: **2026-06-11**
-- Fresh price coverage: **100.0%** (1 stale tickers)
+- Fresh price coverage: **99.9%** (4 stale tickers)
 
 ## Funnel
 
 | Step | Input | Output | Top rejections |
 |---|---|---|---|
-| step1_universe | 0 | 5888 | - |
-| step2_hard_filters | 5888 | 971 | market_cap: 1381, adr_excluded: 1287, listing_age: 477 |
-| step3_standardize | 971 | 971 | - |
-| step4_normalized_model | 971 | 905 | no_normalized_earnings: 60 |
-| step5_quality_risk | 905 | 883 | - |
-| step6_scenario_valuation | 883 | 883 | - |
-| step7_risk_adjusted_ranking | 883 | 883 | - |
+| step1_universe | 0 | 5889 | - |
+| step2_hard_filters | 5889 | 948 | market_cap: 1381, adr_excluded: 1287, listing_age: 477 |
+| step3_standardize | 948 | 948 | - |
+| step4_normalized_model | 948 | 888 | no_normalized_earnings: 56 |
+| step5_quality_risk | 888 | 867 | - |
+| step6_scenario_valuation | 867 | 867 | - |
+| step7_risk_adjusted_ranking | 867 | 867 | - |
 
 ## Robust Top 20 (risk-adjusted)
 
-| # | Ticker | Robust | E[IRR] | P10 | P90 | W(IRR>hurdle) | ES | W(perm loss) | Conf (model/data) |
+| # | Ticker | Robust | Med IRR | P10 | P90 | Hurdle CVaR | W(perm loss) | Quality | Evidence |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | BRBR | 41.5% | 48.9% | 32.8% | 61.2% | 100% | 0.0% | 0% | 0.82/1.00 |
-| 2 | VRRM | 39.3% | 52.2% | 25.2% | 74.1% | 100% | 0.0% | 0% | 0.55/1.00 |
-| 3 | TNET | 34.2% | 42.0% | 25.0% | 55.0% | 100% | 0.0% | 0% | 0.80/1.00 |
-| 4 | HRB | 31.7% | 42.6% | 19.0% | 60.8% | 100% | 0.0% | 0% | 0.68/1.00 |
-| 5 | HLF | 28.7% | 31.1% | 27.5% | 35.7% | 100% | 0.0% | 0% | 0.75/1.00 |
-| 6 | EFOR | 25.8% | 29.4% | 22.3% | 35.4% | 100% | 0.0% | 0% | 0.79/1.00 |
-| 7 | UHS | 25.0% | 32.3% | 16.3% | 44.4% | 100% | 0.0% | 0% | 0.85/1.00 |
-| 8 | OMC | 23.5% | 27.7% | 19.2% | 34.9% | 100% | 0.0% | 0% | 0.84/1.00 |
-| 9 | GTM | 22.0% | 41.0% | 0.5% | 72.9% | 75% | 0.0% | 0% | 0.39/1.00 |
-| 10 | ALSN | 21.8% | 31.0% | 10.8% | 46.0% | 75% | 0.0% | 0% | 0.73/1.00 |
-| 11 | SMPL | 20.8% | 27.1% | 13.8% | 37.0% | 100% | 0.0% | 0% | 0.66/1.00 |
-| 12 | CF | 20.0% | 34.8% | 4.1% | 59.6% | 75% | 0.0% | 0% | 0.37/1.00 |
-| 13 | INVA | 19.1% | 25.7% | 14.4% | 38.3% | 100% | 0.0% | 0% | 0.56/1.00 |
-| 14 | EEFT | 18.8% | 28.3% | 8.0% | 44.5% | 75% | 0.0% | 0% | 0.70/1.00 |
-| 15 | FOX | 18.5% | 25.9% | 9.3% | 38.1% | 75% | 0.0% | 0% | 0.85/1.00 |
-| 16 | NSP | 18.3% | 28.2% | 7.6% | 45.3% | 75% | 0.0% | 0% | 0.65/1.00 |
-| 17 | CMCSA | 17.8% | 20.9% | 15.6% | 26.9% | 100% | 0.0% | 0% | 0.83/1.00 |
-| 18 | MMS | 15.9% | 24.5% | 5.9% | 38.9% | 75% | 0.0% | 0% | 0.75/1.00 |
-| 19 | DOX | 15.7% | 23.3% | 6.4% | 36.0% | 75% | 0.0% | 0% | 0.83/1.00 |
-| 20 | FOXA | 15.1% | 22.5% | 6.1% | 34.5% | 75% | 0.0% | 0% | 0.84/1.00 |
+| 1 | TNET | 27.3% | 46.0% | 26.3% | 57.4% | 0.0% | 0% | 0.93 | 0.80 |
+| 2 | HRB | 22.7% | 45.6% | 19.1% | 61.0% | 0.0% | 0% | 0.93 | 0.68 |
+| 3 | UHS | 19.0% | 34.3% | 16.4% | 44.6% | 0.0% | 0% | 0.79 | 0.85 |
+| 4 | EEFT | 18.0% | 37.7% | 12.5% | 53.0% | 0.0% | 0% | 0.87 | 0.70 |
+| 5 | ALSN | 15.1% | 34.0% | 11.1% | 46.4% | 0.9% | 0% | 0.79 | 0.73 |
+| 6 | OMC | 15.0% | 29.8% | 20.6% | 36.4% | 0.0% | 0% | 0.83 | 0.84 |
+| 7 | HLF | 12.2% | 28.4% | 28.4% | 36.6% | 0.0% | 0% | 0.69 | 0.75 |
+| 8 | SMPL | 11.0% | 28.8% | 13.8% | 37.0% | 0.0% | 0% | 0.64 | 0.66 |
+| 9 | NSP | 8.8% | 31.2% | 8.4% | 47.0% | 3.6% | 0% | 0.40 | 0.65 |
+| 10 | INVA | 8.1% | 26.4% | 15.4% | 39.8% | 0.0% | 0% | 0.65 | 0.56 |
+| 11 | CMCSA | 7.1% | 20.6% | 15.6% | 26.9% | 0.0% | 0% | 0.76 | 0.83 |
+| 12 | FOXA | 6.9% | 26.1% | 7.0% | 36.2% | 5.0% | 0% | 0.90 | 0.85 |
+| 13 | DOX | 6.0% | 25.7% | 6.6% | 36.3% | 5.4% | 0% | 0.87 | 0.83 |
+| 14 | MMS | 4.8% | 26.6% | 5.9% | 38.9% | 6.1% | 0% | 0.81 | 0.75 |
+| 15 | CTSH | 4.8% | 19.8% | 10.0% | 26.1% | 2.0% | 0% | 0.87 | 0.87 |
+| 16 | CRI | 4.1% | 20.3% | 10.4% | 25.1% | 1.6% | 0% | 0.71 | 0.69 |
+| 17 | CF | 2.7% | 39.1% | 4.8% | 61.3% | 7.2% | 0% | 0.89 | 0.37 |
+| 18 | MOH | 1.4% | 22.5% | 8.0% | 37.9% | 4.0% | 0% | 0.37 | 0.51 |
+| 19 | FCN | -0.6% | 19.0% | 5.4% | 26.8% | 6.6% | 0% | 0.91 | 0.87 |
+| 20 | CPAY | -0.6% | 19.3% | 5.2% | 27.0% | 6.8% | 0% | 0.99 | 0.84 |
 
 ## Upside Top 20 (expected IRR)
 
 | # | Ticker | E[IRR] | Median | P10 | P90 | W(IRR>hurdle) | Upside to base |
 |---|---|---|---|---|---|---|---|
-| 1 | HRMY | 110.0% | 20.0% | 20.0% | 200.0% | 100% | 54% |
+| 1 | HRMY | 110.6% | 21.2% | 21.2% | 200.0% | 100% | 63% |
 | 2 | LHX | 93.6% | -12.9% | -12.9% | 200.0% | 50% | -66% |
-| 3 | VRRM | 52.2% | 54.7% | 25.2% | 74.1% | 100% | 393% |
-| 4 | BRBR | 48.9% | 50.8% | 32.8% | 61.2% | 100% | 350% |
-| 5 | HRB | 42.6% | 45.4% | 19.0% | 60.8% | 100% | 251% |
-| 6 | TNET | 42.0% | 43.9% | 25.0% | 55.0% | 100% | 230% |
-| 7 | GTM | 41.0% | 45.3% | 0.5% | 72.9% | 75% | 226% |
-| 8 | IRWD | 37.2% | 63.8% | -95.0% | 116.2% | 75% | 527% |
-| 9 | CF | 34.8% | 37.8% | 4.1% | 59.6% | 75% | 195% |
-| 10 | FISV | 33.8% | 41.3% | -14.2% | 66.9% | 75% | 216% |
-| 11 | CI | 32.3% | 36.5% | -13.1% | 69.2% | 75% | 201% |
-| 12 | UHS | 32.3% | 34.1% | 16.3% | 44.4% | 100% | 131% |
-| 13 | HLF | 31.1% | 27.5% | 27.5% | 35.7% | 100% | 166% |
-| 14 | ALSN | 31.0% | 33.6% | 10.8% | 46.0% | 75% | 142% |
-| 15 | EFOR | 29.4% | 29.9% | 22.3% | 35.4% | 100% | 138% |
-| 16 | EEFT | 28.3% | 30.5% | 8.0% | 44.5% | 75% | 116% |
-| 17 | NSP | 28.2% | 30.0% | 7.6% | 45.3% | 75% | 138% |
-| 18 | OMC | 27.7% | 28.4% | 19.2% | 34.9% | 100% | 156% |
-| 19 | SMPL | 27.1% | 28.8% | 13.8% | 37.0% | 100% | 130% |
-| 20 | DVN | 26.8% | 29.0% | -11.6% | 60.9% | 75% | 158% |
+| 3 | TNET | 43.9% | 46.0% | 26.3% | 57.4% | 100% | 260% |
+| 4 | HRB | 42.8% | 45.6% | 19.1% | 61.0% | 100% | 254% |
+| 5 | IRWD | 37.2% | 63.8% | -95.0% | 116.2% | 75% | 527% |
+| 6 | CF | 36.0% | 39.1% | 4.8% | 61.3% | 75% | 211% |
+| 7 | EEFT | 35.2% | 37.7% | 12.5% | 53.0% | 100% | 193% |
+| 8 | FISV | 34.1% | 41.6% | -14.0% | 67.1% | 75% | 219% |
+| 9 | UHS | 32.4% | 34.3% | 16.4% | 44.6% | 100% | 133% |
+| 10 | CI | 32.3% | 36.5% | -13.1% | 69.2% | 75% | 201% |
+| 11 | HLF | 32.0% | 28.4% | 28.4% | 36.6% | 100% | 179% |
+| 12 | ALSN | 31.4% | 34.0% | 11.1% | 46.4% | 75% | 146% |
+| 13 | NSP | 29.4% | 31.2% | 8.4% | 47.0% | 75% | 153% |
+| 14 | OMC | 29.2% | 29.8% | 20.6% | 36.4% | 100% | 176% |
+| 15 | SMPL | 27.1% | 28.8% | 13.8% | 37.0% | 100% | 130% |
+| 16 | INVA | 27.0% | 26.4% | 15.4% | 39.8% | 100% | 119% |
+| 17 | DVN | 26.8% | 29.0% | -11.6% | 60.9% | 75% | 158% |
+| 18 | GRNT | 26.7% | 28.4% | -95.0% | 144.9% | 75% | 163% |
+| 19 | CQP | 26.3% | 30.9% | -12.6% | 55.9% | 75% | 158% |
+| 20 | LPG | 25.4% | 29.6% | -17.7% | 60.0% | 75% | 159% |
 
 ## Week-over-week
 
 Previous run: 2026-06-11
 
-- Entered Robust Top: CF, CMCSA, DOX, FOX, FOXA, GTM, NSP
-- Exited Robust Top: APO, BNY, CRBG, FHI, GDOT, OPFI, WU
-- Entered Upside Top: ALSN, EFOR, FISV, GTM, HLF, IRWD, NSP, OMC, SMPL
-- Exited Upside Top: APO, BBT, BNY, CRBG, GDOT, MMS, OPFI, REPX, WU
+- Entered Robust Top: CPAY, CRI, CTSH, FCN, MOH
+- Exited Robust Top: BRBR, EFOR, FOX, GTM, VRRM
+- Entered Upside Top: CQP, GRNT, INVA, LPG
+- Exited Upside Top: BRBR, EFOR, GTM, VRRM
 
 Largest robust-rank moves:
 
-- GTM: 698 → 9 (+689)
-- JBI: 730 → 48 (+682)
-- WEX: 27 → 709 (-682)
-- TFX: 916 → 242 (+674)
-- IQV: 864 → 243 (+621)
+- AMR: 417 → 625 (-208)
+- INSW: 366 → 573 (-207)
+- HURN: 435 → 638 (-203)
+- MTN: 354 → 554 (-200)
+- DLB: 333 → 147 (+186)
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
 | Ticker | Scenario | P | Growth y1 | Margin | Terminal ROIC | Value/share | IRR 5y | Return 5y |
 |---|---|---|---|---|---|---|---|---|
-| BRBR | bear | 25% | 2.7% | 13.7% | 7.0% | 21.49 | 32.8% | 285% |
-| BRBR | base | 50% | 8.6% | 16.1% | 12.3% | 40.10 | 50.8% | 654% |
-| BRBR | bull | 25% | 13.3% | 18.1% | 12.9% | 57.19 | 61.2% | 995% |
-| VRRM | bear | 25% | -4.1% | 15.0% | 6.9% | 8.54 | 25.2% | 160% |
-| VRRM | base | 50% | 8.8% | 20.9% | 38.9% | 22.20 | 54.7% | 604% |
-| VRRM | bull | 25% | 19.1% | 25.6% | 47.6% | 39.38 | 74.1% | 1165% |
-| TNET | bear | 25% | 20.2% | 6.5% | 8.4% | 83.43 | 25.0% | 205% |
-| TNET | base | 50% | 25.0% | 8.1% | 28.8% | 157.95 | 43.9% | 502% |
-| TNET | bull | 25% | 28.8% | 9.5% | 30.3% | 223.13 | 55.0% | 763% |
-| HRB | bear | 25% | -3.9% | 17.2% | 6.5% | 54.04 | 19.0% | 121% |
-| HRB | base | 50% | 3.9% | 21.5% | 56.3% | 126.09 | 45.4% | 473% |
-| HRB | bull | 25% | 10.0% | 25.3% | 60.0% | 199.67 | 60.8% | 833% |
-| HLF | bear | 25% | -5.0% | 8.5% | 8.9% | 31.08 | 33.9% | 221% |
-| HLF | base | 50% | 2.6% | 11.0% | 8.9% | 32.44 | 27.5% | 253% |
-| HLF | bull | 25% | 8.7% | 12.8% | 8.9% | 44.88 | 35.7% | 389% |
-| EFOR | bear | 25% | -7.5% | 6.8% | 6.5% | 33.98 | 22.3% | 152% |
-| EFOR | base | 50% | 0.7% | 8.1% | 6.5% | 47.98 | 29.9% | 295% |
-| EFOR | bull | 25% | 7.3% | 8.9% | 6.5% | 64.53 | 35.4% | 460% |
-| UHS | bear | 25% | 1.7% | 8.9% | 8.0% | 181.50 | 16.3% | 101% |
-| UHS | base | 50% | 6.9% | 10.7% | 17.2% | 337.57 | 34.1% | 303% |
-| UHS | bull | 25% | 11.0% | 12.1% | 19.6% | 477.87 | 44.4% | 485% |
-| OMC | bear | 25% | 18.5% | 12.8% | 6.9% | 130.23 | 19.2% | 154% |
-| OMC | base | 50% | 25.0% | 14.6% | 6.9% | 193.52 | 28.4% | 273% |
-| OMC | bull | 25% | 30.2% | 15.9% | 6.9% | 251.07 | 34.9% | 382% |
-| GTM | bear | 25% | -18.6% | 11.4% | 8.3% | 2.05 | 0.5% | 2% |
-| GTM | base | 50% | 16.2% | 16.8% | 14.8% | 8.74 | 45.3% | 474% |
-| GTM | bull | 25% | 44.1% | 20.1% | 20.0% | 21.38 | 72.9% | 1388% |
-| ALSN | bear | 25% | 15.5% | 25.9% | 7.9% | 121.35 | 10.8% | 66% |
-| ALSN | base | 50% | 25.0% | 30.5% | 49.1% | 279.63 | 33.6% | 312% |
-| ALSN | bull | 25% | 32.6% | 33.7% | 59.5% | 423.47 | 46.0% | 538% |
+| TNET | bear | 25% | 20.2% | 6.5% | 8.0% | 89.35 | 26.3% | 222% |
+| TNET | base | 50% | 25.0% | 8.1% | 28.8% | 172.33 | 46.0% | 546% |
+| TNET | bull | 25% | 28.8% | 9.5% | 30.3% | 244.94 | 57.4% | 832% |
+| HRB | bear | 25% | -3.9% | 17.2% | 6.5% | 54.33 | 19.1% | 122% |
+| HRB | base | 50% | 3.9% | 21.5% | 56.3% | 127.15 | 45.6% | 477% |
+| HRB | bull | 25% | 10.0% | 25.3% | 60.0% | 201.57 | 61.0% | 841% |
+| UHS | bear | 25% | 1.7% | 8.9% | 8.0% | 182.51 | 16.4% | 102% |
+| UHS | base | 50% | 6.9% | 10.7% | 17.2% | 339.81 | 34.3% | 305% |
+| UHS | bull | 25% | 11.0% | 12.1% | 19.6% | 481.22 | 44.6% | 488% |
+| EEFT | bear | 25% | 0.8% | 8.7% | 6.5% | 80.95 | 12.5% | 74% |
+| EEFT | base | 50% | 7.5% | 12.1% | 26.5% | 193.41 | 37.7% | 361% |
+| EEFT | bull | 25% | 12.9% | 15.1% | 29.3% | 316.12 | 53.0% | 674% |
+| ALSN | bear | 25% | 15.5% | 25.9% | 7.8% | 123.11 | 11.1% | 68% |
+| ALSN | base | 50% | 25.0% | 30.5% | 49.1% | 284.31 | 34.0% | 318% |
+| ALSN | bull | 25% | 32.6% | 33.7% | 59.6% | 430.86 | 46.4% | 547% |
+| OMC | bear | 25% | 18.6% | 12.8% | 6.6% | 141.76 | 20.6% | 170% |
+| OMC | base | 50% | 25.0% | 14.6% | 6.6% | 208.78 | 29.8% | 295% |
+| OMC | bull | 25% | 30.1% | 15.9% | 6.6% | 269.85 | 36.4% | 408% |
+| HLF | bear | 25% | -5.0% | 8.5% | 8.6% | 32.13 | 34.5% | 229% |
+| HLF | base | 50% | 2.6% | 11.0% | 8.6% | 34.07 | 28.4% | 266% |
+| HLF | bull | 25% | 8.7% | 12.8% | 8.6% | 47.17 | 36.6% | 407% |
 | SMPL | bear | 25% | -8.2% | 13.2% | 6.5% | 16.32 | 13.8% | 80% |
 | SMPL | base | 50% | 5.5% | 15.9% | 7.2% | 29.13 | 28.8% | 244% |
 | SMPL | bull | 25% | 16.4% | 17.5% | 7.4% | 42.26 | 37.0% | 418% |
-| CF | bear | 25% | -10.1% | 22.8% | 6.8% | 96.78 | 4.1% | 21% |
-| CF | base | 50% | 14.3% | 31.1% | 16.8% | 314.63 | 37.8% | 390% |
-| CF | bull | 25% | 33.8% | 38.4% | 18.0% | 674.65 | 59.6% | 1005% |
-| INVA | bear | 25% | -4.9% | 54.5% | 7.0% | 29.70 | 14.4% | 90% |
-| INVA | base | 50% | 8.8% | 76.9% | 7.0% | 46.09 | 25.1% | 226% |
-| INVA | bull | 25% | 19.7% | 94.1% | 7.0% | 74.94 | 38.3% | 445% |
-| EEFT | bear | 25% | 0.5% | 8.7% | 7.8% | 64.80 | 8.0% | 43% |
-| EEFT | base | 50% | 7.5% | 12.1% | 26.2% | 142.41 | 30.5% | 252% |
-| EEFT | bull | 25% | 13.1% | 15.1% | 29.3% | 226.14 | 44.5% | 479% |
-| FOX | bear | 25% | -1.0% | 17.5% | 6.8% | 66.23 | 9.3% | 53% |
-| FOX | base | 50% | 4.7% | 20.1% | 54.5% | 127.45 | 28.1% | 231% |
-| FOX | bull | 25% | 9.2% | 22.0% | 60.0% | 177.82 | 38.1% | 377% |
-| NSP | bear | 25% | -6.3% | 2.4% | 7.5% | 38.06 | 7.6% | 41% |
-| NSP | base | 50% | 4.8% | 3.8% | 12.5% | 89.79 | 30.0% | 243% |
-| NSP | bull | 25% | 13.7% | 4.9% | 15.1% | 153.61 | 45.3% | 495% |
+| NSP | bear | 25% | -6.3% | 2.4% | 7.2% | 39.68 | 8.4% | 46% |
+| NSP | base | 50% | 4.8% | 3.8% | 12.4% | 95.22 | 31.2% | 260% |
+| NSP | bull | 25% | 13.6% | 4.9% | 15.0% | 164.48 | 47.0% | 530% |
+| INVA | bear | 25% | -4.9% | 54.5% | 6.6% | 31.17 | 15.4% | 98% |
+| INVA | base | 50% | 8.8% | 76.9% | 6.6% | 49.13 | 26.4% | 243% |
+| INVA | bull | 25% | 19.7% | 94.1% | 6.6% | 80.02 | 39.8% | 475% |
 | CMCSA | bear | 25% | -6.1% | 16.1% | 6.5% | 30.83 | 15.6% | 95% |
 | CMCSA | base | 50% | 1.2% | 18.7% | 6.5% | 38.94 | 20.6% | 174% |
 | CMCSA | bull | 25% | 7.0% | 20.4% | 6.5% | 52.39 | 26.9% | 284% |
+| FOXA | bear | 25% | -1.1% | 17.5% | 6.6% | 68.43 | 7.0% | 39% |
+| FOXA | base | 50% | 4.7% | 20.1% | 54.7% | 134.53 | 26.1% | 209% |
+| FOXA | bull | 25% | 9.3% | 22.0% | 60.0% | 189.49 | 36.2% | 351% |
+| DOX | bear | 25% | -2.6% | 11.6% | 6.7% | 55.60 | 6.6% | 35% |
+| DOX | base | 50% | 2.8% | 14.0% | 32.3% | 109.51 | 25.7% | 197% |
+| DOX | bull | 25% | 7.1% | 15.8% | 36.3% | 157.15 | 36.3% | 341% |
 | MMS | bear | 25% | -2.2% | 7.5% | 6.5% | 58.97 | 5.9% | 31% |
 | MMS | base | 50% | 4.8% | 9.6% | 12.6% | 126.00 | 26.6% | 213% |
 | MMS | bull | 25% | 10.3% | 11.2% | 14.0% | 196.61 | 38.9% | 405% |
-| DOX | bear | 25% | -2.6% | 11.6% | 6.7% | 55.11 | 6.4% | 34% |
-| DOX | base | 50% | 2.8% | 14.0% | 32.3% | 108.10 | 25.4% | 194% |
-| DOX | bull | 25% | 7.1% | 15.8% | 36.3% | 154.89 | 36.0% | 335% |
-| FOXA | bear | 25% | -1.1% | 17.5% | 6.8% | 65.67 | 6.1% | 33% |
-| FOXA | base | 50% | 4.7% | 20.1% | 54.5% | 126.68 | 24.7% | 192% |
-| FOXA | bull | 25% | 9.3% | 22.0% | 60.0% | 177.18 | 34.5% | 324% |
+| CTSH | bear | 25% | 0.1% | 12.9% | 8.3% | 54.54 | 10.0% | 54% |
+| CTSH | base | 50% | 4.9% | 15.0% | 14.2% | 77.90 | 19.8% | 133% |
+| CTSH | bull | 25% | 8.8% | 16.6% | 15.0% | 98.33 | 26.1% | 202% |
+| CRI | bear | 25% | -8.6% | 8.1% | 8.2% | 44.82 | 10.4% | 57% |
+| CRI | base | 50% | 0.0% | 10.8% | 8.2% | 65.00 | 20.3% | 146% |
+| CRI | bull | 25% | 7.0% | 12.8% | 8.2% | 82.68 | 25.1% | 232% |
+| CF | bear | 25% | -10.1% | 22.8% | 6.6% | 99.81 | 4.8% | 25% |
+| CF | base | 50% | 14.3% | 31.1% | 16.8% | 331.05 | 39.1% | 412% |
+| CF | bull | 25% | 33.8% | 38.4% | 18.0% | 716.41 | 61.3% | 1064% |
+| MOH | bear | 25% | -12.4% | 3.0% | 7.8% | 195.11 | 8.0% | 45% |
+| MOH | base | 50% | 6.0% | 4.5% | 7.8% | 338.02 | 22.5% | 195% |
+| MOH | bull | 25% | 20.8% | 5.4% | 7.8% | 598.38 | 37.9% | 444% |
+| FCN | bear | 25% | 4.0% | 9.6% | 6.8% | 146.47 | 5.4% | 30% |
+| FCN | base | 50% | 8.8% | 11.0% | 18.2% | 244.51 | 19.0% | 136% |
+| FCN | bull | 25% | 12.7% | 12.2% | 19.2% | 326.08 | 26.8% | 224% |
+| CPAY | bear | 25% | 7.7% | 39.8% | 7.4% | 317.46 | 5.2% | 29% |
+| CPAY | base | 50% | 13.3% | 44.0% | 30.0% | 540.82 | 19.3% | 138% |
+| CPAY | bull | 25% | 17.9% | 47.4% | 30.3% | 715.65 | 27.0% | 225% |
 
 ## Key Risks and Failure Conditions
 
-- BRBR: elevated_leverage, thin_interest_coverage, incremental_roic_below_wacc
-- VRRM: thin_interest_coverage, cyclical_revenue
 - TNET: thin_interest_coverage
-- HLF: thin_interest_coverage, incremental_roic_below_wacc
-- EFOR: thin_interest_coverage, incremental_roic_below_wacc
-- OMC: incremental_roic_below_wacc
-- GTM: heavy_sbc, cyclical_revenue
 - ALSN: elevated_leverage
+- OMC: incremental_roic_below_wacc
+- HLF: thin_interest_coverage, incremental_roic_below_wacc
 - SMPL: cyclical_revenue
-- CF: cyclical_revenue
-- INVA: weak_cash_conversion, incremental_roic_below_wacc
 - NSP: thin_interest_coverage
+- INVA: weak_cash_conversion, incremental_roic_below_wacc
 - CMCSA: thin_interest_coverage, incremental_roic_below_wacc
+- CRI: thin_interest_coverage, incremental_roic_below_wacc
+- CF: cyclical_revenue
+- MOH: thin_interest_coverage, weak_cash_conversion, incremental_roic_below_wacc
+- CPAY: thin_interest_coverage
 
 ## Watchlist (not rankable under the general model)
 
 - BRK-B Berkshire Hathaway Inc. — insurance_model_not_supported
-- BRK-A Berkshire Hathaway Inc. — insurance_model_not_supported
 - JPM JPMorgan Chase & Co. — bank_model_not_supported
 - V Visa Inc. — consumer_finance_model_not_supported
 - MA Mastercard Incorporated — consumer_finance_model_not_supported
@@ -441,7 +439,6 @@ Largest robust-rank moves:
 - DEA Easterly Government Properties, Inc. — reit_model_not_supported
 - OPY Oppenheimer Holdings Inc. — asset_management_model_not_supported
 - UVE Universal Insurance Holdings, Inc. — insurance_model_not_supported
-- ASA ASA Gold and Precious Metals Limited — asset_management_model_not_supported
 - EIG Employers Holdings, Inc. — insurance_model_not_supported
 - GSBD Goldman Sachs BDC, Inc. — asset_management_model_not_supported
 - MCB Metropolitan Bank Holding Corp. — bank_model_not_supported
@@ -456,9 +453,11 @@ Largest robust-rank moves:
 - DFIN Donnelley Financial Solutions, Inc. — asset_management_model_not_supported
 - ESRT Empire State Realty Trust, Inc. — reit_model_not_supported
 - ABX Abacus Global Management, Inc. — insurance_model_not_supported
+- BOW Bowhead Specialty Holdings Inc. — insurance_model_not_supported
 - BBDC Barings BDC, Inc. — consumer_finance_model_not_supported
 - PMT PennyMac Mortgage Investment Trust — reit_model_not_supported
 - JBGS JBG SMITH Properties — reit_model_not_supported
+- BCSF Bain Capital Specialty Finance, Inc. — asset_management_model_not_supported
 - PSTL Postal Realty Trust, Inc. — reit_model_not_supported
 - HPP Hudson Pacific Properties, Inc. — reit_model_not_supported
 - PFLT PennantPark Floating Rate Capital Ltd. — asset_management_model_not_supported
@@ -682,6 +681,8 @@ Largest robust-rank moves:
 - TRIN Trinity Capital Inc. — asset_management_model_not_supported
 - PVLA Palvella Therapeutics, Inc. — preprofit_biotech_not_supported
 - MBX MBX Biosciences, Inc. Common Stock — preprofit_biotech_not_supported
+- FMBH First Mid Bancshares, Inc. — bank_model_not_supported
+- UFCS United Fire Group, Inc. — insurance_model_not_supported
 - XERS Xeris Biopharma Holdings, Inc. — preprofit_biotech_not_supported
 - UVSP Univest Financial Corporation — bank_model_not_supported
 - NKTR Nektar Therapeutics — preprofit_biotech_not_supported
@@ -728,6 +729,7 @@ Largest robust-rank moves:
 - TBPH Theravance Biopharma, Inc. — preprofit_biotech_not_supported
 - ABUS Arbutus Biopharma Corporation — preprofit_biotech_not_supported
 - MFIC MidCap Financial Investment Corporation — asset_management_model_not_supported
+- LXRX Lexicon Pharmaceuticals, Inc. — preprofit_biotech_not_supported
 - JANX Janux Therapeutics, Inc. — preprofit_biotech_not_supported
 - WRLD World Acceptance Corporation — consumer_finance_model_not_supported
 - GSBC Great Southern Bancorp, Inc. — bank_model_not_supported
@@ -748,7 +750,6 @@ Largest robust-rank moves:
 - GERN Geron Corporation — preprofit_biotech_not_supported
 - IBCP Independent Bank Corporation — bank_model_not_supported
 - REPL Replimune Group, Inc. — preprofit_biotech_not_supported
-- FDUS Fidus Investment Corporation — asset_management_model_not_supported
 - SLRC SLR Investment Corp. — asset_management_model_not_supported
 - CRMD CorMedix Inc. — preprofit_biotech_not_supported
 - DSGN Design Therapeutics, Inc. — preprofit_biotech_not_supported
@@ -774,10 +775,20 @@ Largest robust-rank moves:
 - CBIO Crescent Biopharma, Inc. — preprofit_biotech_not_supported
 - PRK Park National Corporation — bank_model_not_supported
 - TMP Tompkins Financial Corporation — bank_model_not_supported
+- UI Ubiquiti Inc. — material_event_requires_reunderwriting
+- PRIM Primoris Services Corporation — material_event_requires_reunderwriting
+- SHAK Shake Shack Inc. — material_event_requires_reunderwriting
+- BRBR BellRing Brands, Inc. — material_event_requires_reunderwriting
+- EFOR Everforth, Inc. — material_event_requires_reunderwriting
+- CHTR Charter Communications, Inc. — material_event_requires_reunderwriting
+- PLAB Photronics, Inc. — material_event_requires_reunderwriting
+- PAHC Phibro Animal Health Corporation — material_event_requires_reunderwriting
+- PSIX Power Solutions International, Inc. — material_event_requires_reunderwriting
+- GTM ZoomInfo Technologies Inc. — material_event_requires_reunderwriting
+- VRRM Verra Mobility Corporation — material_event_requires_reunderwriting
+- MRAM Everspin Technologies, Inc. — material_event_requires_reunderwriting
 - KRYS Krystal Biotech, Inc. — preprofit_biotech_not_supported
-- KNSA Kiniksa Pharmaceuticals, Ltd. — preprofit_biotech_not_supported
 - VCYT Veracyte, Inc. — preprofit_biotech_not_supported
-- VCEL Vericel Corporation — preprofit_biotech_not_supported
 - MNKD MannKind Corporation — preprofit_biotech_not_supported
 - RIGL Rigel Pharmaceuticals, Inc. — preprofit_biotech_not_supported
 - XOM Exxon Mobil Corporation — insufficient_model_confidence
@@ -797,7 +808,6 @@ Largest robust-rank moves:
 - PARR Par Pacific Holdings, Inc. — insufficient_model_confidence
 - TSLA Tesla, Inc. — insufficient_model_confidence
 - FWONK Formula One Group — insufficient_model_confidence
-- FWONA Formula One Group — insufficient_model_confidence
 - PAA Plains All American Pipeline, L.P. — insufficient_model_confidence
 - HLIT Harmonic Inc. — insufficient_model_confidence
 - LZ LegalZoom.com, Inc. — insufficient_model_confidence
