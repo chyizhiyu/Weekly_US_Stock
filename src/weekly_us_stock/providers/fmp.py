@@ -344,15 +344,24 @@ class FMPProvider:
 
     def fetch_universe(self, as_of: date) -> pd.DataFrame:
         fetched_at = _now_iso()
-        payload = self._get(
-            "company-screener",
-            {
-                "exchange": "NYSE,NASDAQ,AMEX",
-                "limit": 10000,
-                "isActivelyTrading": "true",
-            },
-        )
-        frame = transform_screener(payload or [], fetched_at, as_of)
+        # One request per exchange: the combined market exceeds the screener's
+        # 10000-row page and would silently truncate. ETFs/funds are excluded
+        # at the source; the type filter still catches stragglers via the
+        # profile flags and name heuristics.
+        frames = []
+        for exchange in ("NYSE", "NASDAQ", "AMEX"):
+            payload = self._get(
+                "company-screener",
+                {
+                    "exchange": exchange,
+                    "limit": 10000,
+                    "isActivelyTrading": "true",
+                    "isEtf": "false",
+                    "isFund": "false",
+                },
+            )
+            frames.append(transform_screener(payload or [], fetched_at, as_of))
+        frame = pd.concat(frames, ignore_index=True).drop_duplicates(subset=["ticker"])
         if frame.empty:
             return frame
         # market_cap_hint stays in the frame: it lets bounded smoke runs pick

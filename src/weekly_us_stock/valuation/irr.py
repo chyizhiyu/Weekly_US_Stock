@@ -9,7 +9,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 LOWER_BOUND = -0.95
-UPPER_BOUND = 10.0
+# 200%/yr caps the solver: anything beyond that is a data artifact (broken
+# share counts, giant negative net debt), not an investable expected return.
+UPPER_BOUND = 2.0
 
 
 def net_present_value(rate: float, cashflows: Sequence[float]) -> float:
