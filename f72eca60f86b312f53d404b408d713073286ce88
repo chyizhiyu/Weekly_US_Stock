@@ -1,0 +1,61 @@
+tests/test_ranking.py
+  0c561210d93e16cc 11,18,21-22,24,26-28,31,35,37,39-41,47,50-69,72-74,77-83,98-100
+src/weekly_us_stock/valuation/normalize.py
+  0c561210d93e16cc 35,65,136-138,171-172
+src/weekly_us_stock/steps/step6_valuation.py
+  0c561210d93e16cc 23,100,102,104,114-119,171
+src/weekly_us_stock/valuation/scenarios.py
+  0c561210d93e16cc 12-14,219-220,226-232,248-249,251,356-370,379
+src/weekly_us_stock/models/valuation.py
+  0c561210d93e16cc 63-68,76-77,79
+src/weekly_us_stock/valuation/wacc.py
+  0c561210d93e16cc 21,26-27,45-47
+src/weekly_us_stock/providers/fmp.py
+  0c561210d93e16cc 208-210,256-260,290
+src/weekly_us_stock/steps/step2_events.py
+  0c561210d93e16cc 1-70
+tests/test_events.py
+  0c561210d93e16cc 1-51
+src/weekly_us_stock/pipeline.py
+  0c561210d93e16cc 41,44,133-134,138,143-152,154-159,167-169,175-178,237,245-246,383,541-569
+src/weekly_us_stock/valuation/ranking.py
+  0c561210d93e16cc 5-6,8-17,23,26-29,46,48-55,57
+src/weekly_us_stock/config.py
+  0c561210d93e16cc 45-56,100-104,134
+src/weekly_us_stock/steps/step2_hard_filters.py
+  0c561210d93e16cc 82-106,158-163
+src/weekly_us_stock/reports/dashboard.py
+  0c561210d93e16cc 121-122,134-136,144
+src/weekly_us_stock/steps/step5_quality.py
+  0c561210d93e16cc 1,3-8
+config/default.yaml
+  0c561210d93e16cc 45-54,83-88
+src/weekly_us_stock/reports/feishu.py
+  0c561210d93e16cc 72,74-76,113
+scripts/generate_sample_data.py
+  0c561210d93e16cc 90-92,232-252,400,437,442-449
+src/weekly_us_stock/steps/step4_normalized.py
+  0c561210d93e16cc 13,39,97-99,108-109,155-165,167-173,186,188-194
+README.md
+  0c561210d93e16cc 30-38,41-47,153-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.22",
+  "base_commit_sha": "f72eca60f86b312f53d404b408d713073286ce88",
+  "prompts": {
+    "0c561210d93e16cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad8549ce-f2a1-43ff-9548-5a819eb2ab3f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "qizy",
+      "messages": [],
+      "total_additions": 509,
+      "total_deletions": 103,
+      "accepted_lines": 506,
+      "overriden_lines": 0
+    }
+  }
+}
