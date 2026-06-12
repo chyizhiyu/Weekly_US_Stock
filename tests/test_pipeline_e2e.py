@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from tests.conftest import AS_OF as AS_OF_DATE
+
 EXPECTED_ARTIFACTS = [
     "universe.csv",
     "hard_filter_candidates.csv",
@@ -149,9 +151,11 @@ def test_feishu_summary_content(pipeline_runs: dict[str, Path]) -> None:
     assert "扫描 27 只" in summary
     assert "Robust Top" in summary and "Upside Top" in summary
     assert "预期IRR" in summary and "P10" in summary
-    assert "永久亏损P" in summary
+    assert "永亏权重" in summary
     assert "观察名单" in summary
     assert "不构成交易指令" in summary
+    # Scenario weights must never masquerade as calibrated probabilities.
+    assert "情景权重为人工设定" in summary
 
 
 def test_week_over_week_comparison(pipeline_runs: dict[str, Path]) -> None:
@@ -159,6 +163,35 @@ def test_week_over_week_comparison(pipeline_runs: dict[str, Path]) -> None:
     assert "Previous run: 2026-01-09" in dashboard
     first_dashboard = (pipeline_runs["first"] / "dashboard.md").read_text("utf-8")
     assert "First tracked run" in first_dashboard
+
+
+def test_production_modes_fail_closed_without_credentials() -> None:
+    # auto/fmp without an FMP key must abort, never silently publish sample
+    # data to the results branch.
+    import pytest
+
+    from weekly_us_stock.config import EnvSettings, load_settings
+    from weekly_us_stock.models.screening import PipelineRequest
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+    from weekly_us_stock.providers.base import DataProviderNotConfigured
+
+    pipeline = WeeklyUSStockPipeline(
+        settings=load_settings(),
+        env=EnvSettings(fmp_api_key=None, polygon_api_key=None, fred_api_key=None),
+    )
+    for source in ["auto", "fmp"]:
+        request = PipelineRequest(as_of=AS_OF_DATE, provider=source)
+        with pytest.raises(DataProviderNotConfigured):
+            pipeline._resolve_provider(request)
+
+
+def test_ttm_anchor_flows_into_outputs(pipeline_runs: dict[str, Path]) -> None:
+    normalized = pd.read_csv(pipeline_runs["first"] / "normalized_financials.csv")
+    stbl = normalized.set_index("ticker").loc["STBL"]
+    assert stbl["anchor_source"] == "ttm"
+    # The TTM window (filed 2025-11-14) anchors revenue above FY2024.
+    assert pd.to_datetime(stbl["latest_filing_date"]) == pd.Timestamp("2025-11-14")
+    assert int(stbl["latest_fiscal_year"]) == 2024  # annual history unchanged
 
 
 def test_no_future_data_in_outputs(pipeline_runs: dict[str, Path]) -> None:

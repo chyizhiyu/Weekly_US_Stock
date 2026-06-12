@@ -34,10 +34,16 @@ def run_normalized_model(
     risk_free: float,
     normalization: NormalizationSettings,
     wacc_settings: WaccSettings,
+    ttm: pd.DataFrame | None = None,
 ) -> NormalizedResult:
     grouped = (
         {ticker: group for ticker, group in fundamentals.groupby("ticker")}
         if not fundamentals.empty
+        else {}
+    )
+    ttm_map: dict[str, pd.Series] = (
+        {str(row["ticker"]): row for _, row in ttm.iterrows()}
+        if ttm is not None and not ttm.empty
         else {}
     )
     estimate_map = _estimate_growth_map(estimates)
@@ -51,7 +57,9 @@ def run_normalized_model(
         base = candidate.to_dict()
         history = grouped.get(ticker)
         metrics = (
-            normalize_company(history, normalization) if history is not None else None
+            normalize_company(history, normalization, ttm_row=ttm_map.get(ticker))
+            if history is not None
+            else None
         )
         if metrics is None:
             rejected_rows.append({**base, "rejection_reason": "normalization_failed"})

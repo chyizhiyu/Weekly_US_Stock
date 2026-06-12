@@ -75,6 +75,25 @@ class TestMarketFilters:
         assert reasons["ILLQ"] == "liquidity"
         assert "STBL" in set(result.candidates["ticker"])
 
+    def test_stale_price_fails_closed(self, settings: Settings) -> None:
+        # An IRR computed off an old quote is a guess: stale names are
+        # rejected with an explicit reason instead of being ranked.
+        candidates = pd.DataFrame([{"ticker": "OLDQ", "name": "Stale Quote Corp"}])
+        snapshot = pd.DataFrame(
+            [
+                {
+                    "ticker": "OLDQ",
+                    "price": 50.0,
+                    "price_as_of": pd.Timestamp("2025-11-01"),
+                    "market_cap": 2e9,
+                    "avg_dollar_volume": 1e8,
+                    "is_price_fresh": False,
+                }
+            ]
+        )
+        result = run_market_filters(candidates, snapshot, settings.hard_filters)
+        assert _reasons(result.rejected)["OLDQ"] == "stale_price"
+
     def test_missing_market_data_fails_closed(self, settings: Settings) -> None:
         candidates = pd.DataFrame([{"ticker": "GHOST", "name": "No Price Corp"}])
         snapshot = pd.DataFrame(

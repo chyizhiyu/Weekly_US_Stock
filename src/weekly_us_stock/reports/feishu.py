@@ -45,8 +45,9 @@ def build_feishu_summary(
 
     lines += [
         "",
-        "说明：仅研究参考，不构成交易指令。排名来自 Bear/Base/Bull 概率估值与风险调整回报，"
-        "硬过滤不可补偿，数据缺失个股已剔除。",
+        "说明：仅研究参考，不构成交易指令。排名来自 Bear/Base/Bull 三情景估值与风险调整回报；"
+        "情景权重为人工设定（默认25/50/25），达标权重、永亏权重等是情景加权值，"
+        "并非经过校准的概率。硬过滤不可补偿，数据缺失个股已剔除。",
     ]
     return "\n".join(lines) + "\n"
 
@@ -70,8 +71,8 @@ def _candidate_lines(robust: pd.DataFrame, top_n: int) -> list[str]:
             f"{int(row['rank'])}. {row['ticker']}"
             f"｜预期IRR {row['expected_irr']:.1%}"
             f"｜P10 {row['p10_irr']:.1%}"
-            f"｜达标P {row['prob_above_hurdle']:.0%}"
-            f"｜永久亏损P {row['permanent_loss_probability']:.0%}"
+            f"｜达标权重 {row['prob_above_hurdle']:.0%}"
+            f"｜永亏权重 {row['permanent_loss_probability']:.0%}"
         )
     return lines
 
@@ -102,8 +103,12 @@ _REASON_CN = {
     "bank_model_not_supported": "银行",
     "insurance_model_not_supported": "保险",
     "reit_model_not_supported": "REIT",
+    "asset_management_model_not_supported": "资产管理",
+    "consumer_finance_model_not_supported": "消费信贷",
+    "financial_sector_model_not_supported": "其他金融",
     "preprofit_biotech_not_supported": "未盈利生物科技",
     "insufficient_confidence": "数据置信度不足",
+    "insufficient_model_confidence": "模型置信度不足",
 }
 
 

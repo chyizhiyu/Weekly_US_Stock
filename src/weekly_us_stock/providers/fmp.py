@@ -38,12 +38,18 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from weekly_us_stock.providers.base import (
     CodeList,
     DataProviderNotConfigured,
+    PointInTimeUnavailable,
 )
 from weekly_us_stock.utils.calendar import is_trading_day, previous_trading_day
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://financialmodelingprep.com/stable"
+
+# The screener and analyst estimates are CURRENT snapshots with no history.
+# Requests older than this window are refused to keep look-ahead bias and
+# survivorship bias out of any attempted historical replay.
+MAX_SNAPSHOT_AGE_DAYS = 7
 
 _EXCHANGE_ALIASES = {
     "NYSE": "NYSE",
@@ -211,6 +217,81 @@ def transform_statements(
     return pd.DataFrame(rows)
 
 
+def build_ttm_row(
+    income: list[dict[str, Any]],
+    balance: list[dict[str, Any]],
+    cashflow: list[dict[str, Any]],
+    fetched_at: str,
+    as_of: date,
+) -> pd.DataFrame:
+    """Four most recent filed quarters -> one trailing-twelve-month row.
+
+    Flow items are summed across the four quarters; balance-sheet items and
+    diluted shares come from the most recent quarter, so valuation anchors on
+    today's capital structure and share count instead of last fiscal year's
+    averages. Returns an empty frame when fewer than four quarters are filed.
+    """
+
+    def _filed(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        usable = [
+            row
+            for row in rows
+            if row.get("filingDate") and str(row["filingDate"])[:10] <= as_of.isoformat()
+        ]
+        return sorted(usable, key=lambda row: str(row.get("date")), reverse=True)
+
+    quarters = _filed(income)[:4]
+    if len(quarters) < 4:
+        return pd.DataFrame()
+    cash_by_date = {str(row.get("date")): row for row in _filed(cashflow)}
+    balance_rows = _filed(balance)
+    latest_balance = balance_rows[0] if balance_rows else {}
+    latest = quarters[0]
+
+    def _sum_income(field: str) -> float:
+        return sum(_f(row.get(field), 0.0) or 0.0 for row in quarters)
+
+    def _sum_cash(field: str) -> float:
+        return sum(
+            _f(cash_by_date.get(str(row.get("date")), {}).get(field), 0.0) or 0.0
+            for row in quarters
+        )
+
+    pretax = _sum_income("incomeBeforeTax")
+    tax = _sum_income("incomeTaxExpense")
+    dividends = _sum_cash("commonDividendsPaid") or _sum_cash("netDividendsPaid")
+    row = {
+        "ticker": latest.get("symbol"),
+        "fiscal_year": None,  # synthetic TTM window, not a fiscal year
+        "fiscal_end": latest.get("date"),
+        "filing_date": latest.get("filingDate"),
+        "revenue": _sum_income("revenue"),
+        "gross_profit": _sum_income("grossProfit"),
+        "operating_income": _sum_income("operatingIncome"),
+        "one_off_items": 0.0,
+        "net_income": _sum_income("netIncome"),
+        "ocf": _sum_cash("operatingCashFlow"),
+        "capex": abs(_sum_cash("capitalExpenditure")),
+        "depreciation": _sum_cash("depreciationAndAmortization"),
+        "sbc": _sum_cash("stockBasedCompensation"),
+        "dividends_paid": abs(dividends),
+        "buybacks": max(-_sum_cash("commonStockRepurchased"), 0.0),
+        "share_issuance": _sum_cash("commonStockIssuance"),
+        "shares_diluted": _f(latest.get("weightedAverageShsOutDil")),
+        "total_debt": _f(latest_balance.get("totalDebt")),
+        "cash": _f(latest_balance.get("cashAndShortTermInvestments")),
+        "interest_expense": _sum_income("interestExpense"),
+        "total_equity": _f(latest_balance.get("totalStockholdersEquity")),
+        "effective_tax_rate": tax / pretax if pretax and pretax > 0 else None,
+        "is_estimate": False,
+        "is_ttm": True,
+        "as_of": as_of.isoformat(),
+        "source": "fmp:statements-quarterly-ttm",
+        "fetched_at": fetched_at,
+    }
+    return pd.DataFrame([row])
+
+
 def transform_estimates(
     payload: list[dict[str, Any]], fetched_at: str, as_of: date
 ) -> pd.DataFrame:
@@ -343,6 +424,7 @@ class FMPProvider:
     # -- DataProvider interface -------------------------------------------------
 
     def fetch_universe(self, as_of: date) -> pd.DataFrame:
+        self._assert_snapshot_recency(as_of, "universe (active listings)")
         fetched_at = _now_iso()
         # One request per exchange: the combined market exceeds the screener's
         # 10000-row page and would silently truncate. ETFs/funds are excluded
@@ -414,7 +496,22 @@ class FMPProvider:
             result = result.loc[result["filing_date"] <= pd.Timestamp(as_of)]
         return result.reset_index(drop=True)
 
+    def load_ttm(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
+        fetched_at = _now_iso()
+        frames = []
+        for symbol in tickers or []:
+            params = {"symbol": symbol, "period": "quarter", "limit": 8}
+            income = self._get("income-statement", params)
+            balance = self._get("balance-sheet-statement", params)
+            cashflow = self._get("cash-flow-statement", params)
+            frames.append(
+                build_ttm_row(income or [], balance or [], cashflow or [], fetched_at, as_of)
+            )
+        non_empty = [frame for frame in frames if not frame.empty]
+        return pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
+
     def load_estimates(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
+        self._assert_snapshot_recency(as_of, "analyst estimates")
         fetched_at = _now_iso()
         frames = []
         for symbol in tickers or []:
@@ -444,6 +541,16 @@ class FMPProvider:
         return list(dict.fromkeys(self._degraded))
 
     # -- internals --------------------------------------------------------------
+
+    @staticmethod
+    def _assert_snapshot_recency(as_of: date, dataset: str) -> None:
+        age_days = (datetime.now(UTC).date() - as_of).days
+        if age_days > MAX_SNAPSHOT_AGE_DAYS:
+            raise PointInTimeUnavailable(
+                f"FMP serves only CURRENT {dataset}; requesting as_of={as_of} "
+                f"({age_days} days old) would leak future data into a historical "
+                "replay. Use the sample provider or archived snapshots for backtests."
+            )
 
     def _enrich_with_bulk_profiles(self, frame: pd.DataFrame) -> pd.DataFrame:
         parts = []

@@ -85,12 +85,17 @@ class RiskPreferenceSettings(BaseModel):
     cvar_alpha: float = 0.25
     permanent_loss_threshold: float = -0.30
     uncertainty_per_missing_confidence: float = 0.03
+    # "penalized_expected": E[IRR] minus all three penalties (the project
+    # spec's decomposition). "median_cvar": Median IRR - downside_aversion x
+    # CVaR, with uncertainty/permanent-loss shown but not double-subtracted.
+    formula: str = "penalized_expected"
 
 
 class ConfidenceSettings(BaseModel):
     min_model_confidence: float = 0.2
     min_data_confidence: float = 0.2
     watchlist_data_confidence: float = 0.45
+    watchlist_model_confidence: float = 0.35
 
 
 class RankingSettings(BaseModel):

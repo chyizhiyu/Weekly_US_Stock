@@ -117,3 +117,64 @@ def test_industry_router() -> None:
     # Profitable biotech is rankable through the general model.
     assert route_model_family("Healthcare", "Biotechnology", 0.25).supported
     assert route_model_family("Technology", "Software - Application", 0.2).supported
+
+
+def test_entire_financial_sector_is_watchlisted() -> None:
+    # Cash/leverage/working capital mean different things for financials:
+    # NONE of the sector may flow through the general owner-earnings DCF.
+    cases = {
+        ("Financial Services", "Asset Management"): "asset_management",
+        ("Financial Services", "Capital Markets"): "asset_management",
+        ("Financial Services", "Credit Services"): "consumer_finance",
+        ("Financial Services", "Mortgage Finance"): "consumer_finance",
+        ("Financial Services", "Financial Data & Stock Exchanges"): "financial_other",
+    }
+    for (sector, industry), family in cases.items():
+        route = route_model_family(sector, industry, 0.3)
+        assert not route.supported, industry
+        assert route.family == family
+
+
+def test_incremental_roic_unestimable_when_capital_shrinks(
+    normalization: NormalizationSettings,
+) -> None:
+    # NOPAT up while invested capital falls: incremental ROIC is undefined and
+    # must NOT become an optimistic fixed constant (the old 60% bug).
+    history = _history([0.10, 0.11, 0.12, 0.14, 0.16, 0.18])
+    history["total_equity"] = [900e6, 850e6, 800e6, 750e6, 700e6, 650e6]
+    metrics = normalize_company(history, normalization)
+    assert metrics is not None
+    assert metrics["incremental_roic"] is None
+
+
+def test_ttm_row_anchors_current_level(normalization: NormalizationSettings) -> None:
+    history = _history([0.15] * 6)
+    ttm = {
+        "revenue": 1_200e6,  # 20% above the last annual report
+        "gross_profit": 480e6,
+        "operating_income": 1_200e6 * 0.18,
+        "one_off_items": 0.0,
+        "shares_diluted": 95e6,  # buybacks since fiscal year end
+        "total_debt": 250e6,
+        "cash": 150e6,
+        "total_equity": 950e6,
+        "depreciation": 48e6,
+        "interest_expense": 6e6,
+        "dividends_paid": 0.0,
+        "buybacks": 50e6,
+        "filing_date": pd.Timestamp("2025-11-14"),
+        "is_ttm": True,
+    }
+    annual_only = normalize_company(history, normalization)
+    anchored = normalize_company(history, normalization, ttm_row=ttm)
+    assert annual_only is not None and anchored is not None
+    assert anchored["anchor_source"] == "ttm"
+    assert anchored["revenue"] == pytest.approx(1_200e6)
+    assert anchored["shares_diluted"] == pytest.approx(95e6)
+    assert anchored["current_operating_margin"] == pytest.approx(0.18)
+    # Normalized earning power = full-cycle ANNUAL median margin x TTM revenue.
+    assert anchored["normalized_operating_margin"] == pytest.approx(
+        annual_only["normalized_operating_margin"]
+    )
+    assert anchored["normalized_operating_income"] == pytest.approx(0.15 * 1_200e6)
+    assert anchored["net_debt"] == pytest.approx(100e6)

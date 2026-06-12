@@ -85,6 +85,8 @@ class Company:
     estimate_growth: float | None = None
     estimate_dispersion: float = 0.08
     num_analysts: int = 12
+    # TTM window growth override (None -> half of the latest annual growth)
+    ttm_growth: float | None = None
 
     @property
     def shares_latest(self) -> float:
@@ -134,6 +136,8 @@ COMPANIES: list[Company] = [
         shares0=200, share_growth=0.03, debt_start=0, cash=500,
         interest_rate=0.04, equity_start=600, equity_end=1800,
         estimate_growth=0.35, estimate_dispersion=0.50, num_analysts=6,
+        ttm_growth=0.02,  # growth stalled in the trailing window: lottery profile
+
     ),
     Company(
         ticker="CYCP", name="PeakCycle Materials", exchange="NYSE",
@@ -503,6 +507,84 @@ def _fundamental_rows() -> list[dict]:
     return rows
 
 
+def _ttm_rows() -> list[dict]:
+    """Trailing-twelve-month anchors as of Q3 FY2025 (filed 2025-11-14).
+
+    Flows scale from FY2024 by half of the latest annual growth so the TTM
+    anchor sits realistically between FY2024 and FY2025. The peak-margin
+    cyclical keeps its FY2024 margin so the normalization tests stay valid.
+    A second window filed 2026-02-10 is a look-ahead trap: it must stay
+    invisible at the canonical as_of of 2026-01-09.
+    """
+
+    rows = []
+    tax = 0.21
+    for company in COMPANIES:
+        revenues = company._revenues()
+        if not revenues or company.first_fiscal_year is None or company.shares0 is None:
+            continue
+        idx = 2024 - company.first_fiscal_year
+        if idx < 1 or idx >= len(revenues):
+            continue
+        if company.ticker in {"TINY", "ILLQ", "LOSS", "DEBT", "MISS", "SDIL", "ACCT", "NEGM",
+                              "BIOX"}:
+            continue  # rejected/watchlisted upstream; annual fallback suffices
+        growth_latest = revenues[idx] / revenues[idx - 1] - 1.0
+        if company.ttm_growth is not None:
+            growth_latest = company.ttm_growth
+        margin = _margin_for(company, idx)
+        debt = _interp(company.debt_start, company.debt_end, idx, len(revenues))
+        equity = _interp(company.equity_start, company.equity_end, idx, len(revenues))
+        for filing, fiscal_end, factor in [
+            ("2025-11-14", "2025-09-30", 1.0 + 0.5 * growth_latest),
+            ("2026-02-10", "2025-12-31", 9.9),  # absurd future window: must be hidden
+        ]:
+            revenue = revenues[idx] * factor
+            operating_income = revenue * margin
+            interest = debt * company.interest_rate
+            pretax = operating_income - interest
+            net_income = pretax * (1 - tax) if pretax > 0 else pretax
+            depreciation = revenue * company.dep_pct
+            sbc = revenue * company.sbc_pct
+            if company.ocf_to_ni_override is not None and net_income > 0:
+                ocf = net_income * company.ocf_to_ni_override
+            else:
+                ocf = net_income + depreciation + sbc
+            shares = company.shares0 * (1.0 + company.share_growth) ** (idx + 0.75)
+            rows.append(
+                {
+                    "ticker": company.ticker,
+                    "fiscal_year": "",
+                    "fiscal_end": fiscal_end,
+                    "filing_date": filing,
+                    "revenue": round(revenue * M, 2),
+                    "gross_profit": round(revenue * company.gross_margin * M, 2),
+                    "operating_income": round(operating_income * M, 2),
+                    "one_off_items": 0.0,
+                    "net_income": round(net_income * M, 2),
+                    "ocf": round(ocf * M, 2),
+                    "capex": round(revenue * company.capex_pct * M, 2),
+                    "depreciation": round(depreciation * M, 2),
+                    "sbc": round(sbc * M, 2),
+                    "dividends_paid": round(max(net_income, 0.0) * company.payout * M, 2),
+                    "buybacks": round(company.buybacks * M, 2),
+                    "share_issuance": round(sbc * M, 2),
+                    "shares_diluted": round(shares * M, 0),
+                    "total_debt": round(debt * M, 2),
+                    "cash": round(company.cash * M, 2),
+                    "interest_expense": round(interest * M, 2),
+                    "total_equity": round(equity * M, 2),
+                    "effective_tax_rate": tax,
+                    "is_estimate": False,
+                    "is_ttm": True,
+                    "as_of": AS_OF.isoformat(),
+                    "source": SOURCE,
+                    "fetched_at": FETCHED_AT,
+                }
+            )
+    return rows
+
+
 def _estimate_rows() -> list[dict]:
     rows = []
     for company in COMPANIES:
@@ -581,6 +663,7 @@ def main() -> None:
     _write_csv("universe.csv", _universe_rows())
     _write_csv("prices.csv", _price_rows())
     _write_csv("fundamentals.csv", _fundamental_rows())
+    _write_csv("ttm.csv", _ttm_rows())
     _write_csv("estimates.csv", _estimate_rows())
     _write_csv("macro.csv", _macro_rows())
 

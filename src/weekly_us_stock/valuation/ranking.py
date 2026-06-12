@@ -2,16 +2,24 @@
 
 Two rankings are published side by side:
 - Upside Ranking: expected 5y IRR, descending.
-- Robust Ranking: expected IRR minus explicit risk penalties whose weights are
-  investor risk preferences from config (NOT factor weights):
+- Robust Ranking: risk-adjusted return under one of two configurable
+  formulas whose weights are investor risk preferences (NOT factor weights):
 
+  formula = "penalized_expected" (default, the project spec's decomposition):
     robust_return = expected_irr
                     - downside_aversion       * expected_shortfall (CVaR)
                     - ambiguity_aversion      * model_uncertainty
-                    - permanent_loss_penalty  * permanent_loss_probability
+                    - permanent_loss_penalty  * permanent_loss_weight
 
-Every component stays in the output so a rank can always be traced back to its
-inputs; nothing is compressed into an opaque composite score.
+  formula = "median_cvar" (single-penalty variant: the three penalty inputs
+  are correlated because all derive partly from the bear scenario, so this
+  mode subtracts only the tail term and reports the rest for sizing):
+    robust_return = median_irr - downside_aversion * expected_shortfall
+
+Every component stays in the output either way, so a rank can always be
+traced back to its inputs; nothing is compressed into an opaque score.
+The bear/base/bull weights are analyst-set scenario weights, not calibrated
+probabilities — see the report disclaimers.
 """
 
 from __future__ import annotations
@@ -30,12 +38,15 @@ def add_robust_components(
     result["permanent_loss_penalty"] = (
         prefs.permanent_loss_penalty * result["permanent_loss_probability"]
     )
-    result["robust_return"] = (
-        result["expected_irr"]
-        - result["downside_penalty"]
-        - result["ambiguity_penalty"]
-        - result["permanent_loss_penalty"]
-    )
+    if prefs.formula == "median_cvar":
+        result["robust_return"] = result["median_irr"] - result["downside_penalty"]
+    else:
+        result["robust_return"] = (
+            result["expected_irr"]
+            - result["downside_penalty"]
+            - result["ambiguity_penalty"]
+            - result["permanent_loss_penalty"]
+        )
     return result
 
 

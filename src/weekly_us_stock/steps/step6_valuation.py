@@ -34,6 +34,7 @@ _CARRY_COLUMNS = [
     "risk_flags",
     "years_of_data",
     "latest_fiscal_year",
+    "anchor_source",
     "latest_filing_date",
     "price_as_of",
     "is_price_fresh",

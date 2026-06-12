@@ -8,7 +8,10 @@ import pandas as pd
 import pytest
 
 from tests.conftest import AS_OF
+from weekly_us_stock.providers.base import PointInTimeUnavailable
 from weekly_us_stock.providers.fmp import (
+    FMPProvider,
+    build_ttm_row,
     classify_security,
     normalize_exchange,
     transform_batch_eod,
@@ -169,6 +172,84 @@ class TestFMPTransforms:
         assert row["buybacks"] == 94.9e9  # sign flipped to positive spend
         assert row["dividends_paid"] == 15.2e9
         assert row["effective_tax_rate"] == 17e9 / 110e9
+
+
+def test_fmp_refuses_historical_snapshot_requests() -> None:
+    # Estimates and the active-listings universe are CURRENT snapshots: a
+    # historical as_of through them would be silent look-ahead/survivorship
+    # bias. The provider must refuse before any HTTP happens.
+    provider = FMPProvider("test-key", min_request_interval=0.0)
+    with pytest.raises(PointInTimeUnavailable):
+        provider.load_estimates(["AAPL"], date(2020, 1, 3))
+    with pytest.raises(PointInTimeUnavailable):
+        provider.fetch_universe(date(2020, 1, 3))
+
+
+def _quarter(symbol: str, q_date: str, filing: str, revenue: float) -> dict:
+    return {
+        "symbol": symbol,
+        "date": q_date,
+        "filingDate": filing,
+        "fiscalYear": q_date[:4],
+        "revenue": revenue,
+        "grossProfit": revenue * 0.4,
+        "operatingIncome": revenue * 0.2,
+        "netIncome": revenue * 0.15,
+        "incomeBeforeTax": revenue * 0.19,
+        "incomeTaxExpense": revenue * 0.04,
+        "interestExpense": revenue * 0.005,
+        "weightedAverageShsOutDil": 100e6 - 1e6 * int(q_date[5:7]),
+    }
+
+
+def test_fmp_build_ttm_row() -> None:
+    quarters = [
+        ("2025-12-31", "2026-01-05", 110e9),  # filed before as_of? no - see below
+        ("2025-09-30", "2025-11-01", 105e9),
+        ("2025-06-30", "2025-08-01", 100e9),
+        ("2025-03-31", "2025-05-01", 95e9),
+        ("2024-12-31", "2025-02-01", 90e9),
+    ]
+    income = [_quarter("AAPL", d, f, r) for d, f, r in quarters]
+    cashflow = [
+        {
+            "date": d,
+            "filingDate": f,
+            "operatingCashFlow": r * 0.2,
+            "capitalExpenditure": -r * 0.05,
+            "depreciationAndAmortization": r * 0.04,
+            "stockBasedCompensation": r * 0.02,
+            "commonDividendsPaid": -r * 0.01,
+            "commonStockRepurchased": -r * 0.03,
+            "commonStockIssuance": 0.0,
+        }
+        for d, f, r in quarters
+    ]
+    balance = [
+        {"date": d, "filingDate": f, "totalDebt": 100e9, "cashAndShortTermInvestments": 60e9,
+         "totalStockholdersEquity": 70e9}
+        for d, f, _ in quarters
+    ]
+    frame = build_ttm_row(income, balance, cashflow, "now", as_of=date(2026, 1, 9))
+    row = frame.iloc[0]
+    # Four most recent FILED quarters: Q4'25 (filed 01-05) .. Q1'25.
+    assert row["revenue"] == pytest.approx((110 + 105 + 100 + 95) * 1e9)
+    assert row["is_ttm"]
+    assert row["filing_date"] == "2026-01-05"
+    assert row["shares_diluted"] == pytest.approx(100e6 - 12e6)  # latest quarter
+    assert row["capex"] == pytest.approx((110 + 105 + 100 + 95) * 1e9 * 0.05)
+    # Fewer than four filed quarters -> empty (caller anchors on annuals).
+    short = build_ttm_row(income[:3], balance[:3], cashflow[:3], "now", date(2026, 1, 9))
+    assert short.empty
+
+
+def test_sample_ttm_hides_future_filing(sample_provider) -> None:
+    ttm = sample_provider.load_ttm(["STBL"], AS_OF)
+    assert len(ttm) == 1
+    # The absurd 9.9x window filed 2026-02-10 must be invisible on 2026-01-09.
+    assert ttm.iloc[0]["filing_date"] == pd.Timestamp("2025-11-14")
+    later = sample_provider.load_ttm(["STBL"], date(2026, 3, 1))
+    assert later.iloc[0]["filing_date"] == pd.Timestamp("2026-02-10")
 
 
 def test_fmp_batch_eod_transform() -> None:

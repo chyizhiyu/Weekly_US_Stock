@@ -25,8 +25,11 @@ def build_dashboard(
         f"# Weekly US Stock Screen — {request.as_of}",
         "",
         "Research output only. No trading instructions are generated. Screening",
-        "scores only narrow the pool; final ordering comes from probabilistic",
+        "scores only narrow the pool; final ordering comes from scenario",
         "valuation and risk-adjusted return, never from fixed factor weights.",
+        "Bear/base/bull weights are ANALYST-SET scenario weights (default",
+        "25/50/25), not calibrated probabilities: W(...) columns and P10/P90",
+        "are scenario-weighted figures, to be read as stress labels.",
         "",
         "## Data Freshness",
         "",
@@ -115,13 +118,13 @@ def _ranking_section(
         return lines + ["- No candidates survived to ranking."]
     if robust_columns:
         lines += [
-            "| # | Ticker | Robust | E[IRR] | P10 | P90 | P(IRR>hurdle) | ES "
-            "| P(perm loss) | Conf (model/data) |",
+            "| # | Ticker | Robust | E[IRR] | P10 | P90 | W(IRR>hurdle) | ES "
+            "| W(perm loss) | Conf (model/data) |",
             "|---|---|---|---|---|---|---|---|---|---|",
         ]
     else:
         lines += [
-            "| # | Ticker | E[IRR] | Median | P10 | P90 | P(IRR>hurdle) | Upside to base |",
+            "| # | Ticker | E[IRR] | Median | P10 | P90 | W(IRR>hurdle) | Upside to base |",
             "|---|---|---|---|---|---|---|---|",
         ]
     for _, row in frame.head(top_n).iterrows():

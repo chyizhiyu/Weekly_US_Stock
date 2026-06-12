@@ -71,6 +71,14 @@ class CompositeProvider:
     def load_fundamentals(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
         return self.fmp.load_fundamentals(tickers, as_of)
 
+    def load_ttm(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
+        try:
+            return self.fmp.load_ttm(tickers, as_of)
+        except Exception:
+            logger.exception("TTM load failed; anchoring on latest annual reports")
+            self._degraded.append("fmp:ttm-unavailable->annual-anchor")
+            return pd.DataFrame()
+
     def load_estimates(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
         try:
             return self.fmp.load_estimates(tickers, as_of)

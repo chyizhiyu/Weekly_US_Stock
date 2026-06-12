@@ -16,6 +16,9 @@ GENERAL = "general_dcf"
 BANK = "bank"
 INSURANCE = "insurance"
 REIT = "reit"
+ASSET_MANAGEMENT = "asset_management"
+CONSUMER_FINANCE = "consumer_finance"
+FINANCIAL_OTHER = "financial_other"
 BIOTECH_PREPROFIT = "biotech_preprofit"
 
 SUPPORTED_FAMILIES = {GENERAL}
@@ -24,6 +27,9 @@ _WATCHLIST_REASONS = {
     BANK: "bank_model_not_supported",
     INSURANCE: "insurance_model_not_supported",
     REIT: "reit_model_not_supported",
+    ASSET_MANAGEMENT: "asset_management_model_not_supported",
+    CONSUMER_FINANCE: "consumer_finance_model_not_supported",
+    FINANCIAL_OTHER: "financial_sector_model_not_supported",
     BIOTECH_PREPROFIT: "preprofit_biotech_not_supported",
 }
 
@@ -51,6 +57,20 @@ def route_model_family(
         "real estate" in sector_text and "trust" in industry_text
     ):
         return _unsupported(REIT)
+    if "asset management" in industry_text or "capital markets" in industry_text:
+        return _unsupported(ASSET_MANAGEMENT)
+    if (
+        "credit services" in industry_text
+        or "consumer finance" in industry_text
+        or "mortgage" in industry_text
+        or "financial conglomerates" in industry_text
+    ):
+        return _unsupported(CONSUMER_FINANCE)
+    if "financial" in sector_text:
+        # Catch-all: cash, leverage and working capital have different
+        # meanings across the financial sector, so the general owner-earnings
+        # DCF is wrong for ALL of it until dedicated models exist.
+        return _unsupported(FINANCIAL_OTHER)
     if "biotech" in industry_text and (
         normalized_operating_margin is None or normalized_operating_margin <= 0
     ):

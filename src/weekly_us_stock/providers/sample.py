@@ -54,6 +54,21 @@ class SampleDataProvider:
         frame = frame.loc[frame["filing_date"] <= pd.Timestamp(as_of)].reset_index(drop=True)
         return require_columns(frame, FUNDAMENTAL_COLUMNS, "fundamentals")
 
+    def load_ttm(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
+        path = self.data_dir / "ttm.csv"
+        if not path.exists():
+            return pd.DataFrame()
+        frame = self._read_csv("ttm.csv", date_columns=["fiscal_end", "filing_date"])
+        frame = self._filter_tickers(frame, tickers)
+        frame = frame.loc[frame["filing_date"] <= pd.Timestamp(as_of)]
+        # Keep only the most recently FILED window per ticker.
+        frame = (
+            frame.sort_values(["ticker", "filing_date"])
+            .groupby("ticker", as_index=False)
+            .tail(1)
+        )
+        return frame.reset_index(drop=True)
+
     def load_estimates(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
         frame = self._read_csv("estimates.csv", date_columns=["as_of"])
         frame = self._filter_tickers(frame, tickers)

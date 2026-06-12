@@ -62,6 +62,16 @@ def test_high_variance_name_is_downweighted_in_robust_ranking_only() -> None:
     assert robust_ranks["LOTTERY"] > robust_ranks["COMPOUND"]
 
 
+def test_median_cvar_formula_uses_a_single_penalty() -> None:
+    prefs = RiskPreferenceSettings(formula="median_cvar", downside_aversion=1.5)
+    scored = add_robust_components(_metrics(), prefs)
+    row = scored.set_index("ticker").loc["LOTTERY"]
+    assert row["robust_return"] == pytest.approx(0.18 - 1.5 * 0.30)
+    # The other risk measures stay visible for position sizing.
+    assert "ambiguity_penalty" in scored.columns
+    assert "permanent_loss_penalty" in scored.columns
+
+
 def test_risk_preferences_change_the_ordering() -> None:
     # An investor with no downside aversion ranks purely on expected return.
     neutral = RiskPreferenceSettings(

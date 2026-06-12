@@ -28,7 +28,7 @@ from weekly_us_stock.models.screening import (
     PipelineResult,
     StepSummary,
 )
-from weekly_us_stock.providers.base import DataProvider, DataProviderNotConfigured
+from weekly_us_stock.providers.base import DataProvider
 from weekly_us_stock.providers.sample import SampleDataProvider
 from weekly_us_stock.reports.compare import (
     compare_with_previous,
@@ -71,7 +71,6 @@ class WeeklyUSStockPipeline:
         self.settings = settings or load_settings()
         self.env = env or EnvSettings()
         self.provider = provider
-        self.provider_fallback_notes: list[str] = []
 
     def run(self, request: PipelineRequest) -> PipelineResult:
         provider = self._resolve_provider(request)
@@ -191,6 +190,12 @@ class WeeklyUSStockPipeline:
         steps.append(summary)
         _log_step(summary)
 
+        # Trailing-twelve-month anchors so valuation does not lag the latest
+        # quarters; missing TTM rows fall back to the latest annual report.
+        ttm = self._timed_data(
+            "ttm", len(tickers), lambda: provider.load_ttm(tickers, as_of)
+        )
+
         # Step 4: normalized model + industry routing ---------------------------
         normalized, summary = self._timed(
             "step4_normalized_model",
@@ -202,6 +207,7 @@ class WeeklyUSStockPipeline:
                 risk_free,
                 self.settings.normalization,
                 self.settings.wacc,
+                ttm=ttm,
             ),
             output_count=lambda result: len(result.modeled),
         )
@@ -237,6 +243,21 @@ class WeeklyUSStockPipeline:
             work=lambda: run_quality_assessment(modeled, fundamentals),
             output_count=len,
         )
+        if not quality.empty:
+            # Hard gate: a valuation the model itself does not trust cannot be
+            # ranked — it goes to the watchlist with its confidence on record.
+            low_model = quality["model_confidence"] < (
+                self.settings.confidence.watchlist_model_confidence
+            )
+            if low_model.any():
+                flagged = quality.loc[low_model].copy()
+                flagged["watchlist_reason"] = "insufficient_model_confidence"
+                watchlist_frames.append(flagged)
+                quality = quality.loc[~low_model].reset_index(drop=True)
+                summary.output_count = len(quality)
+                summary.notes.append(
+                    f"moved {len(flagged)} low-model-confidence names to the watchlist"
+                )
         steps.append(summary)
         _log_step(summary)
 
@@ -344,19 +365,13 @@ class WeeklyUSStockPipeline:
         source = (request.provider or self.settings.app.data_source).lower()
         if source == "sample":
             return SampleDataProvider(self._resolve_path(self.settings.app.sample_data_dir))
-        if source in {"fmp", "composite"}:
+        if source in {"fmp", "composite", "auto"}:
+            # Fail closed: a production run must never silently publish sample
+            # data. Missing credentials abort the run with a clear error; the
+            # sample provider is only ever an EXPLICIT choice.
             from weekly_us_stock.providers.composite import build_composite
 
             return build_composite(self.env, self.settings.wacc)
-        if source == "auto":
-            try:
-                from weekly_us_stock.providers.composite import build_composite
-
-                return build_composite(self.env, self.settings.wacc)
-            except DataProviderNotConfigured as exc:
-                logger.warning("Composite provider unavailable (%s); degrading to sample", exc)
-                self.provider_fallback_notes.append(f"composite-unavailable->sample: {exc}")
-                return SampleDataProvider(self._resolve_path(self.settings.app.sample_data_dir))
         raise ValueError(f"Unsupported data source: {source}")
 
     # -- helpers ---------------------------------------------------------------
@@ -368,14 +383,21 @@ class WeeklyUSStockPipeline:
         financial_result: FilterFrameResult,
         provider: DataProvider,
     ) -> DataFreshness:
-        candidates = financial_result.candidates
-        if candidates.empty or "is_price_fresh" not in candidates:
+        # Coverage is measured over the snapshot (pre-gate): the stale_price
+        # hard filter removes stale names from the ranking, and this metric
+        # reports how much of the market was actually current.
+        priced = (
+            snapshot.loc[snapshot["price"].notna()]
+            if not snapshot.empty and "price" in snapshot
+            else pd.DataFrame()
+        )
+        if priced.empty or "is_price_fresh" not in priced:
             coverage, stale = 0.0, 0
         else:
-            fresh = candidates["is_price_fresh"].fillna(False).astype(bool)
+            fresh = priced["is_price_fresh"].fillna(False).astype(bool)
             coverage = float(fresh.mean())
             stale = int((~fresh).sum())
-        degraded = list(provider.degraded_sources()) + self.provider_fallback_notes
+        degraded = list(provider.degraded_sources())
         notes = []
         if degraded:
             notes.append(

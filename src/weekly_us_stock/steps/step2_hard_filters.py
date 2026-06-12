@@ -69,6 +69,13 @@ def run_market_filters(
         | (frame["avg_dollar_volume"] < settings.min_avg_dollar_volume),
         "liquidity",
     )
+    # Fail closed on stale quotes: an IRR computed off an old price is not a
+    # ranking, it is a guess. Degraded runs report these as rejections.
+    _assign(
+        reasons,
+        ~frame["is_price_fresh"].fillna(False).astype(bool),
+        "stale_price",
+    )
     return _split(frame, reasons)
 
 

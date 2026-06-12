@@ -92,6 +92,13 @@ class DataProvider(Protocol):
         """Annual statements filed on or before as_of."""
         ...
 
+    def load_ttm(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
+        """Trailing-twelve-month anchor rows (one per ticker) built from the
+        four most recent quarters filed on or before as_of. Flows are summed;
+        balance items and diluted shares come from the latest quarter. May be
+        empty, in which case callers anchor on the latest annual report."""
+        ...
+
     def load_estimates(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
         """Analyst estimates as last published on or before as_of."""
         ...
@@ -107,6 +114,13 @@ class DataProvider(Protocol):
 
 class DataProviderNotConfigured(RuntimeError):
     """Raised when a provider is selected but its credentials are missing."""
+
+
+class PointInTimeUnavailable(RuntimeError):
+    """Raised when a historical as_of is requested from a source that only has
+    CURRENT snapshots (analyst estimates, active-listing universe). Replaying
+    history through such a source would leak future data and survivorship
+    bias into the result, so it is refused instead."""
 
 
 def require_columns(frame: pd.DataFrame, columns: Sequence[str], dataset: str) -> pd.DataFrame:

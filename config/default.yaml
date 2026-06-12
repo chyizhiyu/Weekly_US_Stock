@@ -66,15 +66,20 @@ risk_preferences:
   hurdle_rate: 0.12
   downside_aversion: 1.0             # penalty per unit of expected shortfall (CVaR)
   ambiguity_aversion: 0.5            # penalty per unit of model uncertainty
-  permanent_loss_penalty: 0.5        # penalty per unit of permanent-loss probability
+  permanent_loss_penalty: 0.5        # penalty per unit of permanent-loss scenario weight
   cvar_alpha: 0.25
   permanent_loss_threshold: -0.30    # 5y total return below this counts as permanent loss
   uncertainty_per_missing_confidence: 0.03
+  # penalized_expected: E[IRR] - all three penalties (spec decomposition).
+  # median_cvar: Median IRR - downside_aversion x CVaR; uncertainty and
+  # permanent-loss weights are reported alongside but not subtracted again.
+  formula: penalized_expected
 
 confidence:
   min_model_confidence: 0.2
   min_data_confidence: 0.2
   watchlist_data_confidence: 0.45    # below this the name goes to the watchlist, not the ranking
+  watchlist_model_confidence: 0.35   # low model trust is a hard gate too
 
 ranking:
   top_n: 20
