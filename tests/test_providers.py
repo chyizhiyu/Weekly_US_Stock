@@ -5,13 +5,17 @@ from __future__ import annotations
 from datetime import date
 
 import pandas as pd
+import pytest
 
 from tests.conftest import AS_OF
 from weekly_us_stock.providers.fmp import (
     classify_security,
     normalize_exchange,
+    transform_batch_eod,
+    transform_profile_bulk,
     transform_screener,
     transform_statements,
+    transform_treasury,
 )
 from weekly_us_stock.providers.fred import transform_observations
 from weekly_us_stock.providers.polygon import transform_grouped
@@ -123,9 +127,9 @@ class TestFMPTransforms:
             income=[
                 {
                     "symbol": "AAPL",
-                    "calendarYear": "2024",
+                    "fiscalYear": "2024",
                     "date": "2024-09-28",
-                    "fillingDate": "2024-11-01",
+                    "filingDate": "2024-11-01",
                     "revenue": 391e9,
                     "grossProfit": 180e9,
                     "operatingIncome": 123e9,
@@ -138,7 +142,7 @@ class TestFMPTransforms:
             ],
             balance=[
                 {
-                    "calendarYear": "2024",
+                    "fiscalYear": "2024",
                     "totalDebt": 106e9,
                     "cashAndShortTermInvestments": 65e9,
                     "totalStockholdersEquity": 57e9,
@@ -146,12 +150,12 @@ class TestFMPTransforms:
             ],
             cashflow=[
                 {
-                    "calendarYear": "2024",
+                    "fiscalYear": "2024",
                     "operatingCashFlow": 118e9,
                     "capitalExpenditure": -9.4e9,
                     "depreciationAndAmortization": 11.4e9,
                     "stockBasedCompensation": 11.7e9,
-                    "dividendsPaid": -15.2e9,
+                    "commonDividendsPaid": -15.2e9,
                     "commonStockRepurchased": -94.9e9,
                 }
             ],
@@ -160,9 +164,51 @@ class TestFMPTransforms:
         )
         row = statements.iloc[0]
         assert row["filing_date"] == "2024-11-01"
+        assert row["fiscal_year"] == 2024
         assert row["capex"] == 9.4e9  # absolute value
         assert row["buybacks"] == 94.9e9  # sign flipped to positive spend
+        assert row["dividends_paid"] == 15.2e9
         assert row["effective_tax_rate"] == 17e9 / 110e9
+
+
+def test_fmp_batch_eod_transform() -> None:
+    frame = transform_batch_eod(
+        [{"symbol": "AAPL", "date": "2026-01-09", "close": 295.0, "volume": 40_000_000}],
+        trade_date=date(2026, 1, 9),
+        fetched_at="now",
+        as_of=AS_OF,
+    )
+    row = frame.iloc[0]
+    assert row["dollar_volume"] == 295.0 * 40_000_000
+    assert row["source"] == "fmp:batch-eod"
+
+
+def test_fmp_profile_bulk_transform() -> None:
+    csv_text = (
+        "symbol,price,marketCap,beta,averageVolume,ipoDate,isEtf,isActivelyTrading,isAdr,isFund\n"
+        'AAPL,295.63,4342023054280,1.086,45584055,1980-12-12,false,true,false,false\n'
+        'TSM,200.0,1000000000000,1.2,30000000,1997-10-08,false,true,true,false\n'
+    )
+    frame = transform_profile_bulk(csv_text).set_index("ticker")
+    assert frame.loc["AAPL", "listing_date_profile"] == "1980-12-12"
+    assert not frame.loc["AAPL", "is_adr_profile"]
+    assert frame.loc["TSM", "is_adr_profile"]
+    assert frame.loc["AAPL", "shares_outstanding_profile"] == pytest.approx(
+        4342023054280 / 295.63
+    )
+
+
+def test_fmp_treasury_transform() -> None:
+    frame = transform_treasury(
+        [
+            {"date": "2026-01-08", "year10": "4.30", "month1": "5.1"},
+            {"date": "2026-01-09", "year10": None},
+        ],
+        fetched_at="now",
+    )
+    assert len(frame) == 1  # rows without a 10y value are dropped
+    assert frame.iloc[0]["value"] == 0.043
+    assert frame.iloc[0]["source"] == "fmp:treasury"
 
 
 def test_polygon_grouped_transform() -> None:

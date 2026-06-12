@@ -87,6 +87,14 @@ class WeeklyUSStockPipeline:
             work=lambda: fetch_universe(provider, as_of),
             output_count=len,
         )
+        if request.limit is not None and not universe.empty:
+            # Smoke-test mode: keep the N largest names so a bounded real-data
+            # run still exercises every later step.
+            if "market_cap_hint" in universe:
+                universe = universe.sort_values("market_cap_hint", ascending=False)
+            universe = universe.head(request.limit).reset_index(drop=True)
+            summary.output_count = len(universe)
+            summary.notes.append(f"universe truncated to {request.limit} for smoke testing")
         self._export(run_dir, "universe", universe, summary, artifacts)
         steps.append(summary)
         _log_step(summary)
@@ -391,6 +399,7 @@ class WeeklyUSStockPipeline:
         return {
             "as_of": request.as_of.isoformat(),
             "week_key": week_key(request.as_of),
+            "universe_limit": request.limit,
             "generated_at": datetime.now(UTC).isoformat(),
             "pipeline_version": __version__,
             "provider": provider.name,

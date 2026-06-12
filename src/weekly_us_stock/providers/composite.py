@@ -1,11 +1,13 @@
-"""Composite provider: FMP for reference data, Polygon for prices, FRED for
-macro, with explicit degradation when an optional source is unavailable.
+"""Composite provider: FMP as the workhorse, Polygon/FRED as optional
+overrides, with explicit degradation notes when fallbacks engage.
 
 Degradation policy (mirrors the project contract):
-- FMP missing  -> the composite cannot run; callers fall back to the sample
+- FMP missing -> the composite cannot run; callers fall back to the sample
   provider and the run is marked degraded.
-- Polygon missing -> FMP quote proxy is used for liquidity; flagged.
-- FRED missing -> the configured fallback risk-free rate is used; flagged.
+- Polygon missing -> FMP batch-eod serves equivalent daily bars (no flag);
+  only the quote-proxy last resort flags the run.
+- FRED missing -> FMP treasury-rates serves the 10y yield (no flag); the
+  configured constant is the flagged last resort.
 Core per-stock data gaps are never papered over here; downstream filters fail
 closed instead.
 """
@@ -45,14 +47,14 @@ class CompositeProvider:
         self.polygon = polygon
         if self.polygon is None and env.polygon_api_key:
             self.polygon = PolygonProvider(env.polygon_api_key)
-        if self.polygon is None:
-            self._degraded.append("polygon:missing-key->fmp-quote-proxy")
+        # No Polygon key is fine: FMP's batch-eod endpoint provides equivalent
+        # full-market daily bars; only the quote-proxy fallback marks a run
+        # as degraded (see FMPProvider.load_prices).
 
         self.fred = fred
         if self.fred is None and env.fred_api_key:
             self.fred = FredProvider(env.fred_api_key)
-        if self.fred is None:
-            self._degraded.append("fred:missing-key->fallback-risk-free")
+        # No FRED key is fine: FMP's treasury endpoint serves the 10y yield.
 
     def fetch_universe(self, as_of: date) -> pd.DataFrame:
         return self.fmp.fetch_universe(as_of)
@@ -83,10 +85,18 @@ class CompositeProvider:
                 frame = self.fred.load_macro(as_of)
                 if not frame.empty:
                     return frame
-                self._degraded.append("fred:empty->fallback-risk-free")
+                self._degraded.append("fred:empty->fmp-treasury")
             except Exception:
-                logger.exception("FRED macro load failed; using fallback risk-free rate")
-                self._degraded.append("fred:error->fallback-risk-free")
+                logger.exception("FRED macro load failed; trying FMP treasury")
+                self._degraded.append("fred:error->fmp-treasury")
+        try:
+            frame = self.fmp.load_macro(as_of)
+            if not frame.empty:
+                return frame
+            self._degraded.append("fmp-treasury:empty->fallback-risk-free")
+        except Exception:
+            logger.exception("FMP treasury load failed; using fallback risk-free rate")
+            self._degraded.append("fmp-treasury:error->fallback-risk-free")
         return pd.DataFrame(
             [
                 {

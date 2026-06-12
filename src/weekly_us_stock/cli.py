@@ -53,6 +53,13 @@ def run(
             help="Directory holding last week's rankings for the week-over-week diff.",
         ),
     ] = None,
+    limit: Annotated[
+        int | None,
+        typer.Option(
+            "--limit",
+            help="Smoke testing only: keep the N largest universe names.",
+        ),
+    ] = None,
 ) -> None:
     configure_logging()
     settings = load_settings(config)
@@ -61,6 +68,7 @@ def run(
         provider=provider,
         strict_freshness=strict_freshness,
         previous_dir=previous_dir,
+        limit=limit,
     )
     pipeline = WeeklyUSStockPipeline(settings=settings)
     try:

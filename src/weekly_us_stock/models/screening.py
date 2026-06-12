@@ -13,6 +13,9 @@ class PipelineRequest(BaseModel):
     provider: str | None = None
     strict_freshness: bool = False
     previous_dir: str | None = None
+    # Smoke-test aid: keep only the N largest names after step 1. Production
+    # runs must leave this unset; a non-null value is recorded in metadata.
+    limit: int | None = None
 
 
 class StepSummary(BaseModel):

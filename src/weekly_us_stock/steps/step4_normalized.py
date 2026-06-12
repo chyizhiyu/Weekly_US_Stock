@@ -115,9 +115,13 @@ def _estimate_growth_map(estimates: pd.DataFrame) -> dict[str, dict[str, float]]
 
     if estimates.empty:
         return {}
+    # Live feeds include already-reported fiscal years; keep forward years only
+    # (the year before the snapshot year may still be unreported, so keep it).
+    min_year = int(pd.to_datetime(estimates["as_of"]).dt.year.max()) - 1
     result: dict[str, dict[str, float]] = {}
     for ticker, group in estimates.groupby("ticker"):
         group = group.dropna(subset=["revenue_mean"]).sort_values("fiscal_year")
+        group = group.loc[group["fiscal_year"] >= min_year]
         if len(group) < 2:
             continue
         first, second = group.iloc[0], group.iloc[1]
