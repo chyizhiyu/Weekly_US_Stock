@@ -54,11 +54,14 @@ weekly-us-stock expected-as-of
 
 | Provider | 用途 | 凭证 |
 |---|---|---|
-| FMP | 股票列表、财报、分析师预期、报价 | `FMP_API_KEY`（生产必需） |
-| Polygon | 全市场日线（流动性/价格） | `POLYGON_API_KEY`（可选，缺失降级为 FMP 报价代理） |
-| FRED | 无风险利率 DGS10 | `FRED_API_KEY`（可选，缺失用配置回退值） |
+| FMP（stable API） | 股票列表（company-screener + profile-bulk）、财报、分析师预期、全市场日线（batch-eod）、无风险利率（treasury-rates） | `FMP_API_KEY`（生产必需，仅此一个即可完整运行） |
+| Polygon | 日线的可选替代源 | `POLYGON_API_KEY`（可选；缺失时用 FMP batch-eod，等价数据不算降级） |
+| FRED | 无风险利率的可选替代源 | `FRED_API_KEY`（可选；缺失时用 FMP treasury-rates） |
 | SEC EDGAR | 财报抽样校验 | `SEC_USER_AGENT`（含联系方式的 UA 字符串） |
 | Sample | 离线测试/CI | 无 |
+
+注意：2025-08-31 后注册的 FMP 账号只能使用 stable API（`/stable/...`），本项目即按此实现；
+旧版 `/api/v3` 端点对新账号返回 403 Legacy Endpoint。
 
 所有数据带 `as_of` / `source` / `fetched_at` / `filing_date` 溯源字段；财报按
 `filing_date <= as_of` 点时（point-in-time）过滤，历史回放不会泄漏未来数据。
