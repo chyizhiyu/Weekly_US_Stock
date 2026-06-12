@@ -1,0 +1,25 @@
+src/weekly_us_stock/valuation/irr.py
+  0c561210d93e16cc 12-14
+src/weekly_us_stock/providers/fmp.py
+  0c561210d93e16cc 347-364
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.22",
+  "base_commit_sha": "ba4133a9214450bb54d54934564ee16e0607f135",
+  "prompts": {
+    "0c561210d93e16cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad8549ce-f2a1-43ff-9548-5a819eb2ab3f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "qizy",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 10,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    }
+  }
+}
