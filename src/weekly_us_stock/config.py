@@ -112,6 +112,13 @@ class ScenarioSettings(BaseModel):
     price_anchor_growth: float = 0.05
     max_share_change_rate: float = 0.08
     min_share_change_rate: float = -0.05
+    # P1-3: buybacks are not mechanically extrapolated. The retirement rate
+    # decays toward zero each year, spend is capped at a fraction of positive
+    # distributable FCF, and buybacks stop when leverage is too high. Dilution
+    # (positive share change) is NOT decayed - the SBC/issuance penalty stays.
+    buyback_decay: float = 0.80
+    buyback_max_fcf_fraction: float = 0.80
+    buyback_max_net_debt_to_nopat: float = 4.0
 
 
 class RiskPreferenceSettings(BaseModel):

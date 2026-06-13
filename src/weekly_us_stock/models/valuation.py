@@ -57,6 +57,9 @@ class ScenarioValuation(BaseModel):
     total_return_5y: float
     reinvestment_rate_y1: float
     projected_fcf: list[float] = Field(default_factory=list)
+    # P1-3: realized share count at the horizon after FCF-constrained, decaying
+    # buybacks (or persistent dilution) - never the mechanical (1+rate)^h path.
+    ending_shares: float = 0.0
     # P0-1: WHY the 5y IRR could (not) be solved, and whether every projected
     # output for this scenario is a finite number. Drives fail-closed routing.
     irr_5y_status: str = "valid"

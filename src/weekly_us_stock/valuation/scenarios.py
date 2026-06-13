@@ -73,6 +73,11 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
 
     probabilities = cfg.probabilities
 
+    # P1-3: scenarios differ on buybacks. The bear case does not assume
+    # management keeps buying back into a downturn (a buyback rate is floored at
+    # zero), while dilution is kept across every scenario.
+    bear_share = max(share_change, 0.0)
+
     def _assumption(
         name: str,
         growth: float,
@@ -80,6 +85,8 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
         roic: float,
         terminal_roic: float,
         terminal_growth: float,
+        *,
+        share: float,
     ) -> ScenarioAssumptions:
         return ScenarioAssumptions(
             name=name,  # type: ignore[arg-type]
@@ -89,7 +96,7 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
             operating_margin=scenario_margin,
             forward_roic=roic,
             terminal_roic=max(terminal_roic, terminal_growth + _MIN_DENOMINATOR),
-            share_change_rate=share_change,
+            share_change_rate=share,
         )
 
     wacc = inputs.wacc
@@ -104,6 +111,7 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
             max(forward_roic * 0.75, 0.02),
             wacc,  # no enduring value creation in the bear case
             max(cfg.terminal_growth - 0.005, 0.0),
+            share=bear_share,
         ),
         _assumption(
             "base",
@@ -112,6 +120,7 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
             forward_roic,
             wacc + base_excess * moat,
             cfg.terminal_growth,
+            share=share_change,
         ),
         _assumption(
             "bull",
@@ -120,6 +129,7 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
             min(forward_roic * 1.10, 0.60),
             wacc + base_excess * min(1.0, moat + 0.2),
             cfg.terminal_growth + 0.005,
+            share=share_change,
         ),
     ]
 
@@ -156,29 +166,33 @@ def value_scenario(
 
     interest_drag = inputs.net_debt * inputs.cost_of_debt_after_tax
 
-    shares = inputs.shares_outstanding
-    rate = assumption.share_change_rate
-    shares_path = [shares * (1.0 + rate) ** t for t in range(1, horizon + 1)]
-
-    distributable: list[float] = []
+    # P1-3: the share count is not mechanically extrapolated. Buybacks decay
+    # toward zero each year, can only spend a fraction of POSITIVE distributable
+    # FCF, and stop entirely when leverage is too high - so a company never gets
+    # a per-share lift from share shrinkage its cash flow cannot fund. Dilution
+    # (positive rate) persists at full strength so the issuance penalty stays.
+    base_rate = assumption.share_change_rate
+    buyback_blocked = _buyback_blocked(inputs, cfg)
+    current_shares = inputs.shares_outstanding
+    shares_path: list[float] = []
+    per_share_flows: list[float] = []
     for year in range(1, horizon + 1):
         equity_fcf = fcf_path[year - 1] - interest_drag
-        if rate < 0:
-            # Buybacks are paid for: shrinking the share count consumes cash at
-            # a price anchored to today's market price.
-            prior_shares = shares if year == 1 else shares_path[year - 2]
-            buyback_spend = (
-                abs(rate)
-                * prior_shares
-                * inputs.price
-                * (1.0 + cfg.price_anchor_growth) ** year
+        if base_rate < 0:
+            decayed_rate = base_rate * (cfg.buyback_decay ** (year - 1))
+            price_year = inputs.price * (1.0 + cfg.price_anchor_growth) ** year
+            budget = 0.0 if buyback_blocked else cfg.buyback_max_fcf_fraction * max(
+                0.0, equity_fcf
             )
-            equity_fcf -= buyback_spend
-        distributable.append(equity_fcf)
-
-    per_share_flows = [
-        distributable[t] / shares_path[t] for t in range(horizon)
-    ]
+            desired_spend = abs(decayed_rate) * current_shares * price_year
+            actual_spend = min(desired_spend, budget)
+            shares_retired = actual_spend / price_year if price_year > 0 else 0.0
+            current_shares = max(current_shares - shares_retired, _MIN_DENOMINATOR)
+            equity_fcf -= actual_spend
+        else:
+            current_shares = current_shares * (1.0 + base_rate)
+        shares_path.append(current_shares)
+        per_share_flows.append(equity_fcf / current_shares)
 
     exit_5 = _exit_value_per_share(
         nopat_path[-1], assumption, inputs, shares_path[-1]
@@ -236,6 +250,7 @@ def value_scenario(
         total_return_5y=total_return_5y,
         reinvestment_rate_y1=reinvest_y1,
         projected_fcf=[round(value, 4) for value in fcf_path],
+        ending_shares=shares_path[-1],
         irr_5y_status=irr_5y_status,
         is_finite=scenario_finite,
     )
@@ -544,6 +559,17 @@ def _reinvestment_rate(growth: float, roic: float, cfg: ScenarioSettings) -> flo
     if growth <= 0:
         return 0.0
     return min(growth / max(roic, _MIN_DENOMINATOR), cfg.max_reinvestment_rate)
+
+
+def _buyback_blocked(inputs: CompanyInputs, cfg: ScenarioSettings) -> bool:
+    """Stop buybacks when leverage is too high to fund them prudently (P1-3)."""
+
+    if inputs.net_debt <= 0:
+        return False
+    nopat = inputs.latest_revenue * inputs.normalized_operating_margin * (1.0 - inputs.tax_rate)
+    if nopat <= 0:
+        return True  # levered and not earning: no buybacks
+    return inputs.net_debt > cfg.buyback_max_net_debt_to_nopat * nopat
 
 
 def _terminal_value(terminal_nopat: float, assumption: ScenarioAssumptions, wacc: float) -> float:
