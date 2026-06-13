@@ -17,7 +17,7 @@ from weekly_us_stock.config import (
     WaccSettings,
 )
 from weekly_us_stock.models.valuation import CompanyInputs
-from weekly_us_stock.valuation.scenarios import value_company
+from weekly_us_stock.valuation.scenarios import classify_roic, value_company
 
 _CARRY_COLUMNS = [
     "name",
@@ -52,6 +52,7 @@ class ValuationStepResult:
     scenario_rows: pd.DataFrame
     skipped: pd.DataFrame  # incomplete inputs, never entered the engine
     invalid: pd.DataFrame  # ran but failed the finite/solver-bound guard (P0-1)
+    roic_routed: pd.DataFrame  # ROIC not meaningful; needs a dedicated model (P1-4)
 
 
 def run_scenario_valuations(
@@ -70,12 +71,27 @@ def run_scenario_valuations(
     metric_rows: list[dict] = []
     scenario_rows: list[dict] = []
     skipped_rows: list[dict] = []
+    roic_routed_rows: list[dict] = []
 
     for _, row in quality_frame.iterrows():
         inputs = _to_inputs(row)
         if inputs is None:
             skipped_rows.append(
                 {"ticker": row.get("ticker"), "skip_reason": "incomplete_valuation_inputs"}
+            )
+            continue
+        # P1-4: a negative / undefined ROIC is not valued as a low positive one;
+        # route it to a dedicated-model watchlist with its status.
+        roic_status = classify_roic(inputs)
+        if roic_status != "ok":
+            roic_routed_rows.append(
+                {
+                    "ticker": inputs.ticker,
+                    "roic": inputs.roic,
+                    "incremental_roic": inputs.incremental_roic,
+                    "roic_status": roic_status,
+                    "watchlist_reason": f"roic_not_meaningful:{roic_status}",
+                }
             )
             continue
         valuation = value_company(
@@ -149,6 +165,7 @@ def run_scenario_valuations(
             "assumption_flags": ";".join(valuation.assumption_flags),
             "valuation_alerts": ";".join(valuation.valuation_alerts),
             "requires_manual_review": valuation.requires_manual_review,
+            "roic_status": roic_status,  # "ok" here; non-ok was routed out (P1-4)
         }
         for column in _CARRY_COLUMNS:
             if column in row.index:
@@ -171,6 +188,7 @@ def run_scenario_valuations(
         scenario_rows=pd.DataFrame(scenario_rows),
         skipped=pd.DataFrame(skipped_rows),
         invalid=invalid_metrics,
+        roic_routed=pd.DataFrame(roic_routed_rows),
     )
 
 

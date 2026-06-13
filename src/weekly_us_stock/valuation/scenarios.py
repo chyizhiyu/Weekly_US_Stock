@@ -527,7 +527,33 @@ def _growth_spread(inputs: CompanyInputs, cfg: ScenarioSettings) -> float:
     return raw * (1.5 - moat)
 
 
+def classify_roic(inputs: CompanyInputs) -> str:
+    """P1-4: is ROIC a meaningful positive return, or undefined?
+
+    A negative ROIC is NOT silently floored to a small positive number. We
+    distinguish a genuine negative operating return from a ratio made
+    meaningless by a negative/near-zero invested-capital base (accumulated
+    buybacks, negative equity) and from a non-finite data artifact, so the
+    capital-light / impaired names route to the watchlist instead of being
+    valued as if they earned a low-but-positive 2% ROIC.
+    """
+
+    if not math.isfinite(inputs.roic) or (
+        inputs.incremental_roic is not None and not math.isfinite(inputs.incremental_roic)
+    ):
+        return "data_anomaly"
+    if inputs.roic < 0:
+        # NOPAT is positive (margin > 0) yet ROIC < 0 -> invested capital is
+        # negative: the ratio has no economic meaning here.
+        if inputs.normalized_operating_margin > 0:
+            return "meaningless_capital"
+        return "negative_returns"
+    return "ok"
+
+
 def _forward_roic(inputs: CompanyInputs) -> float:
+    # Only reached for "ok" (non-negative ROIC) companies; negative/meaningless
+    # ROIC is routed out by classify_roic before valuation (P1-4).
     if inputs.incremental_roic is not None:
         blended = 0.7 * inputs.incremental_roic + 0.3 * inputs.roic
     else:

@@ -354,6 +354,19 @@ class WeeklyUSStockPipeline:
             summary.notes.append(
                 f"removed {len(flagged)} non-finite/bound-saturated valuations from ranking"
             )
+        # P1-4: names whose ROIC is not economically meaningful are not valued
+        # as low-but-positive; they wait on the watchlist for a dedicated model.
+        if not valuation_result.roic_routed.empty:
+            routed = valuation_result.roic_routed.copy()
+            watchlist_frames.append(routed)
+            self._export(run_dir, "roic_routed", routed, summary, artifacts)
+            summary.rejection_counts = {
+                **(summary.rejection_counts or {}),
+                **routed["watchlist_reason"].value_counts().to_dict(),
+            }
+            summary.notes.append(
+                f"routed {len(routed)} names with non-meaningful ROIC to the watchlist"
+            )
         steps.append(summary)
         _log_step(summary)
 
