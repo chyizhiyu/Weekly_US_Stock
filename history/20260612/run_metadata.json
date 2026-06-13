@@ -2,23 +2,23 @@
   "as_of": "2026-06-12",
   "week_key": "2026-W24",
   "universe_limit": null,
-  "generated_at": "2026-06-13T05:22:34.943187+00:00",
+  "generated_at": "2026-06-13T08:38:13.689534+00:00",
   "pipeline_version": "0.1.0",
   "provider": "composite",
   "data_source_setting": "auto",
   "hurdle_rate": 0.12,
   "degraded_sources": [],
-  "fresh_price_coverage": 0.9986442516268981,
-  "stale_tickers": 5,
+  "fresh_price_coverage": 0.9991865509761388,
+  "stale_tickers": 3,
   "funnel": {
     "step1_universe": 5889,
-    "step2_hard_filters": 947,
-    "step3_standardize": 947,
-    "step4_normalized_model": 887,
-    "step5_quality_risk": 866,
-    "step6_scenario_valuation": 866,
-    "step7_risk_adjusted_ranking": 866,
-    "step8_reports": 866
+    "step2_hard_filters": 948,
+    "step3_standardize": 948,
+    "step4_normalized_model": 888,
+    "step5_quality_risk": 867,
+    "step6_scenario_valuation": 867,
+    "step7_risk_adjusted_ranking": 867,
+    "step8_reports": 867
   },
   "time_consistency": {
     "price_as_of": "2026-06-12",
@@ -28,11 +28,11 @@
     "filing_age_days_max": 219,
     "ttm_anchor_coverage": 1.0
   },
-  "tag": "weekly-us-stock-20260613-121726",
-  "ref": "refs/tags/weekly-us-stock-20260613-121726",
-  "source_sha": "f72eca60f86b312f53d404b408d713073286ce88",
-  "run_id": "27456305778",
-  "run_number": "6",
+  "tag": "weekly-us-stock-20260613-155504",
+  "ref": "refs/tags/weekly-us-stock-20260613-155504",
+  "source_sha": "1a59dcee04646efefc301f58ddb91a1c1885dda1",
+  "run_id": "27460942888",
+  "run_number": "7",
   "run_attempt": "1",
-  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27456305778"
+  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27460942888"
 }
