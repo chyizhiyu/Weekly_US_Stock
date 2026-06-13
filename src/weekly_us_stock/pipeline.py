@@ -35,6 +35,7 @@ from weekly_us_stock.providers.base import (
     normalize_ticker,
 )
 from weekly_us_stock.providers.sample import SampleDataProvider
+from weekly_us_stock.reports.archive import build_paper_portfolio, build_run_manifest
 from weekly_us_stock.reports.compare import (
     compare_with_previous,
     find_previous_run_dir,
@@ -390,6 +391,10 @@ class WeeklyUSStockPipeline:
         self._export(run_dir, "upside_ranking", upside, summary, artifacts)
         self._export(run_dir, "eligible_candidates", eligible, summary, artifacts)
         self._export(run_dir, "research_queue", research_queue, summary, artifacts)
+        # P2-2: freeze the actionable picks as a forward paper-portfolio entry.
+        self._export(
+            run_dir, "paper_portfolio", build_paper_portfolio(eligible, as_of), summary, artifacts
+        )
         summary.notes.append(
             f"eligible candidates: {len(eligible)}/{len(robust)} "
             f"(research queue {len(research_queue)})"
@@ -480,6 +485,32 @@ class WeeklyUSStockPipeline:
         result_path = run_dir / "result.json"
         result.artifacts.append(str(result_path))
         export_json(result.model_dump(mode="json"), result_path)
+
+        # P2-2: a self-describing manifest tying this run's archive to its
+        # universe/config fingerprints for later out-of-sample validation.
+        manifest = build_run_manifest(
+            as_of=request.as_of,
+            fingerprints={
+                "universe_fingerprint": self._universe_fingerprint,
+                "config_fingerprint": self._config_fingerprint,
+                "universe_ticker_hash": self._universe_ticker_hash,
+                "index_membership": self.settings.universe.index_membership,
+                "source_sha": os.environ.get("GITHUB_SHA", ""),
+            },
+            counts={
+                "universe": steps[0].output_count if steps else 0,
+                "ranked": int(len(robust)),
+                "eligible": int(len(eligible)),
+                "research_queue": int(len(research_queue)),
+                "watchlist": int(len(watchlist)),
+                "turnaround": int(len(turnaround)),
+                "invalid_valuations": int(len(valuation_result.invalid)),
+                "roic_routed": int(len(valuation_result.roic_routed)),
+            },
+            artifacts=[Path(a).name for a in artifacts],
+            paper_portfolio_size=int(len(eligible)),
+        )
+        export_json(manifest, run_dir / "run_manifest.json")
         return result
 
     # -- provider wiring ------------------------------------------------------
