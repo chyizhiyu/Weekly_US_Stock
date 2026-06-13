@@ -113,7 +113,7 @@ OpenClaw 主机上每周六北京时间 08:05 执行：
 cd /path/to/Weekly_US_Stock
 git pull --ff-only origin main
 WEEKLY_US_STOCK_TIMEOUT_SECONDS=7200 \
-  scripts/openclaw_wait_for_scheduled_result.sh
+  scripts/openclaw_trigger_actions.sh
 ```
 
 `openclaw_wait_for_scheduled_result.sh` 轮询 `weekly-us-stock-results` 分支，
