@@ -103,3 +103,9 @@ class CompanyValuation(BaseModel):
     valuation_status: str = "valid"
     invalid_reason: str | None = None
     invalid_fields: list[str] = Field(default_factory=list)
+    # P1-2: assumptions that hit a configured bound (growth/ROIC/share/WACC...),
+    # extreme-valuation alerts, and whether the name needs manual re-underwriting
+    # before being treated as a precise estimate.
+    assumption_flags: list[str] = Field(default_factory=list)
+    valuation_alerts: list[str] = Field(default_factory=list)
+    requires_manual_review: bool = False

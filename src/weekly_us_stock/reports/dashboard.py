@@ -120,6 +120,7 @@ def build_dashboard(
         lines += ["", "First tracked run — no previous ranking to compare against."]
 
     lines += _scenario_section(robust, scenarios, top_n)
+    lines += _alerts_section(robust, top_n)
 
     lines += ["", "## Key Risks and Failure Conditions", ""]
     risk_lines = _risk_lines(robust, top_n)
@@ -219,6 +220,30 @@ def _scenario_section(robust: pd.DataFrame, scenarios: pd.DataFrame, top_n: int)
             ]
             for _, row in inverted.iterrows():
                 lines.append(f"- {row['ticker']}: {row.get('scenario_order_note') or 'reordered'}")
+    return lines
+
+
+def _alerts_section(robust: pd.DataFrame, top_n: int) -> list[str]:
+    # P1-2: show which boundary assumptions and extreme outputs drove the result.
+    lines = ["", "## Boundary Assumptions & Valuation Alerts", ""]
+    if robust.empty or "assumption_flags" not in robust.columns:
+        return lines + ["- None."]
+    shown = False
+    for _, row in robust.head(top_n).iterrows():
+        flags = str(row.get("assumption_flags") or "").strip()
+        alerts = str(row.get("valuation_alerts") or "").strip()
+        if not flags and not alerts:
+            continue
+        shown = True
+        review = " ⚠ manual review" if bool(row.get("requires_manual_review")) else ""
+        parts = []
+        if flags:
+            parts.append(f"bounds: {flags}")
+        if alerts:
+            parts.append(f"alerts: {alerts}")
+        lines.append(f"- {row['ticker']}{review} — " + "; ".join(parts))
+    if not shown:
+        lines.append("- No boundary or extreme-valuation flags among ranked names.")
     return lines
 
 

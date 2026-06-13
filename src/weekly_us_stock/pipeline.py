@@ -321,7 +321,11 @@ class WeeklyUSStockPipeline:
             "step6_scenario_valuation",
             input_count=len(quality),
             work=lambda: run_scenario_valuations(
-                quality, self.settings.scenarios, self.settings.risk_preferences
+                quality,
+                self.settings.scenarios,
+                self.settings.risk_preferences,
+                wacc_settings=self.settings.wacc,
+                alert_settings=self.settings.alerts,
             ),
             output_count=lambda result: len(result.metrics),
         )

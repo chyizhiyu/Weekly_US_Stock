@@ -10,7 +10,12 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from weekly_us_stock.config import RiskPreferenceSettings, ScenarioSettings
+from weekly_us_stock.config import (
+    AlertSettings,
+    RiskPreferenceSettings,
+    ScenarioSettings,
+    WaccSettings,
+)
 from weekly_us_stock.models.valuation import CompanyInputs
 from weekly_us_stock.valuation.scenarios import value_company
 
@@ -54,8 +59,14 @@ def run_scenario_valuations(
     scenario_settings: ScenarioSettings,
     risk_preferences: RiskPreferenceSettings,
     hurdle_rate: float | None = None,
+    *,
+    wacc_settings: WaccSettings | None = None,
+    alert_settings: AlertSettings | None = None,
 ) -> ValuationStepResult:
     hurdle = hurdle_rate if hurdle_rate is not None else risk_preferences.hurdle_rate
+    wacc_bounds = (
+        (wacc_settings.min_wacc, wacc_settings.max_wacc) if wacc_settings is not None else None
+    )
     metric_rows: list[dict] = []
     scenario_rows: list[dict] = []
     skipped_rows: list[dict] = []
@@ -67,7 +78,13 @@ def run_scenario_valuations(
                 {"ticker": row.get("ticker"), "skip_reason": "incomplete_valuation_inputs"}
             )
             continue
-        valuation = value_company(inputs, scenario_settings, risk_preferences)
+        valuation = value_company(
+            inputs,
+            scenario_settings,
+            risk_preferences,
+            wacc_bounds=wacc_bounds,
+            alerts=alert_settings,
+        )
 
         for scenario in valuation.scenarios:
             assumption = scenario.assumptions
@@ -128,6 +145,10 @@ def run_scenario_valuations(
             "valuation_status": valuation.valuation_status,
             "invalid_reason": valuation.invalid_reason,
             "invalid_fields": ";".join(valuation.invalid_fields),
+            # P1-2 boundary / extreme-valuation audit.
+            "assumption_flags": ";".join(valuation.assumption_flags),
+            "valuation_alerts": ";".join(valuation.valuation_alerts),
+            "requires_manual_review": valuation.requires_manual_review,
         }
         for column in _CARRY_COLUMNS:
             if column in row.index:

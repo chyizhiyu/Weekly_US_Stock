@@ -159,6 +159,21 @@ class ReportSettings(BaseModel):
     feishu_top_n: int = 10
 
 
+class AlertSettings(BaseModel):
+    """Boundary-assumption and extreme-valuation alert thresholds (P1-2).
+
+    A hit does not prove the valuation is wrong, but it lowers model confidence
+    and/or routes the name to manual review so a boundary-driven number is never
+    read as an ordinary precise estimate. All thresholds are configurable."""
+
+    intrinsic_to_price_flag: float = 2.0   # base intrinsic >= 2x price -> soft flag
+    intrinsic_to_price_review: float = 3.0  # >= 3x price -> manual review
+    median_irr_review: float = 1.0          # median IRR >= 100% -> manual review
+    bull_return_review: float = 10.0        # bull 5y total return >= 1000% -> review
+    scenario_span_review: float = 2.0       # P90 - P10 >= 200 points -> review
+    model_confidence_haircut_per_flag: float = 0.9  # per boundary assumption hit
+
+
 class FreshnessSettings(BaseModel):
     max_price_staleness_days: int = 3
     min_fresh_price_coverage: float = 0.8
@@ -176,6 +191,7 @@ class Settings(BaseModel):
     confidence: ConfidenceSettings = Field(default_factory=ConfidenceSettings)
     ranking: RankingSettings = Field(default_factory=RankingSettings)
     eligibility: EligibilitySettings = Field(default_factory=EligibilitySettings)
+    alerts: AlertSettings = Field(default_factory=AlertSettings)
     report: ReportSettings = Field(default_factory=ReportSettings)
     freshness: FreshnessSettings = Field(default_factory=FreshnessSettings)
 

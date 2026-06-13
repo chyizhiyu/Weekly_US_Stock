@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import math
 
-from weekly_us_stock.config import RiskPreferenceSettings, ScenarioSettings
+from weekly_us_stock.config import AlertSettings, RiskPreferenceSettings, ScenarioSettings
 from weekly_us_stock.models.valuation import (
     CompanyInputs,
     CompanyValuation,
@@ -387,10 +387,111 @@ def value_company(
     inputs: CompanyInputs,
     cfg: ScenarioSettings,
     prefs: RiskPreferenceSettings,
+    *,
+    wacc_bounds: tuple[float, float] | None = None,
+    alerts: AlertSettings | None = None,
 ) -> CompanyValuation:
     assumptions = build_scenarios(inputs, cfg)
     scenarios = [value_scenario(inputs, assumption, cfg) for assumption in assumptions]
-    return aggregate_valuation(inputs, scenarios, prefs)
+    valuation = aggregate_valuation(inputs, scenarios, prefs)
+    _apply_assumption_alerts(valuation, inputs, cfg, prefs, wacc_bounds, alerts or AlertSettings())
+    return valuation
+
+
+# Forward ROIC clamp bounds, mirrored from _forward_roic for boundary detection.
+_FORWARD_ROIC_FLOOR = 0.02
+_FORWARD_ROIC_CAP = 0.60
+
+
+def detect_assumption_flags(
+    inputs: CompanyInputs,
+    cfg: ScenarioSettings,
+    wacc_bounds: tuple[float, float] | None = None,
+) -> list[str]:
+    """Assumptions that hit a configured bound before clamping (P1-2)."""
+
+    flags: list[str] = []
+    anchors = [inputs.hist_revenue_cagr]
+    if inputs.analyst_growth is not None:
+        anchors.append(inputs.analyst_growth)
+    blended_growth = sum(anchors) / len(anchors)
+    if blended_growth >= cfg.base_growth_cap:
+        flags.append("base_growth_cap_hit")
+    elif blended_growth <= cfg.base_growth_floor:
+        flags.append("base_growth_floor_hit")
+
+    raw_roic = (
+        0.7 * inputs.incremental_roic + 0.3 * inputs.roic
+        if inputs.incremental_roic is not None
+        else inputs.roic
+    )
+    if raw_roic >= _FORWARD_ROIC_CAP:
+        flags.append("forward_roic_cap_hit")
+    elif raw_roic <= _FORWARD_ROIC_FLOOR:
+        flags.append("forward_roic_floor_hit")
+
+    if inputs.net_share_change_rate >= cfg.max_share_change_rate:
+        flags.append("share_change_cap_hit")
+    elif inputs.net_share_change_rate <= cfg.min_share_change_rate:
+        flags.append("share_change_floor_hit")
+
+    if wacc_bounds is not None:
+        low, high = wacc_bounds
+        if inputs.wacc >= high:
+            flags.append("wacc_cap_hit")
+        elif inputs.wacc <= low:
+            flags.append("wacc_floor_hit")
+    return flags
+
+
+def detect_valuation_alerts(
+    valuation: CompanyValuation, inputs: CompanyInputs, alerts: AlertSettings
+) -> tuple[list[str], list[str]]:
+    """Return (review_alerts, soft_flags) for extreme valuation outputs."""
+
+    review: list[str] = []
+    soft: list[str] = []
+    ratio = valuation.intrinsic_value_base / inputs.price if inputs.price else 0.0
+    if ratio >= alerts.intrinsic_to_price_review:
+        review.append("intrinsic_3x_price")
+    elif ratio >= alerts.intrinsic_to_price_flag:
+        soft.append("intrinsic_2x_price")
+    if valuation.median_irr >= alerts.median_irr_review:
+        review.append("median_irr_extreme")
+    bull = next((s for s in valuation.scenarios if s.assumptions.name == "bull"), None)
+    if bull is not None and bull.total_return_5y >= alerts.bull_return_review:
+        review.append("bull_return_extreme")
+    if (valuation.p90_irr - valuation.p10_irr) >= alerts.scenario_span_review:
+        review.append("scenario_span_extreme")
+    return review, soft
+
+
+def _apply_assumption_alerts(
+    valuation: CompanyValuation,
+    inputs: CompanyInputs,
+    cfg: ScenarioSettings,
+    prefs: RiskPreferenceSettings,
+    wacc_bounds: tuple[float, float] | None,
+    alerts: AlertSettings,
+) -> None:
+    flags = detect_assumption_flags(inputs, cfg, wacc_bounds)
+    # reinvestment cap is a per-scenario clamp; detect it on the computed paths.
+    if any(s.reinvestment_rate_y1 >= cfg.max_reinvestment_rate for s in valuation.scenarios):
+        flags.append("reinvestment_cap_hit")
+
+    review, soft = detect_valuation_alerts(valuation, inputs, alerts)
+    valuation.assumption_flags = flags + soft
+    valuation.valuation_alerts = review
+    valuation.requires_manual_review = bool(review)
+
+    # A boundary hit lowers model confidence (and raises uncertainty) so a
+    # boundary-driven number is never read as an ordinary precise estimate.
+    if flags:
+        valuation.model_confidence *= alerts.model_confidence_haircut_per_flag ** len(flags)
+        half_spread = max(valuation.p90_irr - valuation.p10_irr, 0.0) / 2.0
+        valuation.model_uncertainty = half_spread + prefs.uncertainty_per_missing_confidence * (
+            (1.0 - valuation.model_confidence) + (1.0 - valuation.data_confidence)
+        )
 
 
 # -- helpers ---------------------------------------------------------------------
