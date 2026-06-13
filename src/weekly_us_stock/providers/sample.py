@@ -35,6 +35,11 @@ class SampleDataProvider:
         frame = frame.loc[pd.to_datetime(frame["listing_date"]).dt.date <= as_of]
         return require_columns(frame.reset_index(drop=True), UNIVERSE_COLUMNS, "universe")
 
+    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
+        # Sample data carries no index membership; an empty set tells the
+        # pipeline to keep the full sample universe instead of filtering.
+        return set()
+
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
         frame = self._read_csv("prices.csv", date_columns=["trade_date"])
         frame = self._filter_tickers(frame, tickers)

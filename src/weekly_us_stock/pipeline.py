@@ -88,6 +88,23 @@ class WeeklyUSStockPipeline:
             work=lambda: fetch_universe(provider, as_of),
             output_count=len,
         )
+        membership = self.settings.universe.index_membership
+        if membership and not universe.empty:
+            allowed = provider.index_constituents(membership, as_of)
+            if allowed:
+                before = len(universe)
+                universe = universe.loc[
+                    universe["ticker"].isin(allowed)
+                ].reset_index(drop=True)
+                summary.output_count = len(universe)
+                summary.notes.append(
+                    f"restricted to {'+'.join(membership)}: {len(universe)}/{before} names"
+                )
+            else:
+                summary.notes.append(
+                    f"index_membership {membership} set but provider returned no "
+                    "constituents; keeping full universe"
+                )
         if request.limit is not None and not universe.empty:
             # Smoke-test mode: keep the N largest names so a bounded real-data
             # run still exercises every later step.

@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+KNOWN_INDEX_MEMBERSHIPS = {"sp500", "nasdaq100", "dowjones"}
 
 
 class AppSettings(BaseModel):
@@ -20,6 +22,25 @@ class UniverseSettings(BaseModel):
     exchanges: list[str] = Field(default_factory=lambda: ["NYSE", "NASDAQ", "AMEX"])
     include_adrs: bool = False
     allowed_security_types: list[str] = Field(default_factory=lambda: ["common_stock"])
+    # Restrict the screened universe to the union of these index memberships
+    # (e.g. ["sp500", "nasdaq100"]). Empty list = full US market. Names are
+    # resolved to current constituent lists by the data provider.
+    index_membership: list[str] = Field(default_factory=list)
+
+    @field_validator("index_membership")
+    @classmethod
+    def _normalize_index_membership(cls, value: list[str]) -> list[str]:
+        normalized: list[str] = []
+        for item in value:
+            key = str(item).strip().lower()
+            if key not in KNOWN_INDEX_MEMBERSHIPS:
+                raise ValueError(
+                    f"unknown index_membership '{item}'; "
+                    f"allowed: {sorted(KNOWN_INDEX_MEMBERSHIPS)}"
+                )
+            if key not in normalized:
+                normalized.append(key)
+        return normalized
 
 
 class HardFilterSettings(BaseModel):

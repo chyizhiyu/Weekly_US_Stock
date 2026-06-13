@@ -51,6 +51,14 @@ BASE_URL = "https://financialmodelingprep.com/stable"
 # survivorship bias out of any attempted historical replay.
 MAX_SNAPSHOT_AGE_DAYS = 7
 
+# Index membership -> stable constituent endpoint. These are CURRENT-membership
+# snapshots (same look-ahead caveat as the screener).
+_INDEX_CONSTITUENT_ENDPOINTS = {
+    "sp500": "sp500-constituent",
+    "nasdaq100": "nasdaq-constituent",
+    "dowjones": "dowjones-constituent",
+}
+
 _EXCHANGE_ALIASES = {
     "NYSE": "NYSE",
     "NEW YORK STOCK EXCHANGE": "NYSE",
@@ -103,6 +111,16 @@ def classify_security(symbol: str, name: str, *, is_etf: bool, is_fund: bool) ->
     if "CLOSED END FUND" in upper_name or upper_name.endswith(" FUND"):
         return "closed_end_fund"
     return "common_stock"
+
+
+def extract_constituent_symbols(payload: list[dict[str, Any]]) -> set[str]:
+    """Index-constituent payload -> set of upper-cased ticker symbols."""
+    symbols: set[str] = set()
+    for item in payload or []:
+        symbol = str(item.get("symbol") or "").strip().upper()
+        if symbol:
+            symbols.add(symbol)
+    return symbols
 
 
 def transform_screener(payload: list[dict[str, Any]], fetched_at: str, as_of: date) -> pd.DataFrame:
@@ -456,6 +474,22 @@ class FMPProvider:
         # market_cap_hint stays in the frame: it lets bounded smoke runs pick
         # the largest names and adds provenance to the universe export.
         return self._enrich_with_bulk_profiles(frame)
+
+    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
+        # Constituent lists are CURRENT-membership snapshots, same look-ahead
+        # caveat as the screener: refuse stale historical replays.
+        self._assert_snapshot_recency(as_of, "index constituents")
+        symbols: set[str] = set()
+        for index in indices:
+            endpoint = _INDEX_CONSTITUENT_ENDPOINTS.get(str(index).lower())
+            if endpoint is None:
+                raise ValueError(
+                    f"Unknown index '{index}'; known: "
+                    f"{sorted(_INDEX_CONSTITUENT_ENDPOINTS)}"
+                )
+            payload = self._get(endpoint, {})
+            symbols |= extract_constituent_symbols(payload or [])
+        return symbols
 
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
         fetched_at = _now_iso()

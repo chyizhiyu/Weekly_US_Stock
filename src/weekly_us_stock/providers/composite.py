@@ -59,6 +59,9 @@ class CompositeProvider:
     def fetch_universe(self, as_of: date) -> pd.DataFrame:
         return self.fmp.fetch_universe(as_of)
 
+    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
+        return self.fmp.index_constituents(indices, as_of)
+
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
         if self.polygon is not None:
             try:

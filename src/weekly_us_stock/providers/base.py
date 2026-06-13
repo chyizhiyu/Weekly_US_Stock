@@ -84,6 +84,14 @@ class DataProvider(Protocol):
         """US-listed instruments with type/exchange/listing metadata."""
         ...
 
+    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
+        """Union of CURRENT ticker symbols for the named indices (``sp500``,
+        ``nasdaq100``, ``dowjones``), used to narrow the universe to index
+        members. Returns an empty set when the source has no membership data
+        (e.g. the sample provider); callers then keep the full universe rather
+        than filtering to nothing."""
+        ...
+
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
         """Daily bars up to and including as_of for liquidity and entry price."""
         ...

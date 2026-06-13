@@ -12,6 +12,9 @@ universe:
   exchanges: [NYSE, NASDAQ, AMEX]   # AMEX == NYSE American
   include_adrs: false               # flip to true to let US-listed ADRs into the pool
   allowed_security_types: [common_stock]
+  # Narrow the screen to index members (union). [] = full US market.
+  # Supported: sp500, nasdaq100, dowjones.
+  index_membership: [sp500, nasdaq100]
 
 hard_filters:
   min_listing_years: 3
