@@ -10,167 +10,167 @@ are scenario-weighted figures, to be read as stress labels.
 ## Data Freshness
 
 - Expected market data date: **2026-06-12**
-- Fresh price coverage: **99.9%** (3 stale tickers)
+- Fresh price coverage: **100.0%** (0 stale tickers)
 
 ## Funnel
 
 | Step | Input | Output | Top rejections |
 |---|---|---|---|
-| step1_universe | 0 | 5889 | - |
-| step2_hard_filters | 5889 | 948 | market_cap: 1379, adr_excluded: 1287, listing_age: 477 |
-| step3_standardize | 948 | 948 | - |
-| step4_normalized_model | 948 | 888 | no_normalized_earnings: 56 |
-| step5_quality_risk | 888 | 867 | - |
-| step6_scenario_valuation | 867 | 867 | - |
-| step7_risk_adjusted_ranking | 867 | 867 | - |
+| step1_universe | 0 | 514 | - |
+| step2_hard_filters | 514 | 322 | persistent_negative_fcf: 22, interest_coverage: 21, adr_excluded: 18 |
+| step3_standardize | 322 | 322 | - |
+| step4_normalized_model | 322 | 315 | no_normalized_earnings: 7 |
+| step5_quality_risk | 315 | 307 | - |
+| step6_scenario_valuation | 307 | 307 | - |
+| step7_risk_adjusted_ranking | 307 | 307 | - |
 
 ## Robust Top 20 (risk-adjusted)
 
 | # | Ticker | Robust | Med IRR | P10 | P90 | Hurdle CVaR | W(perm loss) | Quality | Evidence |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | OPFI | 43.7% | 107.5% | 46.3% | 140.2% | 0.0% | 0% | 0.72 | 0.46 |
-| 2 | TNET | 27.4% | 46.2% | 26.5% | 57.6% | 0.0% | 0% | 0.93 | 0.80 |
-| 3 | HRB | 22.3% | 45.0% | 18.6% | 60.3% | 0.0% | 0% | 0.93 | 0.68 |
-| 4 | UHS | 18.8% | 34.0% | 16.2% | 44.3% | 0.0% | 0% | 0.78 | 0.85 |
-| 5 | EEFT | 17.8% | 37.4% | 12.3% | 52.7% | 0.0% | 0% | 0.87 | 0.70 |
-| 6 | OMC | 14.6% | 29.3% | 20.1% | 35.9% | 0.0% | 0% | 0.82 | 0.84 |
-| 7 | ALSN | 14.0% | 33.3% | 10.5% | 45.6% | 1.5% | 0% | 0.79 | 0.73 |
-| 8 | HLF | 12.3% | 28.5% | 28.5% | 36.8% | 0.0% | 0% | 0.69 | 0.75 |
-| 9 | SMPL | 11.1% | 28.9% | 13.9% | 37.2% | 0.0% | 0% | 0.64 | 0.66 |
-| 10 | NSP | 10.0% | 32.0% | 9.0% | 47.8% | 3.0% | 0% | 0.40 | 0.65 |
-| 11 | FOXA | 8.7% | 27.1% | 7.9% | 37.3% | 4.1% | 0% | 0.90 | 0.85 |
-| 12 | INVA | 7.8% | 25.9% | 14.9% | 39.2% | 0.0% | 0% | 0.65 | 0.56 |
-| 13 | CMCSA | 6.6% | 20.0% | 14.9% | 26.3% | 0.0% | 0% | 0.76 | 0.83 |
-| 14 | DOX | 5.4% | 25.3% | 6.3% | 35.9% | 5.7% | 0% | 0.86 | 0.83 |
-| 15 | MMS | 4.6% | 26.4% | 5.8% | 38.7% | 6.2% | 0% | 0.81 | 0.75 |
-| 16 | CTSH | 3.6% | 19.1% | 9.4% | 25.4% | 2.6% | 0% | 0.87 | 0.87 |
-| 17 | CRI | 2.5% | 19.4% | 9.5% | 24.3% | 2.5% | 0% | 0.71 | 0.69 |
-| 18 | CF | 1.4% | 38.0% | 3.9% | 60.1% | 8.1% | 0% | 0.89 | 0.37 |
-| 19 | MOH | -0.2% | 21.4% | 7.0% | 36.7% | 5.0% | 0% | 0.37 | 0.51 |
-| 20 | ADBE | -0.3% | 17.8% | 6.6% | 24.4% | 5.4% | 0% | 0.98 | 0.88 |
+| 1 | UHS | 18.8% | 34.0% | 16.2% | 44.3% | 0.0% | 0% | 0.78 | 0.85 |
+| 2 | OMC | 14.6% | 29.3% | 20.1% | 35.9% | 0.0% | 0% | 0.82 | 0.84 |
+| 3 | FOXA | 8.7% | 27.1% | 7.9% | 37.3% | 4.1% | 0% | 0.90 | 0.85 |
+| 4 | CMCSA | 6.6% | 20.0% | 14.9% | 26.3% | 0.0% | 0% | 0.76 | 0.83 |
+| 5 | CTSH | 3.6% | 19.1% | 9.4% | 25.4% | 2.6% | 0% | 0.87 | 0.87 |
+| 6 | CF | 1.4% | 38.0% | 3.9% | 60.1% | 8.1% | 0% | 0.89 | 0.37 |
+| 7 | ADBE | -0.3% | 17.8% | 6.6% | 24.4% | 5.4% | 0% | 0.98 | 0.88 |
+| 8 | CPAY | -1.6% | 18.7% | 4.7% | 26.4% | 7.3% | 0% | 0.99 | 0.84 |
+| 9 | ELV | -1.8% | 12.4% | 9.8% | 19.0% | 2.2% | 0% | 0.84 | 0.83 |
+| 10 | HUM | -2.9% | 17.1% | 5.4% | 25.9% | 6.6% | 0% | 0.66 | 0.74 |
+| 11 | HPQ | -3.8% | 8.2% | 8.2% | 14.0% | 3.8% | 0% | 0.97 | 0.83 |
+| 12 | ZTS | -4.0% | 17.4% | 3.2% | 24.9% | 8.8% | 0% | 0.98 | 0.90 |
+| 13 | GIS | -4.1% | 16.2% | 4.1% | 21.2% | 7.9% | 0% | 0.83 | 0.89 |
+| 14 | MO | -6.8% | 17.7% | 0.1% | 26.9% | 11.9% | 0% | 0.96 | 0.89 |
+| 15 | ACN | -8.5% | 11.5% | 3.5% | 16.4% | 8.5% | 0% | 0.99 | 0.88 |
+| 16 | EOG | -8.5% | 25.8% | -2.7% | 46.9% | 14.7% | 0% | 0.83 | 0.45 |
+| 17 | IT | -10.4% | 17.7% | -2.6% | 29.6% | 14.6% | 0% | 0.91 | 0.74 |
+| 18 | HCA | -11.2% | 15.1% | -1.9% | 23.7% | 13.9% | 0% | 0.97 | 0.89 |
+| 19 | APA | -11.4% | 22.5% | -3.5% | 43.9% | 15.5% | 0% | 0.73 | 0.39 |
+| 20 | TSN | -11.6% | 12.9% | -0.2% | 25.7% | 12.2% | 0% | 0.61 | 0.71 |
 
 ## Upside Top 20 (expected IRR)
 
 | # | Ticker | E[IRR] | Median | P10 | P90 | W(IRR>hurdle) | Upside to base |
 |---|---|---|---|---|---|---|---|
-| 1 | HRMY | 110.9% | 21.8% | 21.8% | 200.0% | 100% | 66% |
-| 2 | OPFI | 100.4% | 107.5% | 46.3% | 140.2% | 100% | 859% |
-| 3 | LHX | 93.7% | -12.7% | -12.7% | 200.0% | 50% | -66% |
-| 4 | TNET | 44.1% | 46.2% | 26.5% | 57.6% | 100% | 262% |
-| 5 | HRB | 42.2% | 45.0% | 18.6% | 60.3% | 100% | 248% |
-| 6 | IRWD | 37.0% | 63.6% | -95.0% | 115.9% | 75% | 524% |
-| 7 | CF | 35.0% | 38.0% | 3.9% | 60.1% | 75% | 199% |
-| 8 | EEFT | 34.9% | 37.4% | 12.3% | 52.7% | 100% | 190% |
-| 9 | FISV | 33.2% | 40.8% | -14.8% | 66.2% | 75% | 211% |
-| 10 | HLF | 32.2% | 28.5% | 28.5% | 36.8% | 100% | 181% |
-| 11 | UHS | 32.2% | 34.0% | 16.2% | 44.3% | 100% | 130% |
-| 12 | CI | 32.0% | 36.2% | -13.4% | 68.8% | 75% | 198% |
-| 13 | ALSN | 30.7% | 33.3% | 10.5% | 45.6% | 75% | 140% |
-| 14 | NSP | 30.2% | 32.0% | 9.0% | 47.8% | 75% | 159% |
-| 15 | OMC | 28.7% | 29.3% | 20.1% | 35.9% | 100% | 170% |
-| 16 | CQP | 27.3% | 32.0% | -11.8% | 57.2% | 75% | 169% |
-| 17 | SMPL | 27.2% | 28.9% | 13.9% | 37.2% | 100% | 132% |
-| 18 | INVA | 26.5% | 25.9% | 14.9% | 39.2% | 100% | 115% |
-| 19 | GRNT | 26.3% | 28.1% | -95.0% | 144.2% | 75% | 159% |
-| 20 | DVN | 26.0% | 28.8% | -17.1% | 63.4% | 75% | 156% |
+| 1 | LHX | 93.7% | -12.7% | -12.7% | 200.0% | 50% | -66% |
+| 2 | CF | 35.0% | 38.0% | 3.9% | 60.1% | 75% | 199% |
+| 3 | FISV | 33.2% | 40.8% | -14.8% | 66.2% | 75% | 211% |
+| 4 | UHS | 32.2% | 34.0% | 16.2% | 44.3% | 100% | 130% |
+| 5 | CI | 32.0% | 36.2% | -13.4% | 68.8% | 75% | 198% |
+| 6 | OMC | 28.7% | 29.3% | 20.1% | 35.9% | 100% | 170% |
+| 7 | DVN | 26.0% | 28.8% | -17.1% | 63.4% | 75% | 156% |
+| 8 | FOXA | 24.8% | 27.1% | 7.9% | 37.3% | 75% | 104% |
+| 9 | EOG | 23.9% | 25.8% | -2.7% | 46.9% | 75% | 110% |
+| 10 | CHTR | 22.6% | 54.3% | -95.0% | 76.9% | 75% | 349% |
+| 11 | APA | 21.3% | 22.5% | -3.5% | 43.9% | 75% | 125% |
+| 12 | CMCSA | 20.3% | 20.0% | 14.9% | 26.3% | 100% | 59% |
+| 13 | CTSH | 18.3% | 19.1% | 9.4% | 25.4% | 75% | 48% |
+| 14 | CPAY | 17.1% | 18.7% | 4.7% | 26.4% | 75% | 50% |
+| 15 | ADBE | 16.7% | 17.8% | 6.6% | 24.4% | 75% | 23% |
+| 16 | HUM | 16.4% | 17.1% | 5.4% | 25.9% | 75% | 48% |
+| 17 | ZTS | 15.7% | 17.4% | 3.2% | 24.9% | 75% | 41% |
+| 18 | MO | 15.6% | 17.7% | 0.1% | 26.9% | 75% | 52% |
+| 19 | IT | 15.6% | 17.7% | -2.6% | 29.6% | 75% | 37% |
+| 20 | LDOS | 14.5% | 17.9% | -9.0% | 31.1% | 75% | 52% |
 
 ## Week-over-week
 
 Previous run: 2026-06-12
 
-- Entered Robust Top: OPFI
-- Exited Robust Top: CPAY
-- Entered Upside Top: OPFI
-- Exited Upside Top: SM
+- Entered Robust Top: ACN, APA, CPAY, ELV, EOG, GIS, HCA, HPQ, HUM, IT, MO, TSN, ZTS
+- Exited Robust Top: ALSN, CRI, DOX, EEFT, HLF, HRB, INVA, MMS, MOH, NSP, OPFI, SMPL, TNET
+- Entered Upside Top: ADBE, APA, CHTR, CMCSA, CPAY, CTSH, EOG, FOXA, HUM, IT, LDOS, MO, ZTS
+- Exited Upside Top: ALSN, CQP, EEFT, GRNT, HLF, HRB, HRMY, INVA, IRWD, NSP, OPFI, SMPL, TNET
 
 Largest robust-rank moves:
 
-- DVN: 99 → 169 (-70)
-- HPE: 590 → 587 (+3)
-- CSX: 535 → 537 (-2)
-- APOG: 389 → 391 (-2)
-- NSC: 537 → 535 (+2)
+- LHX: 867 → 307 (+560)
+- MCHP: 861 → 306 (+555)
+- CRM: 856 → 305 (+551)
+- GM: 849 → 304 (+545)
+- XEL: 842 → 303 (+539)
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
 | Ticker | Scenario | P | Growth y1 | Margin | Terminal ROIC | Value/share | IRR 5y | Return 5y |
 |---|---|---|---|---|---|---|---|---|
-| OPFI | bear | 25% | -6.9% | 13.5% | 11.1% | 16.39 | 46.3% | 253% |
-| OPFI | base | 50% | 25.0% | 22.3% | 46.4% | 80.16 | 107.5% | 1870% |
-| OPFI | bull | 25% | 50.5% | 29.8% | 56.1% | 199.46 | 140.2% | 4965% |
-| TNET | bear | 25% | 20.2% | 6.5% | 8.0% | 89.08 | 26.5% | 224% |
-| TNET | base | 50% | 25.0% | 8.1% | 28.8% | 171.65 | 46.2% | 551% |
-| TNET | bull | 25% | 28.8% | 9.5% | 30.3% | 243.91 | 57.6% | 838% |
-| HRB | bear | 25% | -3.9% | 17.2% | 6.5% | 54.33 | 18.6% | 118% |
-| HRB | base | 50% | 3.9% | 21.5% | 56.3% | 127.15 | 45.0% | 467% |
-| HRB | bull | 25% | 10.0% | 25.3% | 60.0% | 201.57 | 60.3% | 824% |
 | UHS | bear | 25% | 1.7% | 8.9% | 8.0% | 181.43 | 16.2% | 100% |
 | UHS | base | 50% | 6.9% | 10.7% | 17.2% | 337.41 | 34.0% | 301% |
 | UHS | bull | 25% | 11.0% | 12.1% | 19.6% | 477.63 | 44.3% | 483% |
-| EEFT | bear | 25% | 0.8% | 8.7% | 6.5% | 80.95 | 12.3% | 72% |
-| EEFT | base | 50% | 7.5% | 12.1% | 26.5% | 193.41 | 37.4% | 357% |
-| EEFT | bull | 25% | 12.9% | 15.1% | 29.3% | 316.12 | 52.7% | 667% |
 | OMC | bear | 25% | 18.6% | 12.8% | 6.6% | 140.35 | 20.1% | 164% |
 | OMC | base | 50% | 25.0% | 14.6% | 6.6% | 206.92 | 29.3% | 286% |
 | OMC | bull | 25% | 30.1% | 15.9% | 6.6% | 267.55 | 35.9% | 398% |
-| ALSN | bear | 25% | 15.5% | 25.9% | 7.8% | 122.04 | 10.5% | 63% |
-| ALSN | base | 50% | 25.0% | 30.5% | 49.1% | 281.46 | 33.3% | 308% |
-| ALSN | bull | 25% | 32.6% | 33.7% | 59.5% | 426.36 | 45.6% | 531% |
-| HLF | bear | 25% | -5.0% | 8.5% | 8.6% | 32.04 | 34.8% | 231% |
-| HLF | base | 50% | 2.6% | 11.0% | 8.6% | 33.92 | 28.5% | 268% |
-| HLF | bull | 25% | 8.7% | 12.8% | 8.6% | 46.97 | 36.8% | 410% |
-| SMPL | bear | 25% | -8.2% | 13.2% | 6.5% | 16.32 | 13.9% | 81% |
-| SMPL | base | 50% | 5.5% | 15.9% | 7.2% | 29.13 | 28.9% | 246% |
-| SMPL | bull | 25% | 16.4% | 17.5% | 7.4% | 42.26 | 37.2% | 421% |
-| NSP | bear | 25% | -6.3% | 2.4% | 7.2% | 39.56 | 9.0% | 50% |
-| NSP | base | 50% | 4.8% | 3.8% | 12.4% | 94.80 | 32.0% | 270% |
-| NSP | bull | 25% | 13.6% | 4.9% | 15.0% | 163.63 | 47.8% | 546% |
 | FOXA | bear | 25% | -1.1% | 17.5% | 6.6% | 68.26 | 7.9% | 45% |
 | FOXA | base | 50% | 4.7% | 20.1% | 54.7% | 134.04 | 27.1% | 221% |
 | FOXA | bull | 25% | 9.3% | 22.0% | 60.0% | 188.71 | 37.3% | 367% |
-| INVA | bear | 25% | -4.9% | 54.5% | 6.6% | 31.02 | 14.9% | 94% |
-| INVA | base | 50% | 8.8% | 76.9% | 6.6% | 48.82 | 25.9% | 237% |
-| INVA | bull | 25% | 19.7% | 94.1% | 6.6% | 79.50 | 39.2% | 464% |
 | CMCSA | bear | 25% | -6.1% | 16.1% | 6.5% | 30.83 | 14.9% | 90% |
 | CMCSA | base | 50% | 1.2% | 18.7% | 6.5% | 38.94 | 20.0% | 167% |
 | CMCSA | bull | 25% | 7.0% | 20.4% | 6.5% | 52.39 | 26.3% | 275% |
-| DOX | bear | 25% | -2.6% | 11.6% | 6.7% | 55.30 | 6.3% | 33% |
-| DOX | base | 50% | 2.8% | 14.0% | 32.3% | 108.65 | 25.3% | 193% |
-| DOX | bull | 25% | 7.1% | 15.8% | 36.3% | 155.78 | 35.9% | 335% |
-| MMS | bear | 25% | -2.2% | 7.5% | 6.5% | 58.97 | 5.8% | 30% |
-| MMS | base | 50% | 4.8% | 9.6% | 12.6% | 126.00 | 26.4% | 211% |
-| MMS | bull | 25% | 10.3% | 11.2% | 14.0% | 196.61 | 38.7% | 402% |
 | CTSH | bear | 25% | 0.1% | 12.9% | 8.4% | 54.32 | 9.4% | 51% |
 | CTSH | base | 50% | 4.9% | 15.0% | 14.2% | 77.46 | 19.1% | 127% |
 | CTSH | bull | 25% | 8.8% | 16.6% | 15.0% | 97.71 | 25.4% | 195% |
-| CRI | bear | 25% | -8.6% | 8.1% | 8.2% | 44.55 | 9.5% | 52% |
-| CRI | base | 50% | 0.0% | 10.8% | 8.2% | 64.57 | 19.4% | 137% |
-| CRI | bull | 25% | 7.0% | 12.8% | 8.2% | 82.07 | 24.3% | 221% |
 | CF | bear | 25% | -10.1% | 22.8% | 6.6% | 99.21 | 3.9% | 20% |
 | CF | base | 50% | 14.3% | 31.1% | 16.8% | 327.78 | 38.0% | 393% |
 | CF | bull | 25% | 33.8% | 38.4% | 18.0% | 708.04 | 60.1% | 1021% |
-| MOH | bear | 25% | -12.5% | 3.0% | 7.9% | 194.04 | 7.0% | 38% |
-| MOH | base | 50% | 6.0% | 4.5% | 7.9% | 335.56 | 21.4% | 182% |
-| MOH | bull | 25% | 20.8% | 5.4% | 7.9% | 594.00 | 36.7% | 421% |
 | ADBE | bear | 25% | 7.9% | 29.7% | 11.0% | 170.83 | 6.6% | 35% |
 | ADBE | base | 50% | 12.4% | 33.6% | 57.2% | 250.36 | 17.8% | 118% |
 | ADBE | bull | 25% | 16.1% | 36.9% | 58.3% | 312.23 | 24.4% | 182% |
+| CPAY | bear | 25% | 7.7% | 39.8% | 7.5% | 315.43 | 4.7% | 26% |
+| CPAY | base | 50% | 13.3% | 44.0% | 30.0% | 535.90 | 18.7% | 133% |
+| CPAY | bull | 25% | 17.9% | 47.4% | 30.3% | 708.45 | 26.4% | 217% |
+| ELV | bear | 25% | -1.3% | 4.9% | 7.0% | 450.87 | 9.8% | 56% |
+| ELV | base | 50% | 4.9% | 5.9% | 7.0% | 501.17 | 12.4% | 87% |
+| ELV | bull | 25% | 9.9% | 6.6% | 7.0% | 658.83 | 19.0% | 152% |
+| HUM | bear | 25% | 12.7% | 2.5% | 7.9% | 338.17 | 5.4% | 31% |
+| HUM | base | 50% | 19.3% | 3.7% | 7.9% | 560.26 | 17.1% | 125% |
+| HUM | bull | 25% | 24.6% | 4.8% | 7.9% | 800.30 | 25.9% | 227% |
+| HPQ | bear | 25% | -3.6% | 5.7% | 8.9% | 24.50 | 9.1% | 49% |
+| HPQ | base | 50% | 1.8% | 6.6% | 8.9% | 22.60 | 8.2% | 55% |
+| HPQ | bull | 25% | 6.2% | 7.3% | 8.9% | 29.13 | 14.0% | 108% |
+| ZTS | bear | 25% | 0.9% | 32.2% | 7.5% | 65.83 | 3.2% | 16% |
+| ZTS | base | 50% | 5.3% | 36.0% | 24.5% | 112.58 | 17.4% | 116% |
+| ZTS | bull | 25% | 8.8% | 39.1% | 24.8% | 148.69 | 24.9% | 194% |
+| GIS | bear | 25% | -6.5% | 14.8% | 6.5% | 30.35 | 4.1% | 21% |
+| GIS | base | 50% | -1.3% | 17.0% | 6.5% | 47.17 | 16.2% | 101% |
+| GIS | bull | 25% | 2.8% | 18.6% | 6.5% | 57.70 | 21.2% | 157% |
+| MO | bear | 25% | -2.4% | 46.5% | 6.6% | 54.88 | 0.1% | 1% |
+| MO | base | 50% | 1.2% | 54.9% | 44.3% | 109.58 | 17.7% | 118% |
+| MO | bull | 25% | 4.1% | 62.0% | 46.0% | 154.01 | 26.9% | 214% |
+| ACN | bear | 25% | 2.4% | 13.4% | 9.4% | 134.76 | 3.5% | 17% |
+| ACN | base | 50% | 7.2% | 14.7% | 18.8% | 184.53 | 11.5% | 65% |
+| ACN | bull | 25% | 11.1% | 15.8% | 18.8% | 223.92 | 16.4% | 104% |
+| EOG | bear | 25% | -6.3% | 22.4% | 6.7% | 95.02 | -2.7% | -12% |
+| EOG | base | 50% | 17.2% | 32.4% | 12.9% | 286.70 | 25.8% | 220% |
+| EOG | bull | 25% | 36.1% | 41.1% | 14.2% | 626.34 | 46.9% | 626% |
+| IT | bear | 25% | -2.0% | 13.0% | 8.1% | 97.45 | -2.6% | -12% |
+| IT | base | 50% | 3.3% | 17.1% | 47.6% | 203.24 | 17.7% | 120% |
+| IT | bull | 25% | 7.6% | 20.7% | 51.6% | 305.63 | 29.6% | 248% |
+| HCA | bear | 25% | 0.8% | 13.3% | 8.2% | 239.82 | -1.9% | -9% |
+| HCA | base | 50% | 5.4% | 14.9% | 20.7% | 458.87 | 15.1% | 99% |
+| HCA | bull | 25% | 9.1% | 16.2% | 21.1% | 632.73 | 23.7% | 185% |
+| APA | bear | 25% | -16.2% | 21.1% | 6.5% | 25.73 | -3.5% | -14% |
+| APA | base | 50% | 11.2% | 31.8% | 6.5% | 83.41 | 22.5% | 184% |
+| APA | bull | 25% | 33.1% | 40.8% | 6.6% | 196.25 | 43.9% | 563% |
+| TSN | bear | 25% | -3.9% | 4.2% | 6.9% | 42.19 | -0.2% | -1% |
+| TSN | base | 50% | 3.8% | 6.7% | 6.9% | 75.92 | 12.9% | 92% |
+| TSN | bull | 25% | 10.0% | 8.8% | 6.9% | 132.35 | 25.7% | 236% |
 
 ## Key Risks and Failure Conditions
 
-- OPFI: cyclical_revenue, peak_cycle_margins
-- TNET: thin_interest_coverage
 - OMC: incremental_roic_below_wacc
-- ALSN: elevated_leverage
-- HLF: thin_interest_coverage, incremental_roic_below_wacc
-- SMPL: cyclical_revenue
-- NSP: thin_interest_coverage
-- INVA: weak_cash_conversion, incremental_roic_below_wacc
 - CMCSA: thin_interest_coverage, incremental_roic_below_wacc
-- CRI: thin_interest_coverage, incremental_roic_below_wacc
 - CF: cyclical_revenue
-- MOH: thin_interest_coverage, weak_cash_conversion, incremental_roic_below_wacc
 - ADBE: heavy_sbc
+- CPAY: thin_interest_coverage
+- ELV: incremental_roic_below_wacc
+- HUM: thin_interest_coverage, incremental_roic_below_wacc
+- HPQ: incremental_roic_below_wacc
+- GIS: elevated_leverage, incremental_roic_below_wacc
+- EOG: cyclical_revenue
+- HCA: elevated_leverage
+- APA: cyclical_revenue, incremental_roic_below_wacc
+- TSN: elevated_leverage, thin_interest_coverage, incremental_roic_below_wacc
 
 ## Watchlist (not rankable under the general model)
 
@@ -220,7 +220,6 @@ Largest robust-rank moves:
 - AIG American International Group, Inc. — insurance_model_not_supported
 - IRM Iron Mountain Incorporated — reit_model_not_supported
 - PRU Prudential Financial, Inc. — insurance_model_not_supported
-- RKT Rocket Companies, Inc. — consumer_finance_model_not_supported
 - HIG The Hartford Financial Services Group, Inc. — insurance_model_not_supported
 - MTB M&T Bank Corporation — bank_model_not_supported
 - VICI VICI Properties Inc. — reit_model_not_supported
@@ -232,248 +231,25 @@ Largest robust-rank moves:
 - RF Regions Financial Corporation — bank_model_not_supported
 - SYF Synchrony Financial — consumer_finance_model_not_supported
 - KEY KeyCorp — bank_model_not_supported
-- MKL Markel Corporation — insurance_model_not_supported
 - L Loews Corporation — insurance_model_not_supported
 - BRO Brown & Brown, Inc. — insurance_model_not_supported
 - ESS Essex Property Trust, Inc. — reit_model_not_supported
 - INVH Invitation Homes Inc. — reit_model_not_supported
 - KIM Kimco Realty Corporation — reit_model_not_supported
-- WPC W. P. Carey Inc. — reit_model_not_supported
 - BEN Franklin Resources, Inc. — asset_management_model_not_supported
 - MAA Mid-America Apartment Communities, Inc. — reit_model_not_supported
-- NLY Annaly Capital Management, Inc. — reit_model_not_supported
 - GPN Global Payments Inc. — consumer_finance_model_not_supported
-- SUI Sun Communities, Inc. — reit_model_not_supported
-- OWL Blue Owl Capital Inc. — asset_management_model_not_supported
-- UNM Unum Group — insurance_model_not_supported
 - DOC Healthpeak Properties, Inc. — reit_model_not_supported
-- EVR Evercore Inc. — asset_management_model_not_supported
-- RGA Reinsurance Group of America, Incorporated — insurance_model_not_supported
-- OHI Omega Healthcare Investors, Inc. — reit_model_not_supported
-- ALLY Ally Financial Inc. — consumer_finance_model_not_supported
 - EG Everest Re Group, Ltd. — insurance_model_not_supported
-- CRBG Corebridge Financial, Inc. — asset_management_model_not_supported
 - GL Globe Life Inc. — insurance_model_not_supported
 - AIZ Assurant, Inc. — insurance_model_not_supported
-- FNF Fidelity National Financial, Inc. — insurance_model_not_supported
-- RNR RenaissanceRe Holdings Ltd. — insurance_model_not_supported
 - IVZ Invesco Ltd. — asset_management_model_not_supported
 - UDR UDR, Inc. — reit_model_not_supported
-- JEF Jefferies Financial Group Inc. — asset_management_model_not_supported
-- ELS Equity LifeStyle Properties, Inc. — reit_model_not_supported
-- EQH Equitable Holdings, Inc. — insurance_model_not_supported
-- CNA CNA Financial Corporation — insurance_model_not_supported
-- VIRT Virtu Financial, Inc. — asset_management_model_not_supported
-- AMH American Homes 4 Rent — reit_model_not_supported
-- WBS Webster Financial Corporation — bank_model_not_supported
-- FHN First Horizon Corporation — bank_model_not_supported
 - CPT Camden Property Trust — reit_model_not_supported
-- SF Stifel Financial Corp. — asset_management_model_not_supported
-- AFG American Financial Group, Inc. — insurance_model_not_supported
-- EGP EastGroup Properties, Inc. — reit_model_not_supported
 - FRT Federal Realty Investment Trust — reit_model_not_supported
 - BXP BXP, Inc. — reit_model_not_supported
-- BRX Brixmor Property Group Inc. — reit_model_not_supported
-- SSB SouthState Corporation — bank_model_not_supported
-- CUBE CubeSmart — reit_model_not_supported
-- HLI Houlihan Lokey, Inc. — asset_management_model_not_supported
-- ORI Old Republic International Corporation — insurance_model_not_supported
-- AMG Affiliated Managers Group, Inc. — asset_management_model_not_supported
-- CFR Cullen/Frost Bankers, Inc. — bank_model_not_supported
 - ARE Alexandria Real Estate Equities, Inc. — reit_model_not_supported
-- WAL Western Alliance Bancorporation — bank_model_not_supported
-- ADC Agree Realty Corporation — reit_model_not_supported
-- NNN NNN REIT, Inc. — reit_model_not_supported
-- PRI Primerica, Inc. — insurance_model_not_supported
 - FDS FactSet Research Systems Inc. — financial_sector_model_not_supported
-- CTRE CareTrust REIT, Inc. — reit_model_not_supported
-- FR First Industrial Realty Trust, Inc. — reit_model_not_supported
-- VOYA Voya Financial, Inc. — financial_sector_model_not_supported
-- REXR Rexford Industrial Realty, Inc. — reit_model_not_supported
-- RHP Ryman Hospitality Properties, Inc. — reit_model_not_supported
-- JXN Jackson Financial Inc. — insurance_model_not_supported
-- AXS AXIS Capital Holdings Limited — insurance_model_not_supported
-- STAG STAG Industrial, Inc. — reit_model_not_supported
-- PNFP Pinnacle Financial Partners, Inc. — bank_model_not_supported
-- PB Prosperity Bancshares, Inc. — bank_model_not_supported
-- HR Healthcare Realty Trust Incorporated — reit_model_not_supported
-- MAC The Macerich Company — reit_model_not_supported
-- VNO Vornado Realty Trust — reit_model_not_supported
-- KNSL Kinsale Capital Group, Inc. — insurance_model_not_supported
-- TRNO Terreno Realty Corporation — reit_model_not_supported
-- LNC Lincoln National Corporation — insurance_model_not_supported
-- THG The Hanover Insurance Group, Inc. — insurance_model_not_supported
-- FAF First American Financial Corporation — insurance_model_not_supported
-- EPRT Essential Properties Realty Trust, Inc. — reit_model_not_supported
-- FNB F.N.B. Corporation — bank_model_not_supported
-- OMF OneMain Holdings, Inc. — consumer_finance_model_not_supported
-- GBCI Glacier Bancorp, Inc. — bank_model_not_supported
-- STWD Starwood Property Trust, Inc. — reit_model_not_supported
-- FLG Flagstar Financial, Inc. — bank_model_not_supported
-- ABCB Ameris Bancorp — bank_model_not_supported
-- KRG Kite Realty Group Trust — reit_model_not_supported
-- AUB Atlantic Union Bankshares Corporation — bank_model_not_supported
-- HOMB Home Bancshares, Inc. — bank_model_not_supported
-- MCY Mercury General Corporation — insurance_model_not_supported
-- OBDC Blue Owl Capital Corporation — consumer_finance_model_not_supported
-- OUT Outfront Media Inc. — reit_model_not_supported
-- MTG MGIC Investment Corporation — insurance_model_not_supported
-- ESNT Essent Group Ltd. — insurance_model_not_supported
-- PIPR Piper Sandler Companies — asset_management_model_not_supported
-- RITM Rithm Capital Corp. — reit_model_not_supported
-- AX Axos Financial, Inc. — bank_model_not_supported
-- MC Moelis & Company — asset_management_model_not_supported
-- WTM White Mountains Insurance Group, Ltd. — insurance_model_not_supported
-- RLI RLI Corp. — insurance_model_not_supported
-- ASB Associated Banc-Corp — bank_model_not_supported
-- HASI HA Sustainable Infrastructure Capital, Inc. — financial_sector_model_not_supported
-- MAIN Main Street Capital Corporation — asset_management_model_not_supported
-- CUZ Cousins Properties Incorporated — reit_model_not_supported
-- ENVA Enova International, Inc. — consumer_finance_model_not_supported
-- CNO CNO Financial Group, Inc. — insurance_model_not_supported
-- NNI Nelnet, Inc. — consumer_finance_model_not_supported
-- SKT Tanger Inc. — reit_model_not_supported
-- RYAN Ryan Specialty Holdings, Inc. — insurance_model_not_supported
-- RDN Radian Group Inc. — insurance_model_not_supported
-- EPR EPR Properties — reit_model_not_supported
-- SFBS ServisFirst Bancshares, Inc. — bank_model_not_supported
-- KRC Kilroy Realty Corporation — reit_model_not_supported
-- FHI Federated Hermes, Inc. — asset_management_model_not_supported
-- LMND Lemonade, Inc. — insurance_model_not_supported
-- LAZ Lazard Ltd — asset_management_model_not_supported
-- PFSI PennyMac Financial Services, Inc. — consumer_finance_model_not_supported
-- UCB United Community Banks, Inc. — bank_model_not_supported
-- COLD Americold Realty Trust, Inc. — reit_model_not_supported
-- BFH Bread Financial Holdings, Inc. — consumer_finance_model_not_supported
-- BNL Broadstone Net Lease, Inc. — reit_model_not_supported
-- AB AllianceBernstein Holding L.P. — asset_management_model_not_supported
-- IRT Independence Realty Trust, Inc. — reit_model_not_supported
-- CNS Cohen & Steers, Inc. — asset_management_model_not_supported
-- RNST Renasant Corporation — bank_model_not_supported
-- FBP First BanCorp. — bank_model_not_supported
-- PJT PJT Partners Inc. — asset_management_model_not_supported
-- CDP COPT Defense Properties — reit_model_not_supported
-- FG F&G Annuities & Life, Inc. — insurance_model_not_supported
-- APLE Apple Hospitality REIT, Inc. — reit_model_not_supported
-- SLG SL Green Realty Corp. — reit_model_not_supported
-- UWMC UWM Holdings Corporation — consumer_finance_model_not_supported
-- BKU BankUnited, Inc. — bank_model_not_supported
-- NSA National Storage Affiliates Trust — reit_model_not_supported
-- NHI National Health Investors, Inc. — reit_model_not_supported
-- CBU Community Bank System, Inc. — bank_model_not_supported
-- GNW Genworth Financial, Inc. — insurance_model_not_supported
-- RYN Rayonier Inc. — reit_model_not_supported
-- AGO Assured Guaranty Ltd. — insurance_model_not_supported
-- HIW Highwoods Properties, Inc. — reit_model_not_supported
-- BOH Bank of Hawaii Corporation — bank_model_not_supported
-- LXP LXP Industrial Trust — reit_model_not_supported
-- BANC Banc of California, Inc. — bank_model_not_supported
-- FSK FS KKR Capital Corp. — asset_management_model_not_supported
-- BXMT Blackstone Mortgage Trust, Inc. — reit_model_not_supported
-- PFS Provident Financial Services, Inc. — bank_model_not_supported
-- UE Urban Edge Properties — reit_model_not_supported
-- MPT Medical Properties Trust, Inc. — reit_model_not_supported
-- AKR Acadia Realty Trust — reit_model_not_supported
-- PK Park Hotels & Resorts Inc. — reit_model_not_supported
-- HTGC Hercules Capital, Inc. — asset_management_model_not_supported
-- DBRG DigitalBridge Group, Inc. — asset_management_model_not_supported
-- FBK FB Financial Corporation — bank_model_not_supported
-- AAMI Acadian Asset Management — asset_management_model_not_supported
-- FCPT Four Corners Property Trust, Inc. — reit_model_not_supported
-- WT WisdomTree, Inc. — asset_management_model_not_supported
-- SPNT SiriusPoint Ltd. — insurance_model_not_supported
-- IVT InvenTrust Properties Corp. — reit_model_not_supported
-- CXW CoreCivic, Inc. — reit_model_not_supported
-- CUBI Customers Bancorp, Inc. — bank_model_not_supported
-- BBT Beacon Financial Corp. — asset_management_model_not_supported
-- APAM Artisan Partners Asset Management Inc. — asset_management_model_not_supported
-- RCUS Arcus Biosciences, Inc. — preprofit_biotech_not_supported
-- WU The Western Union Company — consumer_finance_model_not_supported
-- NIC Nicolet Bankshares, Inc. — bank_model_not_supported
-- NTB The Bank of N.T. Butterfield & Son Limited — bank_model_not_supported
-- HTH Hilltop Holdings Inc. — bank_model_not_supported
-- BBUC Brookfield Business Corporation — asset_management_model_not_supported
-- SHO Sunstone Hotel Investors, Inc. — reit_model_not_supported
-- ARR ARMOUR Residential REIT, Inc. — reit_model_not_supported
-- LC LendingClub Corporation — consumer_finance_model_not_supported
-- PEB Pebblebrook Hotel Trust — reit_model_not_supported
-- DEI Douglas Emmett, Inc. — reit_model_not_supported
-- HCI HCI Group, Inc. — insurance_model_not_supported
-- OFG OFG Bancorp — bank_model_not_supported
-- FCF First Commonwealth Financial Corporation — bank_model_not_supported
-- GTY Getty Realty Corp. — reit_model_not_supported
-- GNL Global Net Lease, Inc. — reit_model_not_supported
-- AGM Federal Agricultural Mortgage Corporation — consumer_finance_model_not_supported
-- STC Stewart Information Services Corporation — insurance_model_not_supported
-- STEL Stellar Bancorp, Inc. — bank_model_not_supported
-- HMN Horace Mann Educators Corporation — insurance_model_not_supported
-- DX Dynex Capital, Inc. — reit_model_not_supported
-- LTC LTC Properties, Inc. — reit_model_not_supported
-- WD Walker & Dunlop, Inc. — consumer_finance_model_not_supported
-- LOB Live Oak Bancshares, Inc. — bank_model_not_supported
-- TFIN Triumph Financial, Inc. — bank_model_not_supported
-- XHR Xenia Hotels & Resorts, Inc. — reit_model_not_supported
-- DCOM Dime Community Bancshares, Inc. — bank_model_not_supported
-- IIPR Innovative Industrial Properties, Inc. — reit_model_not_supported
-- NUVB Nuvation Bio Inc. — preprofit_biotech_not_supported
-- NTST NETSTREIT Corp. — reit_model_not_supported
-- RLJ RLJ Lodging Trust — reit_model_not_supported
-- NBHC National Bank Holdings Corporation — bank_model_not_supported
-- BY Byline Bancorp, Inc. — bank_model_not_supported
-- TSLX Sixth Street Specialty Lending, Inc. — asset_management_model_not_supported
-- OBK Origin Bancorp, Inc. — bank_model_not_supported
-- CBL CBL & Associates Properties, Inc. — reit_model_not_supported
-- AAT American Assets Trust, Inc. — reit_model_not_supported
-- KMPR Kemper Corporation — insurance_model_not_supported
-- ARI Apollo Commercial Real Estate Finance, Inc. — reit_model_not_supported
-- EFC Ellington Financial Inc. — reit_model_not_supported
-- ALX Alexander's, Inc. — reit_model_not_supported
-- UMH UMH Properties, Inc. — reit_model_not_supported
-- TWO Two Harbors Investment Corp. — reit_model_not_supported
-- LADR Ladder Capital Corp — consumer_finance_model_not_supported
-- GOLD Gold.com, Inc. — asset_management_model_not_supported
-- PRA ProAssurance Corporation — insurance_model_not_supported
-- BHVN Biohaven Ltd. — preprofit_biotech_not_supported
-- PDM Piedmont Office Realty Trust, Inc. — reit_model_not_supported
-- SAFE Safehold Inc. — reit_model_not_supported
-- CIM Chimera Investment Corporation — reit_model_not_supported
-- DEA Easterly Government Properties, Inc. — reit_model_not_supported
-- OPY Oppenheimer Holdings Inc. — asset_management_model_not_supported
-- ASA ASA Gold and Precious Metals Limited — asset_management_model_not_supported
-- UVE Universal Insurance Holdings, Inc. — insurance_model_not_supported
-- GSBD Goldman Sachs BDC, Inc. — asset_management_model_not_supported
-- EIG Employers Holdings, Inc. — insurance_model_not_supported
-- MCB Metropolitan Bank Holding Corp. — bank_model_not_supported
-- ABR Arbor Realty Trust, Inc. — reit_model_not_supported
-- ORC Orchid Island Capital, Inc. — reit_model_not_supported
-- WSR Whitestone REIT — reit_model_not_supported
-- FSCO FS Credit Opportunities Corp. — asset_management_model_not_supported
-- MFA MFA Financial, Inc. — reit_model_not_supported
-- DFIN Donnelley Financial Solutions, Inc. — asset_management_model_not_supported
-- AMTB Amerant Bancorp Inc. — bank_model_not_supported
-- BUR Burford Capital Limited — asset_management_model_not_supported
-- ESRT Empire State Realty Trust, Inc. — reit_model_not_supported
-- ABX Abacus Global Management, Inc. — insurance_model_not_supported
-- PMT PennyMac Mortgage Investment Trust — reit_model_not_supported
-- BBDC Barings BDC, Inc. — consumer_finance_model_not_supported
-- JBGS JBG SMITH Properties — reit_model_not_supported
-- PSTL Postal Realty Trust, Inc. — reit_model_not_supported
-- HPP Hudson Pacific Properties, Inc. — reit_model_not_supported
-- PFLT PennantPark Floating Rate Capital Ltd. — asset_management_model_not_supported
-- GDOT Green Dot Corporation — consumer_finance_model_not_supported
-- TYG Tortoise Energy Infrastructure Corporation — asset_management_model_not_supported
-- BRSP BrightSpire Capital, Inc. — reit_model_not_supported
-- NXRT NexPoint Residential Trust, Inc. — reit_model_not_supported
-- CTO CTO Realty Growth, Inc. — reit_model_not_supported
-- HRTG Heritage Insurance Holdings, Inc. — insurance_model_not_supported
-- INN Summit Hotel Properties, Inc. — reit_model_not_supported
-- AHRT AH Realty Trust, Inc. — reit_model_not_supported
-- TRTX TPG RE Finance Trust, Inc. — reit_model_not_supported
-- RWT Redwood Trust, Inc. — reit_model_not_supported
-- FBRT Franklin BSP Realty Trust, Inc. — reit_model_not_supported
-- IVR Invesco Mortgage Capital Inc. — reit_model_not_supported
-- BDN Brandywine Realty Trust — reit_model_not_supported
-- DNA Ginkgo Bioworks Holdings, Inc. — preprofit_biotech_not_supported
 - IBKR Interactive Brokers Group, Inc. — bank_model_not_supported
 - EQIX Equinix, Inc. — reit_model_not_supported
 - CME CME Group Inc. — financial_sector_model_not_supported
@@ -484,329 +260,25 @@ Largest robust-rank moves:
 - ALNY Alnylam Pharmaceuticals, Inc. — preprofit_biotech_not_supported
 - PYPL PayPal Holdings, Inc. — consumer_finance_model_not_supported
 - HBAN Huntington Bancshares Incorporated — bank_model_not_supported
-- RVMD Revolution Medicines, Inc. — preprofit_biotech_not_supported
 - ACGL Arch Capital Group Ltd. — insurance_model_not_supported
 - CINF Cincinnati Financial Corporation — insurance_model_not_supported
-- FCNCA First Citizens BancShares, Inc. — bank_model_not_supported
 - PFG Principal Financial Group, Inc. — asset_management_model_not_supported
-- LPLA LPL Financial Holdings Inc. — asset_management_model_not_supported
 - TROW T. Rowe Price Group, Inc. — asset_management_model_not_supported
 - SBAC SBA Communications Corporation — reit_model_not_supported
-- TW Tradeweb Markets Inc. — asset_management_model_not_supported
-- SOFI SoFi Technologies, Inc. — consumer_finance_model_not_supported
 - INSM Insmed Incorporated — preprofit_biotech_not_supported
 - MRNA Moderna, Inc. — preprofit_biotech_not_supported
-- EWBC East West Bancorp, Inc. — bank_model_not_supported
 - HST Host Hotels & Resorts, Inc. — reit_model_not_supported
-- TPG TPG Inc. — asset_management_model_not_supported
-- CG The Carlyle Group Inc. — asset_management_model_not_supported
-- LAMR Lamar Advertising Company — reit_model_not_supported
 - REG Regency Centers Corporation — reit_model_not_supported
-- ARCC Ares Capital Corporation — asset_management_model_not_supported
-- GLPI Gaming and Leisure Properties, Inc. — reit_model_not_supported
-- HUT Hut 8 Corp. — asset_management_model_not_supported
-- AXSM Axsome Therapeutics, Inc. — preprofit_biotech_not_supported
-- BBIO BridgeBio Pharma, Inc. — preprofit_biotech_not_supported
-- WULF TeraWulf Inc. — asset_management_model_not_supported
-- IONS Ionis Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- AGNC AGNC Investment Corp. — reit_model_not_supported
-- MDGL Madrigal Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- SMMT Summit Therapeutics Inc. — preprofit_biotech_not_supported
-- SEIC SEI Investments Company — asset_management_model_not_supported
-- WTFC Wintrust Financial Corporation — bank_model_not_supported
-- ARWR Arrowhead Pharmaceuticals, Inc. — preprofit_biotech_not_supported
 - ERIE Erie Indemnity Company — insurance_model_not_supported
-- BPOP Popular, Inc. — bank_model_not_supported
-- SNEX StoneX Group Inc. — asset_management_model_not_supported
-- UMBF UMB Financial Corporation — bank_model_not_supported
-- RIOT Riot Platforms, Inc. — asset_management_model_not_supported
-- CIFR Cipher Mining Inc. — asset_management_model_not_supported
-- ZION Zions Bancorporation, National Association — bank_model_not_supported
-- FCFS FirstCash Holdings, Inc — consumer_finance_model_not_supported
-- ONB Old National Bancorp — bank_model_not_supported
-- NUVL Nuvalent, Inc. — preprofit_biotech_not_supported
-- CYTK Cytokinetics, Incorporated — preprofit_biotech_not_supported
-- BOKF BOK Financial Corporation — bank_model_not_supported
-- CBSH Commerce Bancshares, Inc. — bank_model_not_supported
-- VLY Valley National Bancorp — bank_model_not_supported
-- COLB Columbia Banking System, Inc. — bank_model_not_supported
-- IBRX ImmunityBio, Inc. — preprofit_biotech_not_supported
-- KYMR Kymera Therapeutics, Inc. — preprofit_biotech_not_supported
-- PTGX Protagonist Therapeutics, Inc. — preprofit_biotech_not_supported
-- IMVT Immunovant, Inc. — preprofit_biotech_not_supported
-- PCVX Vaxcyte, Inc. — preprofit_biotech_not_supported
-- MORN Morningstar, Inc. — financial_sector_model_not_supported
-- LQDA Liquidia Corporation — preprofit_biotech_not_supported
-- UBSI United Bankshares, Inc. — bank_model_not_supported
-- PTCT PTC Therapeutics, Inc. — preprofit_biotech_not_supported
-- RYTM Rhythm Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- ACT Enact Holdings, Inc. — insurance_model_not_supported
-- HWC Hancock Whitney Corporation — bank_model_not_supported
-- CACC Credit Acceptance Corporation — consumer_finance_model_not_supported
-- OZK Bank OZK — bank_model_not_supported
-- COGT Cogent Biosciences, Inc. — preprofit_biotech_not_supported
-- PRAX Praxis Precision Medicines, Inc. — preprofit_biotech_not_supported
-- BGC BGC Group, Inc — asset_management_model_not_supported
-- STEP StepStone Group Inc. — asset_management_model_not_supported
-- SIGI Selective Insurance Group, Inc. — insurance_model_not_supported
-- MARA Marathon Digital Holdings, Inc. — asset_management_model_not_supported
-- VCTR Victory Capital Holdings, Inc. — asset_management_model_not_supported
-- SRRK Scholar Rock Holding Corporation — preprofit_biotech_not_supported
-- PECO Phillips Edison & Company, Inc. — reit_model_not_supported
-- MIRM Mirum Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- SYRE Spyre Therapeutics, Inc. — preprofit_biotech_not_supported
-- TVTX Travere Therapeutics, Inc. — preprofit_biotech_not_supported
-- FFIN First Financial Bankshares, Inc. — bank_model_not_supported
-- EBC Eastern Bankshares, Inc. — bank_model_not_supported
-- IBOC International Bancshares Corporation — bank_model_not_supported
-- TFSL TFS Financial Corporation — bank_model_not_supported
-- SBRA Sabra Health Care REIT, Inc. — reit_model_not_supported
-- FULT Fulton Financial Corporation — bank_model_not_supported
-- HLNE Hamilton Lane Incorporated — asset_management_model_not_supported
-- TCBI Texas Capital Bancshares, Inc. — bank_model_not_supported
-- ERAS Erasca, Inc. — preprofit_biotech_not_supported
-- CELC Celcuity Inc. — preprofit_biotech_not_supported
-- MKTX MarketAxess Holdings Inc. — asset_management_model_not_supported
-- CLSK CleanSpark, Inc. — asset_management_model_not_supported
-- SLM SLM Corporation — consumer_finance_model_not_supported
-- CATY Cathay General Bancorp — bank_model_not_supported
-- INDB Independent Bank Corp. — bank_model_not_supported
-- WSFS WSFS Financial Corporation — bank_model_not_supported
-- BANF BancFirst Corporation — bank_model_not_supported
-- EWTX Edgewise Therapeutics, Inc. — preprofit_biotech_not_supported
-- CRNX Crinetics Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- BHF Brighthouse Financial, Inc. — insurance_model_not_supported
-- FIBK First Interstate BancSystem, Inc. — bank_model_not_supported
-- TNGX Tango Therapeutics, Inc. — preprofit_biotech_not_supported
-- NAMS NewAmsterdam Pharma Company N.V. — preprofit_biotech_not_supported
-- WSBC WesBanco, Inc. — bank_model_not_supported
-- FHB First Hawaiian, Inc. — bank_model_not_supported
-- GBDC Golub Capital BDC, Inc. — asset_management_model_not_supported
-- DNLI Denali Therapeutics Inc. — preprofit_biotech_not_supported
-- DNTH Dianthus Therapeutics, Inc. — preprofit_biotech_not_supported
-- MCHB Mechanics Bank — bank_model_not_supported
-- FFBC First Financial Bancorp. — bank_model_not_supported
-- VKTX Viking Therapeutics, Inc. — preprofit_biotech_not_supported
-- SFNC Simmons First National Corporation — bank_model_not_supported
-- SBCF Seacoast Banking Corporation of Florida — bank_model_not_supported
-- CRVL CorVel Corporation — insurance_model_not_supported
-- ARQT Arcutis Biotherapeutics, Inc. — preprofit_biotech_not_supported
-- PLMR Palomar Holdings, Inc. — insurance_model_not_supported
-- DYN Dyne Therapeutics, Inc. — preprofit_biotech_not_supported
-- BEAM Beam Therapeutics Inc. — preprofit_biotech_not_supported
-- ALMS Alumis Inc. Common Stock — preprofit_biotech_not_supported
-- UPST Upstart Holdings, Inc. — consumer_finance_model_not_supported
-- CVBF CVB Financial Corp. — bank_model_not_supported
-- ADPT Adaptive Biotechnologies Corporation — preprofit_biotech_not_supported
-- NMIH NMI Holdings, Inc. — insurance_model_not_supported
-- ELVN Enliven Therapeutics, Inc. — preprofit_biotech_not_supported
-- WAFD WaFd, Inc. — bank_model_not_supported
-- TOWN TowneBank — bank_model_not_supported
-- DFTX Definium Therapeutics, Inc. — preprofit_biotech_not_supported
-- TRMK Trustmark Corporation — bank_model_not_supported
-- TARS Tarsus Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- FRME First Merchants Corporation — bank_model_not_supported
-- ORKA Oruka Therapeutics, Inc. — preprofit_biotech_not_supported
-- IRON Disc Medicine, Inc. — preprofit_biotech_not_supported
-- RLAY Relay Therapeutics, Inc. — preprofit_biotech_not_supported
-- FBNC First Bancorp — bank_model_not_supported
-- IDYA IDEAYA Biosciences, Inc. — preprofit_biotech_not_supported
-- NBTB NBT Bancorp Inc. — bank_model_not_supported
-- VERA Vera Therapeutics, Inc. — preprofit_biotech_not_supported
-- DRH DiamondRock Hospitality Company — reit_model_not_supported
-- BUSE First Busey Corporation — bank_model_not_supported
-- ANAB AnaptysBio, Inc. — preprofit_biotech_not_supported
-- RARE Ultragenyx Pharmaceutical Inc. — preprofit_biotech_not_supported
-- TBBK The Bancorp, Inc. — bank_model_not_supported
-- EFSC Enterprise Financial Services Corp — bank_model_not_supported
-- MBIN Merchants Bancorp — bank_model_not_supported
-- BANR Banner Corporation — bank_model_not_supported
-- SYBT Stock Yards Bancorp, Inc. — bank_model_not_supported
-- DHC Diversified Healthcare Trust — reit_model_not_supported
-- NWBI Northwest Bancshares, Inc. — bank_model_not_supported
-- CLBK Columbia Financial, Inc. — bank_model_not_supported
-- CLDX Celldex Therapeutics, Inc. — preprofit_biotech_not_supported
-- SKWD Skyward Specialty Insurance Group, Inc. — insurance_model_not_supported
-- TRVI Trevi Therapeutics, Inc. — preprofit_biotech_not_supported
-- OCUL Ocular Therapeutix, Inc. — preprofit_biotech_not_supported
-- SRCE 1st Source Corporation — bank_model_not_supported
-- STOK Stoke Therapeutics, Inc. — preprofit_biotech_not_supported
-- CHCO City Holding Company — bank_model_not_supported
-- EZPW EZCORP, Inc. — consumer_finance_model_not_supported
-- BCRX BioCryst Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- KOD Kodiak Sciences Inc. — preprofit_biotech_not_supported
-- CASH Pathward Financial, Inc. — bank_model_not_supported
-- IMNM Immunome, Inc. — preprofit_biotech_not_supported
-- AGIO Agios Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- ECPG Encore Capital Group, Inc. — consumer_finance_model_not_supported
-- QURE uniQure N.V. — preprofit_biotech_not_supported
-- GABC German American Bancorp, Inc. — bank_model_not_supported
-- STBA S&T Bancorp, Inc. — bank_model_not_supported
-- TCBK TriCo Bancshares — bank_model_not_supported
-- HOPE Hope Bancorp, Inc. — bank_model_not_supported
-- CNOB ConnectOne Bancorp, Inc. — bank_model_not_supported
-- BFC Bank First Corporation — bank_model_not_supported
-- SNDX Syndax Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- SRPT Sarepta Therapeutics, Inc. — preprofit_biotech_not_supported
-- TYRA Tyra Biosciences, Inc. — preprofit_biotech_not_supported
-- QCRH QCR Holdings, Inc. — bank_model_not_supported
-- MLYS Mineralys Therapeutics, Inc. — preprofit_biotech_not_supported
-- LKFN Lakeland Financial Corporation — bank_model_not_supported
-- RBCAA Republic Bancorp, Inc. — bank_model_not_supported
-- PWP Perella Weinberg Partners — asset_management_model_not_supported
-- VRDN Viridian Therapeutics, Inc. — preprofit_biotech_not_supported
-- NRIX Nurix Therapeutics, Inc. — preprofit_biotech_not_supported
-- CSWC Capital Southwest Corporation — asset_management_model_not_supported
-- NVAX Novavax, Inc. — preprofit_biotech_not_supported
-- IOVA Iovance Biotherapeutics, Inc. — preprofit_biotech_not_supported
-- VIR Vir Biotechnology, Inc. — preprofit_biotech_not_supported
-- URGN UroGen Pharma Ltd. — preprofit_biotech_not_supported
-- ATAI Atai Beckley Inc. — preprofit_biotech_not_supported
-- KALV KalVista Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- TSHA Taysha Gene Therapies, Inc. — preprofit_biotech_not_supported
-- ASST Strive, Inc. — asset_management_model_not_supported
-- RXRX Recursion Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- ARDX Ardelyx, Inc. — preprofit_biotech_not_supported
-- ATLC Atlanticus Holdings Corporation — consumer_finance_model_not_supported
-- MRVI Maravai LifeSciences Holdings, Inc. — preprofit_biotech_not_supported
-- WABC Westamerica Bancorporation — bank_model_not_supported
-- NTLA Intellia Therapeutics, Inc. — preprofit_biotech_not_supported
-- BWIN The Baldwin Insurance Group, Inc. — insurance_model_not_supported
-- PGEN Precigen, Inc. — preprofit_biotech_not_supported
-- AMAL Amalgamated Financial Corp. — bank_model_not_supported
-- PEBO Peoples Bancorp Inc. — bank_model_not_supported
-- CTBI Community Trust Bancorp, Inc. — bank_model_not_supported
-- PVLA Palvella Therapeutics, Inc. — preprofit_biotech_not_supported
-- TRIN Trinity Capital Inc. — asset_management_model_not_supported
-- UFCS United Fire Group, Inc. — insurance_model_not_supported
-- AMLX Amylyx Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- MBX MBX Biosciences, Inc. Common Stock — preprofit_biotech_not_supported
-- GLUE Monte Rosa Therapeutics, Inc. — preprofit_biotech_not_supported
-- UVSP Univest Financial Corporation — bank_model_not_supported
-- CAPR Capricor Therapeutics, Inc. — preprofit_biotech_not_supported
-- XERS Xeris Biopharma Holdings, Inc. — preprofit_biotech_not_supported
-- NKTR Nektar Therapeutics — preprofit_biotech_not_supported
-- PSEC Prospect Capital Corporation — asset_management_model_not_supported
-- OSBC Old Second Bancorp, Inc. — bank_model_not_supported
-- CCB Coastal Financial Corporation — bank_model_not_supported
-- SLS SELLAS Life Sciences Group, Inc. — preprofit_biotech_not_supported
-- EYPT EyePoint Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- SBET Sharplink, Inc. — asset_management_model_not_supported
-- SVRA Savara Inc. — preprofit_biotech_not_supported
-- OCFC OceanFirst Financial Corp. — bank_model_not_supported
-- OCSL Oaktree Specialty Lending Corporation — consumer_finance_model_not_supported
-- ABSI Absci Corporation — preprofit_biotech_not_supported
-- SAFT Safety Insurance Group, Inc. — insurance_model_not_supported
-- CFFN Capitol Federal Financial, Inc. — bank_model_not_supported
-- NBN Northeast Bank — bank_model_not_supported
-- TRUP Trupanion, Inc. — insurance_model_not_supported
-- FSUN FirstSun Capital Bancorp — bank_model_not_supported
-- HBNC Horizon Bancorp, Inc. — bank_model_not_supported
-- BHRB Burke & Herbert Financial Services Corp. — bank_model_not_supported
-- CRVS Corvus Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- ESQ Esquire Financial Holdings, Inc. — bank_model_not_supported
-- HIVE HIVE Digital Technologies Ltd. — financial_sector_model_not_supported
-- HFWA Heritage Financial Corporation — bank_model_not_supported
-- VRTS Virtus Investment Partners, Inc. — asset_management_model_not_supported
-- SPRY ARS Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- BFST Business First Bancshares, Inc. — bank_model_not_supported
-- MBWM Mercantile Bank Corporation — bank_model_not_supported
-- ABTC American Bitcoin Corp — asset_management_model_not_supported
-- HAFC Hanmi Financial Corporation — bank_model_not_supported
-- GSHD Goosehead Insurance, Inc — insurance_model_not_supported
-- XNCR Xencor, Inc. — preprofit_biotech_not_supported
-- THFF First Financial Corporation — bank_model_not_supported
-- MGTX MeiraGTx Holdings plc — preprofit_biotech_not_supported
-- OXLC Oxford Lane Capital Corp. — asset_management_model_not_supported
-- EGBN Eagle Bancorp, Inc. — bank_model_not_supported
-- MPB Mid Penn Bancorp, Inc. — bank_model_not_supported
-- ETON Eton Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- OLMA Olema Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- TBPH Theravance Biopharma, Inc. — preprofit_biotech_not_supported
-- ORIC ORIC Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- LXRX Lexicon Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- ABUS Arbutus Biopharma Corporation — preprofit_biotech_not_supported
-- MFIC MidCap Financial Investment Corporation — asset_management_model_not_supported
-- WRLD World Acceptance Corporation — consumer_finance_model_not_supported
-- PHAT Phathom Pharmaceuticals, Inc. — preprofit_biotech_not_supported
-- JANX Janux Therapeutics, Inc. — preprofit_biotech_not_supported
-- GSBC Great Southern Bancorp, Inc. — bank_model_not_supported
-- KURA Kura Oncology, Inc. — preprofit_biotech_not_supported
-- SMBC Southern Missouri Bancorp, Inc. — bank_model_not_supported
-- CLYM Climb Bio, Inc. — preprofit_biotech_not_supported
-- ROOT Root, Inc. — insurance_model_not_supported
-- CGBD Carlyle Secured Lending, Inc. — asset_management_model_not_supported
-- AGNT eXp World Holdings, Inc. Common Stock — financial_sector_model_not_supported
-- NMFC New Mountain Finance Corporation — asset_management_model_not_supported
-- NAVI Navient Corporation — consumer_finance_model_not_supported
-- ZVRA Zevra Therapeutics, Inc. — preprofit_biotech_not_supported
-- SANA Sana Biotechnology, Inc. — preprofit_biotech_not_supported
-- GERN Geron Corporation — preprofit_biotech_not_supported
-- REPL Replimune Group, Inc. — preprofit_biotech_not_supported
-- IBCP Independent Bank Corporation — bank_model_not_supported
-- FDUS Fidus Investment Corporation — asset_management_model_not_supported
-- SLRC SLR Investment Corp. — asset_management_model_not_supported
-- CRMD CorMedix Inc. — preprofit_biotech_not_supported
-- DSGN Design Therapeutics, Inc. — preprofit_biotech_not_supported
-- CARE Carter Bankshares, Inc. — bank_model_not_supported
-- ESPR Esperion Therapeutics, Inc. — preprofit_biotech_not_supported
-- HIFS Hingham Institution for Savings — bank_model_not_supported
-- OMER Omeros Corporation — preprofit_biotech_not_supported
-- NRDS NerdWallet, Inc. — consumer_finance_model_not_supported
-- GAIN Gladstone Investment Corporation — asset_management_model_not_supported
-- RRBI Red River Bancshares, Inc. — bank_model_not_supported
-- BTBT Bit Digital, Inc. — asset_management_model_not_supported
-- GOOD Gladstone Commercial Corporation — reit_model_not_supported
-- PRAA PRA Group, Inc. — consumer_finance_model_not_supported
-- AMSF AMERISAFE, Inc. — insurance_model_not_supported
-- SFST Southern First Bancshares, Inc. — bank_model_not_supported
-- TECX Tectonic Therapeutic, Inc. — preprofit_biotech_not_supported
-- ANNX Annexon, Inc. — preprofit_biotech_not_supported
-- SLDB Solid Biosciences Inc. — preprofit_biotech_not_supported
-- HBCP Home Bancorp, Inc. — bank_model_not_supported
-- XOMA XOMA Royalty Corp. — preprofit_biotech_not_supported
-- ACRS Aclaris Therapeutics, Inc. — preprofit_biotech_not_supported
-- TREE LendingTree, Inc. — consumer_finance_model_not_supported
-- PRME Prime Medicine, Inc. — preprofit_biotech_not_supported
-- PRK Park National Corporation — bank_model_not_supported
-- TMP Tompkins Financial Corporation — bank_model_not_supported
-- UI Ubiquiti Inc. — material_event_requires_reunderwriting
-- PRIM Primoris Services Corporation — material_event_requires_reunderwriting
-- SHAK Shake Shack Inc. — material_event_requires_reunderwriting
-- BRBR BellRing Brands, Inc. — material_event_requires_reunderwriting
-- EFOR Everforth, Inc. — material_event_requires_reunderwriting
 - SMCI Super Micro Computer, Inc. — material_event_requires_reunderwriting
-- PLAB Photronics, Inc. — material_event_requires_reunderwriting
-- PAHC Phibro Animal Health Corporation — material_event_requires_reunderwriting
-- PSIX Power Solutions International, Inc. — material_event_requires_reunderwriting
-- GTM ZoomInfo Technologies Inc. — material_event_requires_reunderwriting
-- VRRM Verra Mobility Corporation — material_event_requires_reunderwriting
-- MRAM Everspin Technologies, Inc. — material_event_requires_reunderwriting
-- KRYS Krystal Biotech, Inc. — preprofit_biotech_not_supported
-- VCYT Veracyte, Inc. — preprofit_biotech_not_supported
-- MNKD MannKind Corporation — preprofit_biotech_not_supported
-- RIGL Rigel Pharmaceuticals, Inc. — preprofit_biotech_not_supported
 - XOM Exxon Mobil Corporation — insufficient_model_confidence
 - CVX Chevron Corporation — insufficient_model_confidence
 - COP ConocoPhillips — insufficient_model_confidence
 - MPC Marathon Petroleum Corporation — insufficient_model_confidence
 - PSX Phillips 66 — insufficient_model_confidence
 - CCL Carnival Corporation & plc — insufficient_model_confidence
-- APG APi Group Corporation — insufficient_model_confidence
-- DINO HF Sinclair Corporation — insufficient_model_confidence
-- AR Antero Resources Corporation — insufficient_model_confidence
-- HL Hecla Mining Company — insufficient_model_confidence
-- GTLS Chart Industries, Inc. — insufficient_model_confidence
-- AGX Argan, Inc. — insufficient_model_confidence
 - MOS The Mosaic Company — insufficient_model_confidence
-- SWX Southwest Gas Holdings, Inc. — insufficient_model_confidence
-- EE Excelerate Energy, Inc. — insufficient_model_confidence
 - TSLA Tesla, Inc. — insufficient_model_confidence
-- FWONK Formula One Group — insufficient_model_confidence
-- PAA Plains All American Pipeline, L.P. — insufficient_model_confidence
-- HLIT Harmonic Inc. — insufficient_model_confidence
-- LZ LegalZoom.com, Inc. — insufficient_model_confidence
-- REPX Riley Exploration Permian, Inc. — insufficient_model_confidence
 
 ## Data Gaps and Model Limitations
 
