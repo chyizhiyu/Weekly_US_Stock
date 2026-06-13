@@ -15,6 +15,7 @@ def build_dashboard(
     steps: Sequence[StepSummary],
     robust: pd.DataFrame,
     upside: pd.DataFrame,
+    eligible: pd.DataFrame,
     scenarios: pd.DataFrame,
     watchlist: pd.DataFrame,
     comparison: WeekOverWeek,
@@ -60,8 +61,37 @@ def build_dashboard(
             f"| {step.name} | {step.input_count} | {step.output_count} | {top_reasons or '-'} |"
         )
 
-    lines += _ranking_section("Robust Top 20 (risk-adjusted)", robust, top_n, robust_columns=True)
-    lines += _ranking_section("Upside Top 20 (expected IRR)", upside, top_n, robust_columns=False)
+    # P0-4: eligible candidates lead; the full ranking and the Upside research
+    # queue follow, clearly labelled so neither reads as an actionable buy list.
+    if eligible.empty:
+        lines += [
+            "",
+            "## Eligible Candidates",
+            "",
+            "**本周无达标候选 — No eligible candidates this week.** No ranked name "
+            "cleared the minimum bar (finite valuation, robust_return > 0, "
+            "median IRR > hurdle).",
+        ]
+    else:
+        lines += [
+            "",
+            f"## Eligible Candidates ({len(eligible)})",
+            "",
+            "The only names presented as actionable research — finite valuation, "
+            "robust_return > 0, median IRR > hurdle.",
+        ]
+        lines += _ranking_section(
+            "Eligible — risk-adjusted", eligible, top_n, robust_columns=True
+        )
+
+    lines += _ranking_section(
+        "Full Robust Ranking (audit — includes ineligible names)",
+        robust, top_n, robust_columns=True,
+    )
+    lines += _ranking_section(
+        "Upside Ranking — high-dispersion RESEARCH QUEUE (not actionable)",
+        upside, top_n, robust_columns=False,
+    )
 
     lines += ["", "## Week-over-week"]
     if comparison.baseline_reset:

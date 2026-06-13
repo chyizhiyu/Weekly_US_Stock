@@ -142,6 +142,19 @@ class RankingSettings(BaseModel):
     top_n: int = 20
 
 
+class EligibilitySettings(BaseModel):
+    """Minimum bar a ranked name must clear to be an actionable candidate
+    (P0-4). Ranking != investability: a name can be ranked yet ineligible.
+    Stricter optional gates default to off (None)."""
+
+    require_robust_return_positive: bool = True
+    require_median_above_hurdle: bool = True
+    min_p10_irr: float | None = None
+    min_above_hurdle_weight: float | None = None
+    max_model_uncertainty: float | None = None
+    min_evidence_confidence: float | None = None
+
+
 class ReportSettings(BaseModel):
     feishu_top_n: int = 10
 
@@ -162,6 +175,7 @@ class Settings(BaseModel):
     risk_preferences: RiskPreferenceSettings = Field(default_factory=RiskPreferenceSettings)
     confidence: ConfidenceSettings = Field(default_factory=ConfidenceSettings)
     ranking: RankingSettings = Field(default_factory=RankingSettings)
+    eligibility: EligibilitySettings = Field(default_factory=EligibilitySettings)
     report: ReportSettings = Field(default_factory=ReportSettings)
     freshness: FreshnessSettings = Field(default_factory=FreshnessSettings)
 

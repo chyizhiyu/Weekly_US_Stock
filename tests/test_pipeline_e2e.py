@@ -167,7 +167,10 @@ def test_feishu_summary_content(pipeline_runs: dict[str, Path]) -> None:
     summary = (pipeline_runs["first"] / "feishu_summary.md").read_text("utf-8")
     assert "2026-01-09" in summary
     assert "扫描 29 只" in summary
-    assert "Robust Top" in summary and "Upside Top" in summary
+    # P0-4: eligible candidates lead; Upside is an explicitly labelled, non-
+    # actionable research queue (never an "Upside Top" buy list).
+    assert "达标候选" in summary
+    assert "Upside 研究队列" in summary and "非可执行" in summary
     assert "预期IRR" in summary and "P10" in summary
     assert "门槛CVaR" in summary and "质量" in summary and "置信" in summary
     assert "观察名单" in summary

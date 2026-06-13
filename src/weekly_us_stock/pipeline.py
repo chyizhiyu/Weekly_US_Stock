@@ -65,6 +65,7 @@ from weekly_us_stock.utils.fingerprint import (
     ticker_set_hash,
     universe_fingerprint,
 )
+from weekly_us_stock.valuation.eligibility import classify_eligibility
 from weekly_us_stock.valuation.industry import route_unsupported_industries
 from weekly_us_stock.valuation.ranking import build_rankings
 
@@ -361,8 +362,20 @@ class WeeklyUSStockPipeline:
             ),
             output_count=lambda result: len(result[0]),
         )
+        # P0-4: ranking != investability. Flag each ranked name eligible/not and
+        # split out a research queue so reports never pad with sub-bar names.
+        eligibility = classify_eligibility(robust, self.settings.eligibility)
+        robust = eligibility.ranked  # carries `eligible` + `ineligible_reasons`
+        eligible = eligibility.eligible
+        research_queue = eligibility.research_queue
         self._export(run_dir, "robust_ranking", robust, summary, artifacts)
         self._export(run_dir, "upside_ranking", upside, summary, artifacts)
+        self._export(run_dir, "eligible_candidates", eligible, summary, artifacts)
+        self._export(run_dir, "research_queue", research_queue, summary, artifacts)
+        summary.notes.append(
+            f"eligible candidates: {len(eligible)}/{len(robust)} "
+            f"(research queue {len(research_queue)})"
+        )
         steps.append(summary)
         _log_step(summary)
 
@@ -387,6 +400,7 @@ class WeeklyUSStockPipeline:
             steps=steps,
             robust=robust,
             upside=upside,
+            eligible=eligible,
             scenarios=valuation_result.scenario_rows,
             watchlist=watchlist,
             comparison=comparison,
@@ -398,6 +412,7 @@ class WeeklyUSStockPipeline:
             steps=steps,
             robust=robust,
             upside=upside,
+            eligible=eligible,
             watchlist=watchlist,
             comparison=comparison,
             freshness=freshness,
@@ -413,6 +428,9 @@ class WeeklyUSStockPipeline:
             ],
         )
         self._export(run_dir, "watchlist", watchlist, summary, artifacts)
+        # P0-4: the watchlist is the "invalid or not-yet-rankable" bucket; export
+        # it under the spec's name too so the three audiences are explicit files.
+        self._export(run_dir, "invalid_or_watchlist", watchlist, summary, artifacts)
         artifacts.append(str(export_text(dashboard, run_dir / "dashboard.md")))
         artifacts.append(str(export_text(feishu, run_dir / "feishu_summary.md")))
         steps.append(summary)

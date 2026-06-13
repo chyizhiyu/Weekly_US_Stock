@@ -15,6 +15,7 @@ def build_feishu_summary(
     steps: Sequence[StepSummary],
     robust: pd.DataFrame,
     upside: pd.DataFrame,
+    eligible: pd.DataFrame,
     watchlist: pd.DataFrame,
     comparison: WeekOverWeek,
     freshness: DataFreshness,
@@ -28,10 +29,14 @@ def build_feishu_summary(
         f"扫描 {universe_count} 只，漏斗：{funnel}",
         _coverage_line(freshness),
         "",
-        f"Robust Top {top_n}（风险调整后）:",
     ]
-    lines += _candidate_lines(robust, top_n)
-    lines += ["", f"Upside Top {top_n}（预期回报）:"]
+    # P0-4: lead with eligible candidates only; never pad to Top N.
+    if eligible.empty:
+        lines += ["本周无达标候选（无个股满足：估值有限、robust_return>0、中位IRR>门槛）。"]
+    else:
+        lines += [f"达标候选 {len(eligible)} 只（估值有限、robust_return>0、中位IRR>门槛）:"]
+        lines += _candidate_lines(eligible, top_n)
+    lines += ["", f"Upside 研究队列 Top {top_n}（高分散度，仅研究、非可执行）:"]
     lines += _upside_lines(upside, top_n)
 
     lines += ["", _change_line(comparison)]
