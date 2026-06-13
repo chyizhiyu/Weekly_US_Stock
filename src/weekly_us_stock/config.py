@@ -26,6 +26,12 @@ class UniverseSettings(BaseModel):
     # (e.g. ["sp500", "nasdaq100"]). Empty list = full US market. Names are
     # resolved to current constituent lists by the data provider.
     index_membership: list[str] = Field(default_factory=list)
+    # Fail closed if a configured index returns fewer than this many
+    # constituents (a sign the membership endpoint is broken/partial). Unknown
+    # indices fall back to a conservative floor of 1.
+    index_min_constituents: dict[str, int] = Field(
+        default_factory=lambda: {"sp500": 400, "nasdaq100": 80, "dowjones": 25}
+    )
 
     @field_validator("index_membership")
     @classmethod

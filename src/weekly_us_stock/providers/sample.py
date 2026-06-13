@@ -13,6 +13,7 @@ from weekly_us_stock.providers.base import (
     PRICE_COLUMNS,
     UNIVERSE_COLUMNS,
     CodeList,
+    IndexConstituents,
     require_columns,
 )
 
@@ -35,10 +36,18 @@ class SampleDataProvider:
         frame = frame.loc[pd.to_datetime(frame["listing_date"]).dt.date <= as_of]
         return require_columns(frame.reset_index(drop=True), UNIVERSE_COLUMNS, "universe")
 
-    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
-        # Sample data carries no index membership; an empty set tells the
-        # pipeline to keep the full sample universe instead of filtering.
-        return set()
+    def index_constituents(self, indices: list[str], as_of: date) -> IndexConstituents:
+        # Sample data carries no index membership; declare that explicitly
+        # (restrict=False) instead of overloading an empty set.
+        return IndexConstituents(
+            requested=[str(index).lower() for index in indices],
+            per_index_counts={},
+            symbols=set(),
+            source="sample",
+            snapshot_date=as_of.isoformat(),
+            errors=[],
+            restrict=False,
+        )
 
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
         frame = self._read_csv("prices.csv", date_columns=["trade_date"])

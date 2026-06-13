@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -28,7 +28,11 @@ from weekly_us_stock.models.screening import (
     PipelineResult,
     StepSummary,
 )
-from weekly_us_stock.providers.base import DataProvider
+from weekly_us_stock.providers.base import (
+    DataProvider,
+    IndexUniverseUnavailable,
+    normalize_ticker,
+)
 from weekly_us_stock.providers.sample import SampleDataProvider
 from weekly_us_stock.reports.compare import (
     compare_with_previous,
@@ -80,6 +84,7 @@ class WeeklyUSStockPipeline:
         steps: list[StepSummary] = []
         artifacts: list[str] = []
         as_of = request.as_of
+        self._index_universe: dict | None = None  # set when an index pool restricts
 
         # Step 1: universe + market snapshot -----------------------------------
         universe, summary = self._timed(
@@ -90,21 +95,9 @@ class WeeklyUSStockPipeline:
         )
         membership = self.settings.universe.index_membership
         if membership and not universe.empty:
-            allowed = provider.index_constituents(membership, as_of)
-            if allowed:
-                before = len(universe)
-                universe = universe.loc[
-                    universe["ticker"].isin(allowed)
-                ].reset_index(drop=True)
-                summary.output_count = len(universe)
-                summary.notes.append(
-                    f"restricted to {'+'.join(membership)}: {len(universe)}/{before} names"
-                )
-            else:
-                summary.notes.append(
-                    f"index_membership {membership} set but provider returned no "
-                    "constituents; keeping full universe"
-                )
+            universe = self._restrict_to_index_universe(
+                universe, provider, membership, as_of, summary
+            )
         if request.limit is not None and not universe.empty:
             # Smoke-test mode: keep the N largest names so a bounded real-data
             # run still exercises every later step.
@@ -438,6 +431,78 @@ class WeeklyUSStockPipeline:
 
             return build_composite(self.env, self.settings.wacc)
         raise ValueError(f"Unsupported data source: {source}")
+
+    # -- universe restriction --------------------------------------------------
+
+    def _restrict_to_index_universe(
+        self,
+        universe: pd.DataFrame,
+        provider: DataProvider,
+        membership: list[str],
+        as_of: date,
+        summary: StepSummary,
+    ) -> pd.DataFrame:
+        """Narrow the universe to configured index members, failing closed.
+
+        A provider that does not enforce membership (sample) is a no-op. For an
+        enforcing provider, an empty union, a failed constituent endpoint, or an
+        implausibly low count aborts the run instead of silently screening the
+        full market (P0-2).
+        """
+
+        constituents = provider.index_constituents(membership, as_of)
+        if not constituents.restrict:
+            summary.notes.append(
+                f"provider '{constituents.source}' does not enforce index "
+                f"membership {membership}; using full universe"
+            )
+            return universe
+
+        floors = self.settings.universe.index_min_constituents
+        problems: list[str] = list(constituents.errors)
+        if constituents.union_count == 0:
+            problems.append("constituent union is empty")
+        for index in constituents.requested:
+            count = constituents.per_index_counts.get(index, 0)
+            floor = floors.get(index, 1)
+            if count < floor:
+                problems.append(f"{index}: {count} constituents below floor {floor}")
+        if problems:
+            raise IndexUniverseUnavailable(
+                f"configured index universe {membership} could not be built "
+                f"safely (source={constituents.source}): {'; '.join(problems)}"
+            )
+
+        allowed = {normalize_ticker(symbol) for symbol in constituents.symbols}
+        universe_keys = universe["ticker"].map(normalize_ticker)
+        mask = universe_keys.isin(allowed)
+        unmatched = sorted(allowed - set(universe_keys[mask]))
+        before = len(universe)
+        restricted = universe.loc[mask].reset_index(drop=True)
+        summary.output_count = len(restricted)
+        summary.notes.append(
+            f"restricted to {'+'.join(membership)}: {len(restricted)}/{before} "
+            f"(union {constituents.union_count}, unmatched {len(unmatched)})"
+        )
+        if unmatched:
+            # Never silently drop a constituent: list those with no matching
+            # screener security so a ticker-format drift is visible (P0-2).
+            logger.warning(
+                "index constituents with no universe match (%d): %s",
+                len(unmatched),
+                ", ".join(unmatched[:50]),
+            )
+        self._index_universe = {
+            "source": constituents.source,
+            "snapshot_date": constituents.snapshot_date,
+            "requested": constituents.requested,
+            "per_index_counts": constituents.per_index_counts,
+            "union_count": constituents.union_count,
+            "matched_count": int(len(restricted)),
+            "unmatched_count": len(unmatched),
+            "unmatched_symbols": unmatched,
+        }
+        return restricted
 
     # -- helpers ---------------------------------------------------------------
 

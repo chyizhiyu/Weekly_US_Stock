@@ -9,7 +9,11 @@ from weekly_us_stock.config import load_settings
 from weekly_us_stock.logging import configure_logging
 from weekly_us_stock.models.screening import DataNotReadyError, PipelineRequest
 from weekly_us_stock.pipeline import WeeklyUSStockPipeline
-from weekly_us_stock.providers.base import DataProviderNotConfigured, PointInTimeUnavailable
+from weekly_us_stock.providers.base import (
+    DataProviderNotConfigured,
+    IndexUniverseUnavailable,
+    PointInTimeUnavailable,
+)
 from weekly_us_stock.utils.calendar import expected_weekly_as_of, parse_date
 
 app = typer.Typer(help="Weekly US stock screener. Research and reports only; no trading.")
@@ -77,8 +81,13 @@ def run(
     except DataNotReadyError as exc:
         typer.echo(f"Data not ready: {exc}", err=True)
         raise typer.Exit(code=EXIT_DATA_NOT_READY) from exc
-    except (DataProviderNotConfigured, PointInTimeUnavailable) as exc:
-        # Fail closed: never publish sample/leaky data from a production path.
+    except (
+        DataProviderNotConfigured,
+        PointInTimeUnavailable,
+        IndexUniverseUnavailable,
+    ) as exc:
+        # Fail closed: never publish sample/leaky data, and never silently
+        # screen the full market when a configured index universe is unsafe.
         typer.echo(f"Refusing to run: {exc}", err=True)
         raise typer.Exit(code=78) from exc  # EX_CONFIG
 

@@ -20,7 +20,7 @@ from datetime import UTC, date, datetime
 import pandas as pd
 
 from weekly_us_stock.config import EnvSettings, WaccSettings
-from weekly_us_stock.providers.base import CodeList, DataProviderNotConfigured
+from weekly_us_stock.providers.base import CodeList, DataProviderNotConfigured, IndexConstituents
 from weekly_us_stock.providers.fmp import FMPProvider
 from weekly_us_stock.providers.fred import FredProvider
 from weekly_us_stock.providers.polygon import PolygonProvider
@@ -59,7 +59,7 @@ class CompositeProvider:
     def fetch_universe(self, as_of: date) -> pd.DataFrame:
         return self.fmp.fetch_universe(as_of)
 
-    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
+    def index_constituents(self, indices: list[str], as_of: date) -> IndexConstituents:
         return self.fmp.index_constituents(indices, as_of)
 
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:

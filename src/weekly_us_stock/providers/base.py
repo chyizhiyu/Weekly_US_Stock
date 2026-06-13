@@ -1,12 +1,48 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Protocol
 
 import pandas as pd
 
 CodeList = Sequence[str] | None
+
+
+def normalize_ticker(symbol: object) -> str:
+    """Canonical ticker key for matching across data sources.
+
+    Vendors disagree on share-class punctuation (``BRK.B`` vs ``BRK-B`` vs
+    ``BRK/B``). Fold them to one key so an index constituent is never silently
+    dropped just because the screener spells it differently.
+    """
+
+    text = str(symbol or "").strip().upper()
+    for separator in (".", "/", " "):
+        text = text.replace(separator, "-")
+    return text
+
+
+@dataclass(frozen=True)
+class IndexConstituents:
+    """Structured result of an index-membership fetch (P0-2).
+
+    ``restrict`` is False only for sources that explicitly do not enforce index
+    membership (e.g. the sample provider) - never inferred from an empty set.
+    """
+
+    requested: list[str]
+    per_index_counts: dict[str, int]
+    symbols: set[str]
+    source: str
+    snapshot_date: str | None = None
+    errors: list[str] = field(default_factory=list)
+    restrict: bool = True
+
+    @property
+    def union_count(self) -> int:
+        return len(self.symbols)
 
 # Every frame a provider returns must carry provenance columns so reports can
 # disclose where each number came from and how fresh it is.
@@ -84,12 +120,13 @@ class DataProvider(Protocol):
         """US-listed instruments with type/exchange/listing metadata."""
         ...
 
-    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
-        """Union of CURRENT ticker symbols for the named indices (``sp500``,
-        ``nasdaq100``, ``dowjones``), used to narrow the universe to index
-        members. Returns an empty set when the source has no membership data
-        (e.g. the sample provider); callers then keep the full universe rather
-        than filtering to nothing."""
+    def index_constituents(self, indices: list[str], as_of: date) -> IndexConstituents:
+        """CURRENT membership of the named indices (``sp500``, ``nasdaq100``,
+        ``dowjones``) as a structured result with per-index counts, union
+        symbols, source, snapshot date and per-index fetch errors. The caller
+        fails closed on empty/incomplete/abnormal results; ``restrict=False``
+        means the source does not enforce membership (e.g. the sample
+        provider), never an empty set."""
         ...
 
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
@@ -122,6 +159,12 @@ class DataProvider(Protocol):
 
 class DataProviderNotConfigured(RuntimeError):
     """Raised when a provider is selected but its credentials are missing."""
+
+
+class IndexUniverseUnavailable(RuntimeError):
+    """Raised when a configured index universe cannot be built safely (empty,
+    a constituent endpoint failed, or a count is implausibly low). The run
+    fails closed rather than silently screening the full market (P0-2)."""
 
 
 class PointInTimeUnavailable(RuntimeError):

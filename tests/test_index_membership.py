@@ -49,7 +49,11 @@ def test_index_constituents_unions_endpoints(monkeypatch) -> None:
     monkeypatch.setattr(FMPProvider, "_get", fake_get)
     provider = FMPProvider("test-key", min_request_interval=0.0)
     result = provider.index_constituents(["sp500", "nasdaq100"], _today())
-    assert result == {"AAPL", "MSFT", "NVDA"}
+    assert result.symbols == {"AAPL", "MSFT", "NVDA"}
+    assert result.union_count == 3
+    assert result.per_index_counts == {"sp500": 2, "nasdaq100": 2}
+    assert result.restrict is True
+    assert result.errors == []
     assert calls == ["sp500-constituent", "nasdaq-constituent"]
 
 

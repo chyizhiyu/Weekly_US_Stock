@@ -38,6 +38,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from weekly_us_stock.providers.base import (
     CodeList,
     DataProviderNotConfigured,
+    IndexConstituents,
     PointInTimeUnavailable,
 )
 from weekly_us_stock.utils.calendar import is_trading_day, previous_trading_day
@@ -475,21 +476,41 @@ class FMPProvider:
         # the largest names and adds provenance to the universe export.
         return self._enrich_with_bulk_profiles(frame)
 
-    def index_constituents(self, indices: list[str], as_of: date) -> set[str]:
+    def index_constituents(self, indices: list[str], as_of: date) -> IndexConstituents:
         # Constituent lists are CURRENT-membership snapshots, same look-ahead
         # caveat as the screener: refuse stale historical replays.
         self._assert_snapshot_recency(as_of, "index constituents")
         symbols: set[str] = set()
+        per_index_counts: dict[str, int] = {}
+        errors: list[str] = []
         for index in indices:
-            endpoint = _INDEX_CONSTITUENT_ENDPOINTS.get(str(index).lower())
+            key = str(index).lower()
+            endpoint = _INDEX_CONSTITUENT_ENDPOINTS.get(key)
             if endpoint is None:
                 raise ValueError(
                     f"Unknown index '{index}'; known: "
                     f"{sorted(_INDEX_CONSTITUENT_ENDPOINTS)}"
                 )
-            payload = self._get(endpoint, {})
-            symbols |= extract_constituent_symbols(payload or [])
-        return symbols
+            try:
+                payload = self._get(endpoint, {})
+            except requests.RequestException as exc:
+                # Record the failure; the caller fails closed rather than
+                # silently shipping a partial union or the full market.
+                errors.append(f"{key}: fetch failed ({exc.__class__.__name__})")
+                per_index_counts[key] = 0
+                continue
+            index_symbols = extract_constituent_symbols(payload or [])
+            per_index_counts[key] = len(index_symbols)
+            symbols |= index_symbols
+        return IndexConstituents(
+            requested=[str(index).lower() for index in indices],
+            per_index_counts=per_index_counts,
+            symbols=symbols,
+            source="fmp:constituent",
+            snapshot_date=as_of.isoformat(),
+            errors=errors,
+            restrict=True,
+        )
 
     def load_prices(self, tickers: CodeList, as_of: date, lookback_days: int) -> pd.DataFrame:
         fetched_at = _now_iso()
