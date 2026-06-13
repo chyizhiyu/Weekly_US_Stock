@@ -32,8 +32,12 @@ weekly-us-stock = "weekly_us_stock.cli:app"
 packages = ["src/weekly_us_stock"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+# importlib mode + repo root on the path lets `from tests.conftest import ...`
+# resolve under a plain `pytest` / `python -m pytest` in a clean checkout,
+# without relying on an editable install or `-m`'s cwd insertion.
+pythonpath = ["src", "."]
 testpaths = ["tests"]
+addopts = "--import-mode=importlib"
 
 [tool.ruff]
 line-length = 100
