@@ -206,6 +206,19 @@ def _scenario_section(robust: pd.DataFrame, scenarios: pd.DataFrame, top_n: int)
                 f"| {row['terminal_roic']:.1%} | {row['intrinsic_value_per_share']:.2f} "
                 f"| {irr_text} | {row['total_return_5y']:.0%} |"
             )
+    # P1-1: bear/base/bull intrinsic values need not be ordered; surface the
+    # inversions and their driver instead of pretending low <= base <= high.
+    if "scenario_order_inversion" in robust.columns:
+        inverted = robust.head(top_n)
+        inverted = inverted[inverted["scenario_order_inversion"].fillna(False).astype(bool)]
+        if not inverted.empty:
+            lines += [
+                "",
+                "**Scenario order inversions** (named bear/base/bull intrinsic value "
+                "is not monotone — this is economic, not a bug):",
+            ]
+            for _, row in inverted.iterrows():
+                lines.append(f"- {row['ticker']}: {row.get('scenario_order_note') or 'reordered'}")
     return lines
 
 

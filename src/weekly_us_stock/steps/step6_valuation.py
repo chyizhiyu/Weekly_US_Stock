@@ -108,6 +108,10 @@ def run_scenario_valuations(
             "intrinsic_value_low": valuation.intrinsic_value_low,
             "intrinsic_value_base": valuation.intrinsic_value_base,
             "intrinsic_value_high": valuation.intrinsic_value_high,
+            "intrinsic_value_bear": valuation.intrinsic_value_bear,
+            "intrinsic_value_bull": valuation.intrinsic_value_bull,
+            "scenario_order_inversion": valuation.scenario_order_inversion,
+            "scenario_order_note": valuation.scenario_order_note,
             "upside_to_base": valuation.intrinsic_value_base / inputs.price - 1.0
             if inputs.price
             else None,

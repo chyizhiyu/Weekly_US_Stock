@@ -275,6 +275,15 @@ def aggregate_valuation(
     )
 
     by_name = {s.assumptions.name: s for s in scenarios}
+    bear_iv = by_name["bear"].intrinsic_value_per_share
+    base_iv = by_name["base"].intrinsic_value_per_share
+    bull_iv = by_name["bull"].intrinsic_value_per_share
+    # P1-1: the named order need not be monotone (low growth destroys less value
+    # when ROIC < WACC). Flag the inversion and explain the driver instead of
+    # forcing the numbers to look ordered.
+    inversion = not (bear_iv <= base_iv <= bull_iv)
+    order_note = _scenario_order_note(inputs, by_name["base"].assumptions) if inversion else None
+
     required_metrics = {
         "expected_irr": expected_irr,
         "median_irr": median_irr,
@@ -282,7 +291,7 @@ def aggregate_valuation(
         "p90_irr": p90_irr,
         "hurdle_cvar": hurdle_cvar,
         "expected_shortfall": expected_shortfall,
-        "intrinsic_value_base": by_name["base"].intrinsic_value_per_share,
+        "intrinsic_value_base": base_iv,
     }
     status, reason, invalid_fields = _classify_validity(scenarios, required_metrics)
     return CompanyValuation(
@@ -297,15 +306,34 @@ def aggregate_valuation(
         permanent_loss_weight=permanent_loss_weight,
         expected_shortfall=expected_shortfall,
         hurdle_cvar=hurdle_cvar,
-        intrinsic_value_low=by_name["bear"].intrinsic_value_per_share,
-        intrinsic_value_base=by_name["base"].intrinsic_value_per_share,
-        intrinsic_value_high=by_name["bull"].intrinsic_value_per_share,
+        intrinsic_value_low=min(bear_iv, base_iv, bull_iv),
+        intrinsic_value_base=base_iv,
+        intrinsic_value_high=max(bear_iv, base_iv, bull_iv),
+        intrinsic_value_bear=bear_iv,
+        intrinsic_value_bull=bull_iv,
+        scenario_order_inversion=inversion,
+        scenario_order_note=order_note,
         model_confidence=inputs.model_confidence,
         data_confidence=inputs.data_confidence,
         model_uncertainty=model_uncertainty,
         valuation_status=status,
         invalid_reason=reason,
         invalid_fields=invalid_fields,
+    )
+
+
+def _scenario_order_note(inputs: CompanyInputs, base: ScenarioAssumptions) -> str:
+    """Explain why bear/base/bull intrinsic values are not monotone."""
+
+    if base.forward_roic <= inputs.wacc + _MIN_DENOMINATOR:
+        return (
+            f"growth destroys value: forward ROIC {base.forward_roic:.1%} at/below "
+            f"WACC {inputs.wacc:.1%}, so higher-growth scenarios reinvest below the "
+            "cost of capital and are worth less than the bear case"
+        )
+    return (
+        "intrinsic value is not monotone in growth: margin and reinvestment "
+        "assumptions reorder the bear/base/bull cases"
     )
 
 

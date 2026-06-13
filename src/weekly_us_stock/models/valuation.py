@@ -81,9 +81,18 @@ class CompanyValuation(BaseModel):
     permanent_loss_weight: float
     expected_shortfall: float
     hurdle_cvar: float  # tail mean of max(0, hurdle - irr): shortfall vs the hurdle
+    # P1-1: keep the NAMED scenario values and the STATISTICAL interval separate.
+    # low/high are min/max of the three scenarios (so low <= base <= high holds
+    # by construction); intrinsic_value_bear/bull keep the economic identity of
+    # the bear/bull case, which need not be the lowest/highest (low growth can
+    # destroy less value when ROIC < WACC).
     intrinsic_value_low: float
     intrinsic_value_base: float
     intrinsic_value_high: float
+    intrinsic_value_bear: float
+    intrinsic_value_bull: float
+    scenario_order_inversion: bool = False
+    scenario_order_note: str | None = None
     model_confidence: float
     data_confidence: float
     model_uncertainty: float
