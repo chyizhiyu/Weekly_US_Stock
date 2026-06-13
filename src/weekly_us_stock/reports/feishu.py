@@ -93,7 +93,12 @@ def _upside_lines(upside: pd.DataFrame, top_n: int) -> list[str]:
 
 
 def _change_line(comparison: WeekOverWeek) -> str:
-    if not comparison.has_previous:
+    if comparison.baseline_reset:
+        return (
+            f"对比基准已重置（{comparison.reset_reason}）：股票池或关键配置已变更，"
+            "本周不做周环比,以免产生无意义的新进/退出。"
+        )
+    if not comparison.comparable:
         return "本周为首次运行，无上周对比。"
     entered = "、".join(comparison.robust_entered) or "无"
     exited = "、".join(comparison.robust_exited) or "无"

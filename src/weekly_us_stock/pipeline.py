@@ -10,6 +10,7 @@ runs/YYYYMMDD/.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -59,6 +60,11 @@ from weekly_us_stock.steps.step4_normalized import run_normalized_model
 from weekly_us_stock.steps.step5_quality import run_quality_assessment
 from weekly_us_stock.steps.step6_valuation import run_scenario_valuations
 from weekly_us_stock.utils.calendar import week_key
+from weekly_us_stock.utils.fingerprint import (
+    config_fingerprint,
+    ticker_set_hash,
+    universe_fingerprint,
+)
 from weekly_us_stock.valuation.industry import route_unsupported_industries
 from weekly_us_stock.valuation.ranking import build_rankings
 
@@ -85,6 +91,9 @@ class WeeklyUSStockPipeline:
         artifacts: list[str] = []
         as_of = request.as_of
         self._index_universe: dict | None = None  # set when an index pool restricts
+        self._universe_fingerprint: str | None = None
+        self._config_fingerprint: str | None = None
+        self._universe_ticker_hash: str | None = None
 
         # Step 1: universe + market snapshot -----------------------------------
         universe, summary = self._timed(
@@ -107,6 +116,12 @@ class WeeklyUSStockPipeline:
             summary.output_count = len(universe)
             summary.notes.append(f"universe truncated to {request.limit} for smoke testing")
         self._export(run_dir, "universe", universe, summary, artifacts)
+        # P0-3: fingerprints make week-over-week comparability checkable.
+        self._universe_fingerprint = universe_fingerprint(self.settings)
+        self._config_fingerprint = config_fingerprint(self.settings)
+        self._universe_ticker_hash = (
+            ticker_set_hash(universe["ticker"]) if not universe.empty else None
+        )
         steps.append(summary)
         _log_step(summary)
 
@@ -359,7 +374,12 @@ class WeeklyUSStockPipeline:
         )
         previous_dir = self._resolve_previous_dir(request, run_dir)
         comparison = compare_with_previous(
-            robust, upside, previous_dir, self.settings.ranking.top_n
+            robust,
+            upside,
+            previous_dir,
+            self.settings.ranking.top_n,
+            current_universe_fingerprint=self._universe_fingerprint,
+            current_config_fingerprint=self._config_fingerprint,
         )
         started = time.perf_counter()
         dashboard = build_dashboard(
@@ -561,6 +581,18 @@ class WeeklyUSStockPipeline:
             "fresh_price_coverage": freshness.fresh_price_coverage,
             "stale_tickers": freshness.stale_tickers,
             "funnel": {step.name: step.output_count for step in steps},
+            # P0-3: universe definition + fingerprints make each run's
+            # comparability and exact pool auditable.
+            "index_membership": self.settings.universe.index_membership,
+            "universe_definition": self._index_universe
+            or {
+                "index_membership": self.settings.universe.index_membership,
+                "restrict": False,
+            },
+            "universe_fingerprint": self._universe_fingerprint,
+            "universe_ticker_hash": self._universe_ticker_hash,
+            "config_fingerprint": self._config_fingerprint,
+            "source_sha": os.environ.get("GITHUB_SHA", ""),
         }
 
     def _resolve_previous_dir(self, request: PipelineRequest, run_dir: Path) -> Path | None:

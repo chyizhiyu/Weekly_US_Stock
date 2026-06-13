@@ -64,7 +64,15 @@ def build_dashboard(
     lines += _ranking_section("Upside Top 20 (expected IRR)", upside, top_n, robust_columns=False)
 
     lines += ["", "## Week-over-week"]
-    if comparison.has_previous:
+    if comparison.baseline_reset:
+        lines += [
+            "",
+            f"**comparison_baseline_reset** — previous run: {comparison.previous_as_of}.",
+            f"The universe or result-affecting config changed ({comparison.reset_reason}); "
+            "entered/exited/rank-change deltas are suppressed because they would be "
+            "meaningless against a different baseline.",
+        ]
+    elif comparison.comparable:
         lines += [
             "",
             f"Previous run: {comparison.previous_as_of}",

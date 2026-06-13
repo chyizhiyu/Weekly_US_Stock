@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,10 +20,18 @@ class WeekOverWeek:
     upside_entered: list[str] = field(default_factory=list)
     upside_exited: list[str] = field(default_factory=list)
     robust_rank_changes: pd.DataFrame = field(default_factory=pd.DataFrame)
+    # P0-3: True when the universe or result-affecting config changed since the
+    # previous run, so entered/exited/rank deltas would be meaningless.
+    baseline_reset: bool = False
+    reset_reason: str | None = None
 
     @property
     def has_previous(self) -> bool:
         return self.previous_as_of is not None
+
+    @property
+    def comparable(self) -> bool:
+        return self.has_previous and not self.baseline_reset
 
 
 def find_previous_run_dir(output_dir: Path, current_key: str) -> Path | None:
@@ -43,6 +52,9 @@ def compare_with_previous(
     upside: pd.DataFrame,
     previous_dir: Path | None,
     top_n: int,
+    *,
+    current_universe_fingerprint: str | None = None,
+    current_config_fingerprint: str | None = None,
 ) -> WeekOverWeek:
     if previous_dir is None:
         return WeekOverWeek()
@@ -53,6 +65,16 @@ def compare_with_previous(
         return WeekOverWeek()
 
     previous_as_of = _previous_as_of(previous_dir, previous_robust)
+
+    # P0-3: only compare against a baseline with the same universe and config.
+    reset = _baseline_reset_reason(
+        previous_dir, current_universe_fingerprint, current_config_fingerprint
+    )
+    if reset is not None:
+        logger.info("Comparison baseline reset (%s); suppressing week-over-week deltas", reset)
+        return WeekOverWeek(
+            previous_as_of=previous_as_of, baseline_reset=True, reset_reason=reset
+        )
 
     current_top = _top_tickers(robust, top_n)
     previous_top = _top_tickers(previous_robust, top_n)
@@ -81,19 +103,45 @@ def _read_ranking(path: Path) -> pd.DataFrame | None:
         return None
 
 
-def _previous_as_of(previous_dir: Path, robust: pd.DataFrame) -> str:
+def _read_metadata(previous_dir: Path) -> dict:
     metadata_path = previous_dir / "run_metadata.json"
-    if metadata_path.exists():
-        import json
+    if not metadata_path.exists():
+        return {}
+    try:
+        return json.loads(metadata_path.read_text(encoding="utf-8"))
+    except Exception:
+        logger.exception("Failed to read previous run metadata %s", metadata_path)
+        return {}
 
-        try:
-            return str(json.loads(metadata_path.read_text(encoding="utf-8")).get("as_of"))
-        except Exception:
-            pass
+
+def _previous_as_of(previous_dir: Path, robust: pd.DataFrame) -> str:
+    as_of = _read_metadata(previous_dir).get("as_of")
+    if as_of:
+        return str(as_of)
     name = previous_dir.name
     if len(name) == 8 and name.isdigit():
         return f"{name[:4]}-{name[4:6]}-{name[6:]}"
     return "unknown"
+
+
+def _baseline_reset_reason(
+    previous_dir: Path, current_uf: str | None, current_cf: str | None
+) -> str | None:
+    """Why the comparison baseline is not usable, or None if it is."""
+
+    if current_uf is None and current_cf is None:
+        return None  # caller did not supply fingerprints (legacy callers)
+    meta = _read_metadata(previous_dir)
+    prev_uf = meta.get("universe_fingerprint")
+    prev_cf = meta.get("config_fingerprint")
+    if prev_uf is None or prev_cf is None:
+        return "previous run has no universe/config fingerprint"
+    changed = []
+    if current_uf is not None and prev_uf != current_uf:
+        changed.append("universe")
+    if current_cf is not None and prev_cf != current_cf:
+        changed.append("config")
+    return ("changed: " + ", ".join(changed)) if changed else None
 
 
 def _top_tickers(frame: pd.DataFrame, top_n: int) -> set[str]:
