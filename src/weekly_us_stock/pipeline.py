@@ -42,8 +42,9 @@ from weekly_us_stock.reports.compare import (
 from weekly_us_stock.reports.dashboard import build_dashboard
 from weekly_us_stock.reports.exporters import export_dataframe, export_json, export_text
 from weekly_us_stock.reports.feishu import build_feishu_summary
+from weekly_us_stock.reports.turnaround import build_turnaround_watchlist
 from weekly_us_stock.steps.step1_universe import build_market_snapshot, fetch_universe
-from weekly_us_stock.steps.step2_events import detect_material_events
+from weekly_us_stock.steps.step2_events import MATERIAL_EVENT_REASON, detect_material_events
 from weekly_us_stock.steps.step2_hard_filters import (
     combine_results,
     drop_duplicate_share_classes,
@@ -402,6 +403,14 @@ class WeeklyUSStockPipeline:
             if watchlist_frames
             else pd.DataFrame(columns=["ticker", "name", "watchlist_reason"])
         )
+        # P2-1: structure the material-event names into a turnaround watchlist
+        # with a state machine and the evidence each needs to re-enter ranking.
+        event_rows = (
+            watchlist.loc[watchlist["watchlist_reason"] == MATERIAL_EVENT_REASON]
+            if "watchlist_reason" in watchlist.columns
+            else watchlist.iloc[0:0]
+        )
+        turnaround = build_turnaround_watchlist(event_rows, as_of)
         previous_dir = self._resolve_previous_dir(request, run_dir)
         comparison = compare_with_previous(
             robust,
@@ -420,6 +429,7 @@ class WeeklyUSStockPipeline:
             eligible=eligible,
             scenarios=valuation_result.scenario_rows,
             watchlist=watchlist,
+            turnaround=turnaround,
             comparison=comparison,
             freshness=freshness,
             top_n=self.settings.ranking.top_n,
@@ -431,6 +441,7 @@ class WeeklyUSStockPipeline:
             upside=upside,
             eligible=eligible,
             watchlist=watchlist,
+            turnaround=turnaround,
             comparison=comparison,
             freshness=freshness,
             top_n=self.settings.report.feishu_top_n,
@@ -448,6 +459,7 @@ class WeeklyUSStockPipeline:
         # P0-4: the watchlist is the "invalid or not-yet-rankable" bucket; export
         # it under the spec's name too so the three audiences are explicit files.
         self._export(run_dir, "invalid_or_watchlist", watchlist, summary, artifacts)
+        self._export(run_dir, "turnaround_watchlist", turnaround, summary, artifacts)  # P2-1
         artifacts.append(str(export_text(dashboard, run_dir / "dashboard.md")))
         artifacts.append(str(export_text(feishu, run_dir / "feishu_summary.md")))
         steps.append(summary)

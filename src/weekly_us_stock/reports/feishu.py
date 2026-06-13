@@ -17,6 +17,7 @@ def build_feishu_summary(
     upside: pd.DataFrame,
     eligible: pd.DataFrame,
     watchlist: pd.DataFrame,
+    turnaround: pd.DataFrame,
     comparison: WeekOverWeek,
     freshness: DataFreshness,
     top_n: int = 10,
@@ -47,6 +48,11 @@ def build_feishu_summary(
             f"{_reason_cn(reason)}{count}只" for reason, count in reasons.items()
         )
         lines += [f"观察名单：{len(watchlist)} 只（{reason_text}）"]
+    if not turnaround.empty:
+        names = "、".join(
+            f"{r['ticker']}({r['status']})" for _, r in turnaround.head(8).iterrows()
+        )
+        lines += [f"重大事件反转观察：{len(turnaround)} 只 — {names}"]
 
     lines += [
         "",

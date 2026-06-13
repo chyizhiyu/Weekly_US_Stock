@@ -21,7 +21,7 @@ import pandas as pd
 from weekly_us_stock.config import EventGateSettings
 from weekly_us_stock.models.screening import FilterFrameResult
 
-WATCHLIST_REASON = "material_event_requires_reunderwriting"
+MATERIAL_EVENT_REASON = WATCHLIST_REASON = "material_event_requires_reunderwriting"
 
 
 def detect_material_events(

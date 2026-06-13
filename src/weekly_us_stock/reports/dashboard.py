@@ -18,6 +18,7 @@ def build_dashboard(
     eligible: pd.DataFrame,
     scenarios: pd.DataFrame,
     watchlist: pd.DataFrame,
+    turnaround: pd.DataFrame,
     comparison: WeekOverWeek,
     freshness: DataFreshness,
     top_n: int,
@@ -121,6 +122,7 @@ def build_dashboard(
 
     lines += _scenario_section(robust, scenarios, top_n)
     lines += _alerts_section(robust, top_n)
+    lines += _turnaround_section(turnaround)
 
     lines += ["", "## Key Risks and Failure Conditions", ""]
     risk_lines = _risk_lines(robust, top_n)
@@ -220,6 +222,27 @@ def _scenario_section(robust: pd.DataFrame, scenarios: pd.DataFrame, top_n: int)
             ]
             for _, row in inverted.iterrows():
                 lines.append(f"- {row['ticker']}: {row.get('scenario_order_note') or 'reordered'}")
+    return lines
+
+
+def _turnaround_section(turnaround: pd.DataFrame) -> list[str]:
+    # P2-1: material-event names are not forgotten - each carries a status and
+    # the evidence it needs before it can be re-underwritten and re-ranked.
+    lines = ["", "## Turnaround Watchlist (material events)", ""]
+    if turnaround.empty:
+        return lines + ["- None this week."]
+    lines += ["| Ticker | Triggers | Wk drop | Drawdown | Status | Evidence needed |",
+              "|---|---|---|---|---|---|"]
+    for _, row in turnaround.iterrows():
+        wk = row.get("weekly_drop")
+        dd = row.get("drawdown_from_high")
+        lines.append(
+            f"| {row['ticker']} | {row.get('event_triggers') or '-'} "
+            f"| {wk:.0%} | {dd:.0%} | {row['status']} | {row['evidence_needed']} |"
+            if wk is not None and dd is not None
+            else f"| {row['ticker']} | {row.get('event_triggers') or '-'} | - | - "
+            f"| {row['status']} | {row['evidence_needed']} |"
+        )
     return lines
 
 
