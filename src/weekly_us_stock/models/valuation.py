@@ -57,6 +57,10 @@ class ScenarioValuation(BaseModel):
     total_return_5y: float
     reinvestment_rate_y1: float
     projected_fcf: list[float] = Field(default_factory=list)
+    # P0-1: WHY the 5y IRR could (not) be solved, and whether every projected
+    # output for this scenario is a finite number. Drives fail-closed routing.
+    irr_5y_status: str = "valid"
+    is_finite: bool = True
 
 
 class CompanyValuation(BaseModel):
@@ -83,3 +87,10 @@ class CompanyValuation(BaseModel):
     model_confidence: float
     data_confidence: float
     model_uncertainty: float
+    # P0-1: "valid" means every ranked output is finite and inside the IRR
+    # solver bounds. Otherwise the reason (e.g. "irr_above_solver_bound",
+    # "invalid_valuation_output") routes the name to the watchlist with an
+    # auditable list of offending fields instead of into a ranking.
+    valuation_status: str = "valid"
+    invalid_reason: str | None = None
+    invalid_fields: list[str] = Field(default_factory=list)

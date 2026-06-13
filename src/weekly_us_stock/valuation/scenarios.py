@@ -22,6 +22,8 @@ aggregate below operates on generic (value, probability) pairs already.
 
 from __future__ import annotations
 
+import math
+
 from weekly_us_stock.config import RiskPreferenceSettings, ScenarioSettings
 from weekly_us_stock.models.valuation import (
     CompanyInputs,
@@ -29,9 +31,27 @@ from weekly_us_stock.models.valuation import (
     ScenarioAssumptions,
     ScenarioValuation,
 )
-from weekly_us_stock.valuation.irr import LOWER_BOUND, solve_irr
+from weekly_us_stock.valuation.irr import (
+    LOWER_BOUND,
+    UPPER_BOUND,
+    solve_irr,
+    solve_irr_detailed,
+)
 
 _MIN_DENOMINATOR = 0.01
+
+# Aggregate outputs that must be finite for a company to be RANKED. A NaN,
+# Infinity or solver-bound-saturated value in any of these routes the name to
+# the watchlist (P0-1) instead of into a pseudo-precise ranking row.
+_REQUIRED_FINITE_METRICS = (
+    "expected_irr",
+    "median_irr",
+    "p10_irr",
+    "p90_irr",
+    "hurdle_cvar",
+    "expected_shortfall",
+    "intrinsic_value_base",
+)
 
 
 def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[ScenarioAssumptions]:
@@ -164,10 +184,18 @@ def value_scenario(
         nopat_path[-1], assumption, inputs, shares_path[-1]
     )
     flows_5y = [-inputs.price, *per_share_flows[:-1], per_share_flows[-1] + exit_5]
-    irr_5y = solve_irr(flows_5y)
-    if irr_5y is None:
-        total_payoff = sum(per_share_flows) + exit_5
-        irr_5y = LOWER_BOUND if total_payoff < inputs.price else None
+    irr_solution = solve_irr_detailed(flows_5y)
+    irr_5y = irr_solution.rate
+    irr_5y_status = irr_solution.status
+    if irr_5y is None and irr_5y_status == "below_lower_bound":
+        # Catastrophic bear (IRR < -95%): floor the magnitude so weighted
+        # aggregates stay finite, but the status still removes the company from
+        # rankings (it is a bound-saturated, not a precise, return).
+        irr_5y = LOWER_BOUND
+    elif irr_5y is None and irr_5y_status == "above_upper_bound":
+        # IRR > 200%: the cap comment calls this a data artifact. Keep a finite
+        # placeholder for the distribution; the status removes it from lists.
+        irr_5y = UPPER_BOUND
 
     exit_year = min(cfg.exit_year, horizon)
     exit_3 = _exit_value_per_share(
@@ -191,6 +219,14 @@ def value_scenario(
 
     total_return_5y = (sum(per_share_flows) + exit_5) / inputs.price - 1.0
 
+    # Fail-closed backstop: every projected per-share output must be a finite
+    # number. Clamps usually prevent NaN/Infinity, but data artifacts (zero
+    # shares at exit, degenerate denominators) can still leak through.
+    scenario_finite = all(
+        math.isfinite(value)
+        for value in (intrinsic_per_share, exit_5, total_return_5y, *per_share_flows)
+    )
+
     return ScenarioValuation(
         assumptions=assumption,
         intrinsic_value_per_share=intrinsic_per_share,
@@ -200,6 +236,8 @@ def value_scenario(
         total_return_5y=total_return_5y,
         reinvestment_rate_y1=reinvest_y1,
         projected_fcf=[round(value, 4) for value in fcf_path],
+        irr_5y_status=irr_5y_status,
+        is_finite=scenario_finite,
     )
 
 
@@ -237,6 +275,16 @@ def aggregate_valuation(
     )
 
     by_name = {s.assumptions.name: s for s in scenarios}
+    required_metrics = {
+        "expected_irr": expected_irr,
+        "median_irr": median_irr,
+        "p10_irr": p10_irr,
+        "p90_irr": p90_irr,
+        "hurdle_cvar": hurdle_cvar,
+        "expected_shortfall": expected_shortfall,
+        "intrinsic_value_base": by_name["base"].intrinsic_value_per_share,
+    }
+    status, reason, invalid_fields = _classify_validity(scenarios, required_metrics)
     return CompanyValuation(
         ticker=inputs.ticker,
         price=inputs.price,
@@ -255,7 +303,56 @@ def aggregate_valuation(
         model_confidence=inputs.model_confidence,
         data_confidence=inputs.data_confidence,
         model_uncertainty=model_uncertainty,
+        valuation_status=status,
+        invalid_reason=reason,
+        invalid_fields=invalid_fields,
     )
+
+
+def _classify_validity(
+    scenarios: list[ScenarioValuation], required_metrics: dict[str, float]
+) -> tuple[str, str | None, list[str]]:
+    """Decide whether a valuation is precise enough to be ranked.
+
+    Returns (status, headline_reason, offending_fields). A name is invalid when
+    any scenario IRR is solver-bound-saturated or non-finite, when any scenario
+    produced a non-finite output, or when any required aggregate metric is not
+    a finite number. Invalid names are routed to the watchlist, never ranked.
+    """
+
+    fields: list[str] = []
+    reasons: set[str] = set()
+    for scenario in scenarios:
+        label = scenario.assumptions.name
+        status = scenario.irr_5y_status
+        if status == "above_upper_bound":
+            fields.append(f"irr_5y[{label}]")
+            reasons.add("irr_above_solver_bound")
+        elif status == "below_lower_bound":
+            fields.append(f"irr_5y[{label}]")
+            reasons.add("irr_below_solver_bound")
+        elif status == "non_finite_input":
+            fields.append(f"irr_5y[{label}]")
+            reasons.add("invalid_valuation_output")
+        if not scenario.is_finite:
+            fields.append(f"scenario[{label}]")
+            reasons.add("invalid_valuation_output")
+
+    for key, value in required_metrics.items():
+        if value is None or not math.isfinite(value):
+            fields.append(key)
+            reasons.add("invalid_valuation_output")
+
+    if not fields:
+        return "valid", None, []
+
+    priority = (
+        "irr_above_solver_bound",
+        "invalid_valuation_output",
+        "irr_below_solver_bound",
+    )
+    headline = next((r for r in priority if r in reasons), sorted(reasons)[0])
+    return "invalid", headline, sorted(set(fields))
 
 
 def value_company(

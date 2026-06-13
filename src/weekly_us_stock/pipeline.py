@@ -323,6 +323,24 @@ class WeeklyUSStockPipeline:
         self._export(
             run_dir, "scenario_valuations", valuation_result.scenario_rows, summary, artifacts
         )
+        # P0-1: valuations with a non-finite or solver-bound-saturated required
+        # output are not precise enough to rank; route them to the watchlist
+        # with an auditable reason instead of letting pseudo-precise numbers
+        # into Robust/Upside.
+        if not valuation_result.invalid.empty:
+            flagged = valuation_result.invalid.copy()
+            flagged["watchlist_reason"] = flagged["invalid_reason"].fillna(
+                "invalid_valuation_output"
+            )
+            watchlist_frames.append(flagged)
+            self._export(run_dir, "invalid_valuations", flagged, summary, artifacts)
+            summary.rejection_counts = {
+                **(summary.rejection_counts or {}),
+                **flagged["watchlist_reason"].value_counts().to_dict(),
+            }
+            summary.notes.append(
+                f"removed {len(flagged)} non-finite/bound-saturated valuations from ranking"
+            )
         steps.append(summary)
         _log_step(summary)
 

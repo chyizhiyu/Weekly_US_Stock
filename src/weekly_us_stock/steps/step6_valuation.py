@@ -43,9 +43,10 @@ _CARRY_COLUMNS = [
 
 @dataclass(slots=True)
 class ValuationStepResult:
-    metrics: pd.DataFrame
+    metrics: pd.DataFrame  # finite, in-bound, rankable companies only
     scenario_rows: pd.DataFrame
-    skipped: pd.DataFrame
+    skipped: pd.DataFrame  # incomplete inputs, never entered the engine
+    invalid: pd.DataFrame  # ran but failed the finite/solver-bound guard (P0-1)
 
 
 def run_scenario_valuations(
@@ -87,6 +88,8 @@ def run_scenario_valuations(
                     "irr_5y": scenario.irr_5y,
                     "exit_value_per_share": scenario.exit_value_per_share,
                     "total_return_5y": scenario.total_return_5y,
+                    "irr_5y_status": scenario.irr_5y_status,
+                    "scenario_is_finite": scenario.is_finite,
                 }
             )
 
@@ -117,16 +120,32 @@ def run_scenario_valuations(
             "business_quality": inputs.financial_persistence,
             "valuation_excess": valuation.median_irr - hurdle,
             "evidence_confidence": valuation.data_confidence * valuation.model_confidence,
+            # P0-1 fail-closed routing fields.
+            "valuation_status": valuation.valuation_status,
+            "invalid_reason": valuation.invalid_reason,
+            "invalid_fields": ";".join(valuation.invalid_fields),
         }
         for column in _CARRY_COLUMNS:
             if column in row.index:
                 metric[column] = row[column]
         metric_rows.append(metric)
 
+    all_metrics = pd.DataFrame(metric_rows)
+    if all_metrics.empty:
+        valid_metrics = all_metrics
+        invalid_metrics = all_metrics
+    else:
+        # P0-1: only finite, in-bound valuations are rankable. Everything else
+        # is routed to the watchlist by the pipeline with its auditable reason.
+        is_valid = all_metrics["valuation_status"] == "valid"
+        valid_metrics = all_metrics.loc[is_valid].reset_index(drop=True)
+        invalid_metrics = all_metrics.loc[~is_valid].reset_index(drop=True)
+
     return ValuationStepResult(
-        metrics=pd.DataFrame(metric_rows),
+        metrics=valid_metrics,
         scenario_rows=pd.DataFrame(scenario_rows),
         skipped=pd.DataFrame(skipped_rows),
+        invalid=invalid_metrics,
     )
 
 
