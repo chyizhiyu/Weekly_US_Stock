@@ -1,0 +1,47 @@
+{
+  "as_of": "2026-06-12",
+  "universe_fingerprint": "79ff19e592a8c461",
+  "config_fingerprint": "f42e5f3f15161676",
+  "universe_ticker_hash": "a7f3831698ac678b",
+  "index_membership": [
+    "sp500",
+    "nasdaq100"
+  ],
+  "source_sha": "af83ee2f1394b9413174b67ec312ff48d5bee970",
+  "counts": {
+    "universe": 514,
+    "ranked": 278,
+    "eligible": 5,
+    "research_queue": 273,
+    "watchlist": 134,
+    "turnaround": 4,
+    "invalid_valuations": 2,
+    "roic_routed": 6
+  },
+  "paper_portfolio_size": 5,
+  "artifacts": [
+    "dashboard.md",
+    "eligible_candidates.csv",
+    "feishu_summary.md",
+    "funnel_ledger.csv",
+    "hard_filter_candidates.csv",
+    "hard_filter_rejected.csv",
+    "invalid_or_watchlist.csv",
+    "invalid_valuations.csv",
+    "normalization_rejected.csv",
+    "normalized_financials.csv",
+    "paper_portfolio.csv",
+    "research_queue.csv",
+    "result.json",
+    "robust_ranking.csv",
+    "roic_routed.csv",
+    "run_manifest.json",
+    "run_metadata.json",
+    "scenario_valuations.csv",
+    "turnaround_watchlist.csv",
+    "universe.csv",
+    "upside_ranking.csv",
+    "watchlist.csv"
+  ],
+  "calibration_note": "Scenario weights are analyst-set, NOT calibrated probabilities. Out-of-sample validation requires accumulated archived runs (P2-2); do not report W(...) figures as calibrated until that forward history exists."
+}

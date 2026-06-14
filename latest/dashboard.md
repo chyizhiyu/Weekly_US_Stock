@@ -17,12 +17,12 @@ are scenario-weighted figures, to be read as stress labels.
 | Step | Input | Output | Top rejections |
 |---|---|---|---|
 | step1_universe | 0 | 514 | - |
-| step2_hard_filters | 514 | 321 | persistent_negative_fcf: 22, interest_coverage: 21, adr_excluded: 18 |
-| step3_standardize | 321 | 321 | - |
-| step4_normalized_model | 321 | 314 | no_normalized_earnings: 7 |
-| step5_quality_risk | 314 | 306 | - |
-| step6_scenario_valuation | 306 | 268 | irr_below_solver_bound: 31, roic_not_meaningful:meaningless_capital: 6, invalid_valuation_output: 1 |
-| step7_risk_adjusted_ranking | 268 | 268 | - |
+| step2_hard_filters | 514 | 319 | persistent_negative_fcf: 22, interest_coverage: 21, adr_excluded: 18 |
+| step3_standardize | 319 | 319 | - |
+| step4_normalized_model | 319 | 312 | no_normalized_earnings: 7 |
+| step5_quality_risk | 312 | 304 | - |
+| step6_scenario_valuation | 304 | 278 | insufficient_post_valuation_model_confidence: 18, roic_not_meaningful:meaningless_capital: 6, irr_below_solver_bound: 1 |
+| step7_risk_adjusted_ranking | 278 | 278 | - |
 
 ## Eligible Candidates (5)
 
@@ -47,51 +47,63 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 3 | FOXA | 5.3% | 26.1% | 7.7% | 35.9% | 4.3% | 0% | 0.90 | 0.68 |
 | 4 | CTSH | 3.2% | 18.8% | 9.3% | 24.9% | 2.7% | 0% | 0.87 | 0.87 |
 | 5 | CMCSA | 3.1% | 17.8% | 14.1% | 23.2% | 0.0% | 0% | 0.76 | 0.54 |
-| 6 | ADBE | -0.2% | 17.9% | 7.2% | 24.3% | 4.8% | 0% | 0.98 | 0.79 |
-| 7 | CF | -0.4% | 36.3% | 4.3% | 56.5% | 7.7% | 0% | 0.89 | 0.30 |
-| 8 | CPAY | -2.0% | 18.2% | 4.8% | 25.5% | 7.2% | 0% | 0.99 | 0.84 |
-| 9 | ELV | -2.4% | 11.5% | 9.6% | 17.7% | 2.4% | 0% | 0.84 | 0.67 |
-| 10 | ZTS | -4.0% | 16.9% | 3.6% | 24.2% | 8.4% | 0% | 0.98 | 0.90 |
-| 11 | HUM | -4.0% | 16.5% | 5.3% | 25.0% | 6.7% | 0% | 0.66 | 0.60 |
-| 12 | HPQ | -4.6% | 7.4% | 7.4% | 12.5% | 4.6% | 0% | 0.97 | 0.67 |
-| 13 | GIS | -4.7% | 15.4% | 4.6% | 19.7% | 7.4% | 0% | 0.83 | 0.80 |
-| 14 | MO | -6.5% | 17.4% | 0.7% | 26.4% | 11.3% | 0% | 0.96 | 0.89 |
-| 15 | ACN | -8.3% | 11.4% | 3.7% | 16.3% | 8.3% | 0% | 0.99 | 0.88 |
-| 16 | EOG | -8.5% | 24.9% | -1.7% | 44.8% | 13.7% | 0% | 0.83 | 0.40 |
-| 17 | APA | -9.3% | 22.5% | -0.9% | 42.4% | 12.9% | 0% | 0.73 | 0.34 |
-| 18 | IT | -9.5% | 17.1% | -1.3% | 28.5% | 13.3% | 0% | 0.91 | 0.74 |
-| 19 | HCA | -11.2% | 13.8% | -0.7% | 21.5% | 12.7% | 0% | 0.97 | 0.81 |
-| 20 | TSN | -11.6% | 12.7% | -0.0% | 25.2% | 12.0% | 0% | 0.61 | 0.58 |
+| 6 | CPAY | -2.0% | 18.2% | 4.8% | 25.5% | 7.2% | 0% | 0.99 | 0.84 |
+| 7 | ELV | -2.4% | 11.5% | 9.6% | 17.7% | 2.4% | 0% | 0.84 | 0.67 |
+| 8 | ZTS | -4.0% | 16.9% | 3.6% | 24.2% | 8.4% | 0% | 0.98 | 0.90 |
+| 9 | HUM | -4.0% | 16.5% | 5.3% | 25.0% | 6.7% | 0% | 0.66 | 0.60 |
+| 10 | HPQ | -4.6% | 7.4% | 7.4% | 12.5% | 4.6% | 0% | 0.97 | 0.67 |
+| 11 | GIS | -4.7% | 15.4% | 4.6% | 19.7% | 7.4% | 0% | 0.83 | 0.80 |
+| 12 | MO | -6.5% | 17.4% | 0.7% | 26.4% | 11.3% | 0% | 0.96 | 0.89 |
+| 13 | ACN | -8.3% | 11.4% | 3.7% | 16.3% | 8.3% | 0% | 0.99 | 0.88 |
+| 14 | EOG | -8.5% | 24.9% | -1.7% | 44.8% | 13.7% | 0% | 0.83 | 0.40 |
+| 15 | IT | -9.5% | 17.1% | -1.3% | 28.5% | 13.3% | 0% | 0.91 | 0.74 |
+| 16 | HCA | -11.2% | 13.8% | -0.7% | 21.5% | 12.7% | 0% | 0.97 | 0.81 |
+| 17 | TSN | -11.6% | 12.7% | -0.0% | 25.2% | 12.0% | 0% | 0.61 | 0.58 |
+| 18 | PHM | -11.7% | 9.5% | 0.3% | 15.2% | 11.7% | 0% | 0.80 | 0.66 |
+| 19 | INTU | -11.9% | 9.4% | 0.1% | 15.4% | 11.9% | 0% | 0.95 | 0.83 |
+| 20 | MCK | -13.1% | 13.1% | -2.0% | 21.6% | 14.0% | 0% | 0.96 | 0.77 |
 
 ## Upside Ranking — high-dispersion RESEARCH QUEUE (not actionable)
 
 | # | Ticker | E[IRR] | Median | P10 | P90 | W(IRR>hurdle) | Upside to base |
 |---|---|---|---|---|---|---|---|
-| 1 | CF | 33.4% | 36.3% | 4.3% | 56.5% | 75% | 199% |
-| 2 | FISV | 31.0% | 37.1% | -11.0% | 60.6% | 75% | 211% |
-| 3 | UHS | 30.9% | 32.8% | 15.2% | 42.8% | 100% | 130% |
-| 4 | CI | 30.3% | 33.8% | -10.1% | 63.7% | 75% | 198% |
-| 5 | OMC | 28.5% | 29.1% | 20.0% | 35.6% | 100% | 170% |
-| 6 | DVN | 25.5% | 27.9% | -15.4% | 61.7% | 75% | 156% |
-| 7 | FOXA | 23.9% | 26.1% | 7.7% | 35.9% | 75% | 104% |
-| 8 | EOG | 23.2% | 24.9% | -1.7% | 44.8% | 75% | 110% |
-| 9 | APA | 21.6% | 22.5% | -0.9% | 42.4% | 75% | 125% |
-| 10 | CMCSA | 18.2% | 17.8% | 14.1% | 23.2% | 100% | 59% |
-| 11 | CTSH | 17.9% | 18.8% | 9.3% | 24.9% | 75% | 48% |
-| 12 | ADBE | 16.8% | 17.9% | 7.2% | 24.3% | 75% | 26% |
-| 13 | CPAY | 16.7% | 18.2% | 4.8% | 25.5% | 75% | 50% |
-| 14 | HUM | 15.8% | 16.5% | 5.3% | 25.0% | 75% | 48% |
-| 15 | MO | 15.5% | 17.4% | 0.7% | 26.4% | 75% | 52% |
-| 16 | ZTS | 15.4% | 16.9% | 3.6% | 24.2% | 75% | 41% |
-| 17 | IT | 15.4% | 17.1% | -1.3% | 28.5% | 75% | 37% |
-| 18 | LDOS | 14.2% | 17.2% | -7.5% | 29.8% | 75% | 52% |
-| 19 | GIS | 13.8% | 15.4% | 4.6% | 19.7% | 75% | 37% |
-| 20 | KDP | 13.6% | 16.1% | -8.3% | 30.5% | 75% | 51% |
+| 1 | UHS | 30.9% | 32.8% | 15.2% | 42.8% | 100% | 130% |
+| 2 | OMC | 28.5% | 29.1% | 20.0% | 35.6% | 100% | 170% |
+| 3 | FOXA | 23.9% | 26.1% | 7.7% | 35.9% | 75% | 104% |
+| 4 | EOG | 23.2% | 24.9% | -1.7% | 44.8% | 75% | 110% |
+| 5 | FISV | 21.3% | 29.1% | -24.8% | 52.1% | 75% | 127% |
+| 6 | CMCSA | 18.2% | 17.8% | 14.1% | 23.2% | 100% | 59% |
+| 7 | CTSH | 17.9% | 18.8% | 9.3% | 24.9% | 75% | 48% |
+| 8 | CPAY | 16.7% | 18.2% | 4.8% | 25.5% | 75% | 50% |
+| 9 | HUM | 15.8% | 16.5% | 5.3% | 25.0% | 75% | 48% |
+| 10 | MO | 15.5% | 17.4% | 0.7% | 26.4% | 75% | 52% |
+| 11 | ZTS | 15.4% | 16.9% | 3.6% | 24.2% | 75% | 41% |
+| 12 | IT | 15.4% | 17.1% | -1.3% | 28.5% | 75% | 37% |
+| 13 | LDOS | 14.2% | 17.2% | -7.5% | 29.8% | 75% | 52% |
+| 14 | GIS | 13.8% | 15.4% | 4.6% | 19.7% | 75% | 37% |
+| 15 | KDP | 13.6% | 16.1% | -8.3% | 30.5% | 75% | 51% |
+| 16 | TSN | 12.6% | 12.7% | -0.0% | 25.2% | 75% | 32% |
+| 17 | ELV | 12.6% | 11.5% | 9.6% | 17.7% | 25% | 24% |
+| 18 | HCA | 12.1% | 13.8% | -0.7% | 21.5% | 75% | 19% |
+| 19 | MKC | 12.0% | 14.1% | -4.0% | 23.9% | 75% | 33% |
+| 20 | MCK | 11.5% | 13.1% | -2.0% | 21.6% | 75% | 27% |
 
 ## Week-over-week
 
-**comparison_baseline_reset** — previous run: 2026-06-12.
-The universe or result-affecting config changed (previous run has no universe/config fingerprint); entered/exited/rank-change deltas are suppressed because they would be meaningless against a different baseline.
+Previous run: 2026-06-12
+
+- Entered Robust Top: INTU, MCK, PHM
+- Exited Robust Top: ADBE, APA, CF
+- Entered Upside Top: ELV, HCA, MCK, MKC, TSN
+- Exited Upside Top: ADBE, APA, CF, CI, DVN
+
+Largest robust-rank moves:
+
+- IQV: 94 → 266 (-172)
+- FISV: 26 → 122 (-96)
+- GEN: 115 → 164 (-49)
+- TGT: 57 → 102 (-45)
+- DLTR: 214 → 251 (-37)
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
@@ -112,12 +124,6 @@ The universe or result-affecting config changed (previous run has no universe/co
 | CMCSA | bear | 25% | -6.1% | 16.1% | 6.5% | 30.83 | 14.1% | 76% |
 | CMCSA | base | 50% | 1.2% | 18.7% | 6.5% | 38.94 | 17.8% | 130% |
 | CMCSA | bull | 25% | 7.0% | 20.4% | 6.5% | 52.39 | 23.2% | 210% |
-| ADBE | bear | 25% | 8.7% | 29.7% | 11.0% | 174.91 | 7.2% | 35% |
-| ADBE | base | 50% | 13.2% | 33.6% | 57.2% | 257.06 | 17.9% | 117% |
-| ADBE | bull | 25% | 16.9% | 36.9% | 58.3% | 320.75 | 24.3% | 178% |
-| CF | bear | 25% | -10.1% | 22.8% | 6.6% | 99.21 | 4.3% | 20% |
-| CF | base | 50% | 14.3% | 31.1% | 16.8% | 327.78 | 36.3% | 356% |
-| CF | bull | 25% | 33.8% | 38.4% | 18.0% | 708.04 | 56.5% | 855% |
 | CPAY | bear | 25% | 7.7% | 39.8% | 7.5% | 315.43 | 4.8% | 24% |
 | CPAY | base | 50% | 13.3% | 44.0% | 30.0% | 535.90 | 18.2% | 125% |
 | CPAY | bull | 25% | 17.9% | 47.4% | 30.3% | 708.45 | 25.5% | 203% |
@@ -145,9 +151,6 @@ The universe or result-affecting config changed (previous run has no universe/co
 | EOG | bear | 25% | -6.3% | 22.4% | 6.7% | 95.02 | -1.7% | -7% |
 | EOG | base | 50% | 17.2% | 32.4% | 12.9% | 286.70 | 24.9% | 201% |
 | EOG | bull | 25% | 36.1% | 41.1% | 14.2% | 626.34 | 44.8% | 552% |
-| APA | bear | 25% | -13.5% | 21.1% | 6.5% | 28.84 | -0.9% | -4% |
-| APA | base | 50% | 11.2% | 31.8% | 6.5% | 83.45 | 22.5% | 184% |
-| APA | bull | 25% | 31.0% | 40.8% | 6.6% | 185.90 | 42.4% | 528% |
 | IT | bear | 25% | -2.0% | 13.0% | 8.1% | 97.45 | -1.3% | -6% |
 | IT | base | 50% | 3.3% | 17.1% | 47.6% | 203.24 | 17.1% | 113% |
 | IT | bull | 25% | 7.6% | 20.7% | 51.6% | 305.63 | 28.5% | 231% |
@@ -157,6 +160,15 @@ The universe or result-affecting config changed (previous run has no universe/co
 | TSN | bear | 25% | -3.9% | 4.2% | 6.9% | 42.19 | -0.0% | -0% |
 | TSN | base | 50% | 3.8% | 6.7% | 6.9% | 75.92 | 12.7% | 88% |
 | TSN | bull | 25% | 10.0% | 8.8% | 6.9% | 132.35 | 25.2% | 226% |
+| PHM | bear | 25% | -6.0% | 14.4% | 10.0% | 83.44 | 0.3% | 1% |
+| PHM | base | 50% | 2.0% | 18.0% | 10.0% | 119.53 | 9.5% | 54% |
+| PHM | bull | 25% | 8.4% | 20.7% | 10.0% | 148.73 | 15.2% | 100% |
+| INTU | bear | 25% | 10.6% | 22.4% | 8.9% | 186.32 | 0.1% | 0% |
+| INTU | base | 50% | 15.8% | 25.9% | 16.8% | 282.21 | 9.4% | 55% |
+| INTU | bull | 25% | 20.0% | 28.8% | 17.3% | 362.39 | 15.4% | 101% |
+| MCK | bear | 25% | 6.8% | 1.2% | 6.8% | 529.26 | -2.0% | -9% |
+| MCK | base | 50% | 11.1% | 1.4% | 57.8% | 998.24 | 13.1% | 83% |
+| MCK | bull | 25% | 14.5% | 1.5% | 60.0% | 1378.34 | 21.6% | 161% |
 
 **Scenario order inversions** (named bear/base/bull intrinsic value is not monotone — this is economic, not a bug):
 - HPQ: growth destroys value: forward ROIC 2.0% at/below WACC 8.9%, so higher-growth scenarios reinvest below the cost of capital and are worth less than the bear case
@@ -167,39 +179,39 @@ The universe or result-affecting config changed (previous run has no universe/co
 - OMC — bounds: base_growth_cap_hit;reinvestment_cap_hit;intrinsic_2x_price
 - FOXA — bounds: forward_roic_cap_hit;share_change_floor_hit;intrinsic_2x_price
 - CMCSA — bounds: forward_roic_floor_hit;share_change_floor_hit;wacc_floor_hit;reinvestment_cap_hit
-- ADBE — bounds: share_change_floor_hit
-- CF — bounds: share_change_floor_hit;reinvestment_cap_hit;intrinsic_2x_price
 - ELV — bounds: forward_roic_floor_hit;reinvestment_cap_hit
 - HUM — bounds: forward_roic_floor_hit;reinvestment_cap_hit
 - HPQ — bounds: forward_roic_floor_hit;reinvestment_cap_hit
 - GIS — bounds: wacc_floor_hit
 - EOG — bounds: reinvestment_cap_hit;intrinsic_2x_price
-- APA — bounds: wacc_floor_hit;reinvestment_cap_hit;intrinsic_2x_price
 - HCA — bounds: share_change_floor_hit
 - TSN — bounds: forward_roic_floor_hit;reinvestment_cap_hit
+- PHM — bounds: share_change_floor_hit
+- MCK — bounds: forward_roic_cap_hit
 
 ## Turnaround Watchlist (material events)
 
 | Ticker | Triggers | Wk drop | Drawdown | Status | Evidence needed |
 |---|---|---|---|---|---|
+| ORCL | weekly_drop | -26% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| ADBE | weekly_drop | -26% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 | CHTR | drawdown_from_high | nan% | -40% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| SMCI | weekly_drop | -34% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| SMCI | weekly_drop | -35% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 
 ## Key Risks and Failure Conditions
 
 - OMC: incremental_roic_below_wacc
 - CMCSA: thin_interest_coverage, incremental_roic_below_wacc
-- ADBE: heavy_sbc
-- CF: cyclical_revenue
 - CPAY: thin_interest_coverage
 - ELV: incremental_roic_below_wacc
 - HUM: thin_interest_coverage, incremental_roic_below_wacc
 - HPQ: incremental_roic_below_wacc
 - GIS: elevated_leverage, incremental_roic_below_wacc
 - EOG: cyclical_revenue
-- APA: cyclical_revenue, incremental_roic_below_wacc
 - HCA: elevated_leverage
-- TSN: elevated_leverage, thin_interest_coverage, incremental_roic_below_wacc
+- TSN: thin_interest_coverage, incremental_roic_below_wacc
+- PHM: incremental_roic_below_wacc
+- INTU: heavy_sbc
 
 ## Watchlist (not rankable under the general model)
 
@@ -299,6 +311,8 @@ The universe or result-affecting config changed (previous run has no universe/co
 - HST Host Hotels & Resorts, Inc. — reit_model_not_supported
 - REG Regency Centers Corporation — reit_model_not_supported
 - ERIE Erie Indemnity Company — insurance_model_not_supported
+- ORCL Oracle Corporation — material_event_requires_reunderwriting
+- ADBE Adobe Inc. — material_event_requires_reunderwriting
 - CHTR Charter Communications, Inc. — material_event_requires_reunderwriting
 - SMCI Super Micro Computer, Inc. — material_event_requires_reunderwriting
 - XOM Exxon Mobil Corporation — insufficient_model_confidence
@@ -309,44 +323,32 @@ The universe or result-affecting config changed (previous run has no universe/co
 - CCL Carnival Corporation & plc — insufficient_model_confidence
 - MOS The Mosaic Company — insufficient_model_confidence
 - TSLA Tesla, Inc. — insufficient_model_confidence
-- T AT&T Inc. — irr_below_solver_bound
-- DE Deere & Company — irr_below_solver_bound
-- CRM Salesforce, Inc. — irr_below_solver_bound
-- SO The Southern Company — irr_below_solver_bound
-- WMB The Williams Companies, Inc. — irr_below_solver_bound
-- RCL Royal Caribbean Cruises Ltd. — irr_below_solver_bound
 - GM General Motors Company — irr_below_solver_bound
-- KMI Kinder Morgan, Inc. — irr_below_solver_bound
-- TRGP Targa Resources Corp. — irr_below_solver_bound
-- CARR Carrier Global Corporation — irr_below_solver_bound
 - LHX L3Harris Technologies, Inc. — invalid_valuation_output
-- OXY Occidental Petroleum Corporation — irr_below_solver_bound
-- DAL Delta Air Lines, Inc. — irr_below_solver_bound
-- BDX Becton, Dickinson and Company — irr_below_solver_bound
-- CAH Cardinal Health, Inc. — irr_below_solver_bound
-- LYV Live Nation Entertainment, Inc. — irr_below_solver_bound
-- PEG Public Service Enterprise Group Incorporated — irr_below_solver_bound
-- ED Consolidated Edison, Inc. — irr_below_solver_bound
-- WEC WEC Energy Group, Inc. — irr_below_solver_bound
-- LVS Las Vegas Sands Corp. — irr_below_solver_bound
-- NRG NRG Energy, Inc. — irr_below_solver_bound
-- IFF International Flavors & Fragrances Inc. — irr_below_solver_bound
-- EFX Equifax Inc. — irr_below_solver_bound
-- RVTY Revvity, Inc. — irr_below_solver_bound
-- CRL Charles River Laboratories International, Inc. — irr_below_solver_bound
-- BLDR Builders FirstSource, Inc. — irr_below_solver_bound
-- TMUS T-Mobile US, Inc. — irr_below_solver_bound
-- AEP American Electric Power Company, Inc. — irr_below_solver_bound
-- MCHP Microchip Technology Incorporated — irr_below_solver_bound
-- XEL Xcel Energy Inc. — irr_below_solver_bound
-- UAL United Airlines Holdings, Inc. — irr_below_solver_bound
-- HAS Hasbro, Inc. — irr_below_solver_bound
-- BKNG nan — roic_not_meaningful:meaningless_capital
-- FTNT nan — roic_not_meaningful:meaningless_capital
-- ABNB nan — roic_not_meaningful:meaningless_capital
-- EXPE nan — roic_not_meaningful:meaningless_capital
-- VRSN nan — roic_not_meaningful:meaningless_capital
-- CSGP nan — roic_not_meaningful:meaningless_capital
+- BKNG Booking Holdings Inc. — roic_not_meaningful:meaningless_capital
+- FTNT Fortinet, Inc. — roic_not_meaningful:meaningless_capital
+- ABNB Airbnb, Inc. — roic_not_meaningful:meaningless_capital
+- EXPE Expedia Group, Inc. — roic_not_meaningful:meaningless_capital
+- VRSN VeriSign, Inc. — roic_not_meaningful:meaningless_capital
+- CSGP CoStar Group, Inc. — roic_not_meaningful:meaningless_capital
+- PFE Pfizer Inc. — insufficient_post_valuation_model_confidence
+- RCL Royal Caribbean Cruises Ltd. — insufficient_post_valuation_model_confidence
+- CI Cigna Corporation — insufficient_post_valuation_model_confidence
+- VLO Valero Energy Corporation — insufficient_post_valuation_model_confidence
+- NUE Nucor Corporation — insufficient_post_valuation_model_confidence
+- TRGP Targa Resources Corp. — insufficient_post_valuation_model_confidence
+- OXY Occidental Petroleum Corporation — insufficient_post_valuation_model_confidence
+- XYZ Block, Inc. — insufficient_post_valuation_model_confidence
+- DVN Devon Energy Corporation — insufficient_post_valuation_model_confidence
+- IFF International Flavors & Fragrances Inc. — insufficient_post_valuation_model_confidence
+- CF CF Industries Holdings, Inc. — insufficient_post_valuation_model_confidence
+- BLDR Builders FirstSource, Inc. — insufficient_post_valuation_model_confidence
+- NVDA NVIDIA Corporation — insufficient_post_valuation_model_confidence
+- MU Micron Technology, Inc. — insufficient_post_valuation_model_confidence
+- AMD Advanced Micro Devices, Inc. — insufficient_post_valuation_model_confidence
+- APP AppLovin Corporation — insufficient_post_valuation_model_confidence
+- STLD Steel Dynamics, Inc. — insufficient_post_valuation_model_confidence
+- APA APA Corporation — insufficient_post_valuation_model_confidence
 
 ## Data Gaps and Model Limitations
 

@@ -1,5 +1,5 @@
 美股周度筛选｜数据日 2026-06-12
-扫描 514 只，漏斗：514 → 321 → 321 → 314 → 306 → 268 → 268
+扫描 514 只，漏斗：514 → 319 → 319 → 312 → 304 → 278 → 278
 数据覆盖：价格新鲜度 100%（陈旧 0 只）
 
 达标候选 5 只（估值有限、robust_return>0、中位IRR>门槛）:
@@ -10,21 +10,21 @@
 5. CMCSA｜中位IRR 17.8%｜P10 14.1%｜门槛CVaR 0.0%｜质量 0.76｜置信 0.54
 
 Upside 研究队列 Top 10（高分散度，仅研究、非可执行）:
-1. CF｜预期IRR 33.4%｜中位 36.3%｜P10 4.3% / P90 56.5%
-2. FISV｜预期IRR 31.0%｜中位 37.1%｜P10 -11.0% / P90 60.6%
-3. UHS｜预期IRR 30.9%｜中位 32.8%｜P10 15.2% / P90 42.8%
-4. CI｜预期IRR 30.3%｜中位 33.8%｜P10 -10.1% / P90 63.7%
-5. OMC｜预期IRR 28.5%｜中位 29.1%｜P10 20.0% / P90 35.6%
-6. DVN｜预期IRR 25.5%｜中位 27.9%｜P10 -15.4% / P90 61.7%
-7. FOXA｜预期IRR 23.9%｜中位 26.1%｜P10 7.7% / P90 35.9%
-8. EOG｜预期IRR 23.2%｜中位 24.9%｜P10 -1.7% / P90 44.8%
-9. APA｜预期IRR 21.6%｜中位 22.5%｜P10 -0.9% / P90 42.4%
-10. CMCSA｜预期IRR 18.2%｜中位 17.8%｜P10 14.1% / P90 23.2%
+1. UHS｜预期IRR 30.9%｜中位 32.8%｜P10 15.2% / P90 42.8%
+2. OMC｜预期IRR 28.5%｜中位 29.1%｜P10 20.0% / P90 35.6%
+3. FOXA｜预期IRR 23.9%｜中位 26.1%｜P10 7.7% / P90 35.9%
+4. EOG｜预期IRR 23.2%｜中位 24.9%｜P10 -1.7% / P90 44.8%
+5. FISV｜预期IRR 21.3%｜中位 29.1%｜P10 -24.8% / P90 52.1%
+6. CMCSA｜预期IRR 18.2%｜中位 17.8%｜P10 14.1% / P90 23.2%
+7. CTSH｜预期IRR 17.9%｜中位 18.8%｜P10 9.3% / P90 24.9%
+8. CPAY｜预期IRR 16.7%｜中位 18.2%｜P10 4.8% / P90 25.5%
+9. HUM｜预期IRR 15.8%｜中位 16.5%｜P10 5.3% / P90 25.0%
+10. MO｜预期IRR 15.5%｜中位 17.4%｜P10 0.7% / P90 26.4%
 
-对比基准已重置（previous run has no universe/config fingerprint）：股票池或关键配置已变更，本周不做周环比,以免产生无意义的新进/退出。
-观察名单：144 只（irr_below_solver_bound31只、REIT27只、保险21只、资产管理16只、银行14只、其他金融8只、模型置信度不足8只、消费信贷7只、roic_not_meaningful:meaningless_capital6只、未盈利生物科技3只、重大事件待复核2只、invalid_valuation_output1只）
-重大事件反转观察：2 只 — CHTR(awaiting_new_evidence)、SMCI(awaiting_new_evidence)
+对比 2026-06-12：新进 INTU、MCK、PHM；退出 ADBE、APA、CF。
+观察名单：134 只（REIT27只、保险21只、估值后模型置信度不足18只、资产管理16只、银行14只、其他金融8只、模型置信度不足8只、消费信贷7只、roic_not_meaningful:meaningless_capital6只、重大事件待复核4只、未盈利生物科技3只、Base/Bull 越下界1只、估值输出非有限1只）
+重大事件反转观察：4 只 — ORCL(awaiting_new_evidence)、ADBE(awaiting_new_evidence)、CHTR(awaiting_new_evidence)、SMCI(awaiting_new_evidence)
 
 说明：仅研究参考，不构成交易指令。排名来自 Bear/Base/Bull 三情景估值与风险调整回报；情景权重为人工设定（默认25/50/25），达标权重、永亏权重等是情景加权值，并非经过校准的概率。硬过滤不可补偿，数据缺失个股已剔除。
 
-完整结果：GitHub Actions #9 https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27469707691
+完整结果：GitHub Actions #10 https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27502472824
