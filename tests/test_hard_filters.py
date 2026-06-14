@@ -174,6 +174,31 @@ class TestFinancialHardFilters:
         result = run_financial_hard_filters(candidates, history, settings.hard_filters)
         assert _reasons(result.rejected)["BURN"] == "persistent_negative_fcf"
 
+    def test_records_every_failed_gate_while_preserving_first_reason(
+        self, settings: Settings
+    ) -> None:
+        candidates = pd.DataFrame([{"ticker": "MULTI"}])
+        history = _history(
+            "MULTI",
+            6,
+            operating_income=5e6,
+            net_income=-20e6,
+            ocf=-20e6,
+            capex=40e6,
+            total_debt=1_000e6,
+            cash=0.0,
+            interest_expense=20e6,
+        )
+        result = run_financial_hard_filters(candidates, history, settings.hard_filters)
+        rejected = result.rejected.iloc[0]
+        assert rejected["rejection_reason"] == "consecutive_losses"
+        assert rejected["all_rejection_reasons"].split(";") == [
+            "consecutive_losses",
+            "persistent_negative_fcf",
+            "interest_coverage",
+            "excessive_leverage",
+        ]
+
     def test_healthy_company_passes(self, settings: Settings) -> None:
         candidates = pd.DataFrame([{"ticker": "FINE"}])
         result = run_financial_hard_filters(
