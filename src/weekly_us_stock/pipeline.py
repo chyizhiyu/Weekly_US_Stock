@@ -582,10 +582,13 @@ class WeeklyUSStockPipeline:
             paper_portfolio_size=int(len(eligible)),
         )
         export_json(manifest, run_dir / "run_manifest.json")
-        # Promote the fully-written staging dir to the official run dir through a
-        # recoverable backup, under a per-date lock so concurrent same-date runs
-        # cannot interleave their promotions and destroy each other's report.
+        # Promote under a per-date lock so concurrent same-date runs cannot
+        # interleave. Recovery runs inside the SAME lock immediately before
+        # promotion, so an orphaned backup left by another run's crashed
+        # promotion is restored before we touch anything — a double fault no
+        # longer destroys the last good report.
         with self._date_lock(final_dir.parent, final_dir.name):
+            self._recover_promotion(final_dir)
             self._promote_run_dir(run_dir, final_dir)
         return result
 
@@ -799,11 +802,15 @@ class WeeklyUSStockPipeline:
     def _promote_run_dir(staging: Path, final_dir: Path) -> None:
         # Replace final_dir with staging through a recoverable backup. The old
         # report is only deleted AFTER the new one is in place; if the swap
-        # fails, it is rolled back. A crash mid-swap is repaired by
-        # _recover_promotion on the next run.
+        # fails, it is rolled back. Callers MUST run _recover_promotion under the
+        # same lock first, so no orphaned backup survives to here.
         backup = final_dir.with_name(f".{final_dir.name}.bak")
         if backup.exists():
-            shutil.rmtree(backup)
+            # A surviving backup is the only copy of a prior report from a
+            # crashed promotion. Recovery (run under the same lock just before
+            # this) should have cleared it; fail closed rather than destroy the
+            # last recoverable copy.
+            raise RuntimeError(f"refusing to promote over an unrecovered backup: {backup}")
         stepped_aside = False
         if final_dir.exists():
             final_dir.rename(backup)

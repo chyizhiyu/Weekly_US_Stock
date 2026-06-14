@@ -396,6 +396,7 @@ def test_concurrent_promotions_do_not_lose_reports(tmp_path: Path) -> None:
         staging = Path(tempfile.mkdtemp(prefix=".20260109.", suffix=".tmp", dir=output))
         (staging / "result.json").write_text(tag, encoding="utf-8")
         with WeeklyUSStockPipeline._date_lock(output, "20260109"):
+            WeeklyUSStockPipeline._recover_promotion(final)
             WeeklyUSStockPipeline._promote_run_dir(staging, final)
 
     threads = [threading.Thread(target=promote, args=(f"RUN{i}",)) for i in range(4)]
@@ -407,3 +408,44 @@ def test_concurrent_promotions_do_not_lose_reports(tmp_path: Path) -> None:
     assert final.exists()
     assert (final / "result.json").read_text(encoding="utf-8").startswith("RUN")
     assert [p.name for p in output.iterdir() if p.name.endswith((".tmp", ".bak"))] == []
+
+
+def test_promotion_recovers_orphaned_backup_before_promoting(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # Double fault: another run's promotion crashed leaving only a .bak (final
+    # missing), then THIS run's promotion also fails. Recovery inside the
+    # promotion lock must restore the orphaned backup before promoting, so the
+    # last good report survives both failures instead of being deleted.
+    import tempfile
+
+    import pytest
+
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+
+    output = tmp_path
+    final = output / "20260109"
+    backup = output / ".20260109.bak"
+    backup.mkdir()
+    (backup / "result.json").write_text("LAST_GOOD", encoding="utf-8")
+
+    staging = Path(tempfile.mkdtemp(prefix=".20260109.", suffix=".tmp", dir=output))
+    (staging / "result.json").write_text("NEW", encoding="utf-8")
+
+    real_rename = Path.rename
+
+    def flaky_rename(self: Path, target: object) -> Path:
+        if self == staging:
+            raise OSError("this run's promotion also fails")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    # Exactly what _execute does inside the promotion lock.
+    WeeklyUSStockPipeline._recover_promotion(final)
+    with pytest.raises(OSError):
+        WeeklyUSStockPipeline._promote_run_dir(staging, final)
+
+    assert final.exists()
+    assert (final / "result.json").read_text(encoding="utf-8") == "LAST_GOOD"
+    assert not backup.exists()
