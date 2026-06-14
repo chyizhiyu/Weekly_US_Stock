@@ -126,6 +126,7 @@ _REASON_CN = {
     "preprofit_biotech_not_supported": "未盈利生物科技",
     "insufficient_confidence": "数据置信度不足",
     "insufficient_model_confidence": "模型置信度不足",
+    "insufficient_post_valuation_model_confidence": "估值后模型置信度不足",
     "material_event_requires_reunderwriting": "重大事件待复核",
 }
 

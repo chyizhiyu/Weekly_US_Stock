@@ -18,6 +18,7 @@ EXPECTED_ARTIFACTS = [
     "robust_ranking.csv",
     "upside_ranking.csv",
     "watchlist.csv",
+    "funnel_ledger.csv",
     "result.json",
     "dashboard.md",
     "feishu_summary.md",
@@ -52,6 +53,19 @@ def test_hard_filter_audit_trail(pipeline_runs: dict[str, Path]) -> None:
     assert reasons["SDIL"] == "severe_dilution"
     assert reasons["ACCT"] == "earnings_cash_mismatch"
     assert reasons["STBL.B"] == "duplicate_share_class"
+    assert "all_rejection_reasons" in rejected.columns
+
+
+def test_funnel_ledger_accounts_for_every_universe_ticker(
+    pipeline_runs: dict[str, Path],
+) -> None:
+    universe = pd.read_csv(pipeline_runs["first"] / "universe.csv")
+    ledger = pd.read_csv(pipeline_runs["first"] / "funnel_ledger.csv").set_index("ticker")
+    assert len(ledger) == len(universe)
+    assert not (ledger["final_bucket"] == "unaccounted").any()
+    assert ledger.loc["ADRX", "decision_reason"] == "adr_excluded"
+    assert ledger.loc["BNKA", "decision_reason"] == "bank_model_not_supported"
+    assert ledger.loc["STBL", "final_bucket"] == "eligible"
 
 
 def test_material_event_goes_to_watchlist_not_ranking(pipeline_runs: dict[str, Path]) -> None:
@@ -184,6 +198,30 @@ def test_week_over_week_comparison(pipeline_runs: dict[str, Path]) -> None:
     assert "Previous run: 2026-01-09" in dashboard
     first_dashboard = (pipeline_runs["first"] / "dashboard.md").read_text("utf-8")
     assert "First tracked run" in first_dashboard
+
+
+def test_post_valuation_confidence_haircut_is_rechecked(
+    tmp_path: Path, sample_provider
+) -> None:
+    from weekly_us_stock.config import load_settings
+    from weekly_us_stock.models.screening import PipelineRequest
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+
+    settings = load_settings()
+    settings.app.output_dir = str(tmp_path)
+    settings.confidence.watchlist_model_confidence = 0.40
+    WeeklyUSStockPipeline(settings=settings, provider=sample_provider).run(
+        PipelineRequest(as_of=AS_OF_DATE, provider="sample")
+    )
+
+    run_dir = tmp_path / AS_OF_DATE.strftime("%Y%m%d")
+    robust = pd.read_csv(run_dir / "robust_ranking.csv")
+    watchlist = pd.read_csv(run_dir / "watchlist.csv").set_index("ticker")
+    assert "LOTO" not in set(robust["ticker"])
+    assert (
+        watchlist.loc["LOTO", "watchlist_reason"]
+        == "insufficient_post_valuation_model_confidence"
+    )
 
 
 def test_production_modes_fail_closed_without_credentials() -> None:

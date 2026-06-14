@@ -43,6 +43,7 @@ from weekly_us_stock.reports.compare import (
 from weekly_us_stock.reports.dashboard import build_dashboard
 from weekly_us_stock.reports.exporters import export_dataframe, export_json, export_text
 from weekly_us_stock.reports.feishu import build_feishu_summary
+from weekly_us_stock.reports.funnel import build_funnel_ledger
 from weekly_us_stock.reports.turnaround import build_turnaround_watchlist
 from weekly_us_stock.steps.step1_universe import build_market_snapshot, fetch_universe
 from weekly_us_stock.steps.step2_events import MATERIAL_EVENT_REASON, detect_material_events
@@ -338,10 +339,9 @@ class WeeklyUSStockPipeline:
         self._export(
             run_dir, "scenario_valuations", valuation_result.scenario_rows, summary, artifacts
         )
-        # P0-1: valuations with a non-finite or solver-bound-saturated required
-        # output are not precise enough to rank; route them to the watchlist
-        # with an auditable reason instead of letting pseudo-precise numbers
-        # into Robust/Upside.
+        # P0-1: non-finite or implausibly high valuations are not precise enough
+        # to rank. Catastrophic below-bound losses remain in the distribution so
+        # their downside is visible in Robust and the research queue.
         if not valuation_result.invalid.empty:
             flagged = valuation_result.invalid.copy()
             flagged["watchlist_reason"] = flagged["invalid_reason"].fillna(
@@ -354,7 +354,7 @@ class WeeklyUSStockPipeline:
                 **flagged["watchlist_reason"].value_counts().to_dict(),
             }
             summary.notes.append(
-                f"removed {len(flagged)} non-finite/bound-saturated valuations from ranking"
+                f"removed {len(flagged)} non-finite/implausibly-high valuations from ranking"
             )
         # P1-4: names whose ROIC is not economically meaningful are not valued
         # as low-but-positive; they wait on the watchlist for a dedicated model.
@@ -369,6 +369,28 @@ class WeeklyUSStockPipeline:
             summary.notes.append(
                 f"routed {len(routed)} names with non-meaningful ROIC to the watchlist"
             )
+        # Step 6 can lower model confidence further when assumptions hit
+        # configured bounds. Re-check the same hard confidence floor after those
+        # haircuts so every route into the ranking obeys one consistent gate.
+        if not valuation_result.metrics.empty:
+            low_post_valuation_confidence = valuation_result.metrics["model_confidence"] < (
+                self.settings.confidence.watchlist_model_confidence
+            )
+            if low_post_valuation_confidence.any():
+                flagged = valuation_result.metrics.loc[low_post_valuation_confidence].copy()
+                flagged["watchlist_reason"] = "insufficient_post_valuation_model_confidence"
+                watchlist_frames.append(flagged)
+                valuation_result.metrics = valuation_result.metrics.loc[
+                    ~low_post_valuation_confidence
+                ].reset_index(drop=True)
+                summary.output_count = len(valuation_result.metrics)
+                summary.rejection_counts = {
+                    **(summary.rejection_counts or {}),
+                    "insufficient_post_valuation_model_confidence": int(len(flagged)),
+                }
+                summary.notes.append(
+                    f"moved {len(flagged)} post-valuation low-confidence names to the watchlist"
+                )
         steps.append(summary)
         _log_step(summary)
 
@@ -416,6 +438,13 @@ class WeeklyUSStockPipeline:
             else watchlist.iloc[0:0]
         )
         turnaround = build_turnaround_watchlist(event_rows, as_of)
+        funnel_ledger = build_funnel_ledger(
+            universe,
+            rejected,
+            normalized.rejected,
+            watchlist,
+            robust,
+        )
         previous_dir = self._resolve_previous_dir(request, run_dir)
         comparison = compare_with_previous(
             robust,
@@ -465,6 +494,7 @@ class WeeklyUSStockPipeline:
         # it under the spec's name too so the three audiences are explicit files.
         self._export(run_dir, "invalid_or_watchlist", watchlist, summary, artifacts)
         self._export(run_dir, "turnaround_watchlist", turnaround, summary, artifacts)  # P2-1
+        self._export(run_dir, "funnel_ledger", funnel_ledger, summary, artifacts)
         artifacts.append(str(export_text(dashboard, run_dir / "dashboard.md")))
         artifacts.append(str(export_text(feishu, run_dir / "feishu_summary.md")))
         steps.append(summary)
