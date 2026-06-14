@@ -291,3 +291,37 @@ def test_incomplete_valuation_inputs_routed_to_watchlist(
     ledger = pd.read_csv(run_dir / "funnel_ledger.csv").set_index("ticker")
     assert ledger.loc["STBL", "final_bucket"] == "watchlist"
     assert not (ledger["final_bucket"] == "unaccounted").any()
+
+
+def test_failed_rerun_preserves_previous_report(
+    tmp_path: Path, sample_provider, monkeypatch
+) -> None:
+    # The run writes to a staging dir and only swaps it into runs/YYYYMMDD on
+    # success, so a same-date rerun that fails mid-way must leave the previous
+    # successful report fully intact (never a half-written or empty dir).
+    import pytest
+
+    from weekly_us_stock import pipeline as pipeline_mod
+    from weekly_us_stock.config import load_settings
+    from weekly_us_stock.models.screening import PipelineRequest
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+
+    settings = load_settings()
+    settings.app.output_dir = str(tmp_path)
+    request = PipelineRequest(as_of=AS_OF_DATE, provider="sample")
+
+    WeeklyUSStockPipeline(settings=settings, provider=sample_provider).run(request)
+    run_dir = tmp_path / AS_OF_DATE.strftime("%Y%m%d")
+    good_result = (run_dir / "result.json").read_text("utf-8")
+    good_files = sorted(p.name for p in run_dir.iterdir())
+
+    def boom(*args: object, **kwargs: object) -> object:
+        raise RuntimeError("provider exploded mid-run")
+
+    monkeypatch.setattr(pipeline_mod, "build_funnel_ledger", boom)
+    with pytest.raises(RuntimeError):
+        WeeklyUSStockPipeline(settings=settings, provider=sample_provider).run(request)
+
+    # The official report is untouched; no staging dir is promoted on failure.
+    assert (run_dir / "result.json").read_text("utf-8") == good_result
+    assert sorted(p.name for p in run_dir.iterdir()) == good_files

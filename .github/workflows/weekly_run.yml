@@ -216,16 +216,33 @@ jobs:
           fi
 
           RUN_KEY="${WEEKLY_AS_OF//-/}"
-          # Clear BOTH snapshots first so an artifact absent this run is not
-          # carried over from the checked-out branch (latest/) or a same-day
-          # rerun (history/) and misattributed. Publish is manifest-driven —
-          # every artifact this run indexed — so the set never drifts from a
-          # hand-maintained file list.
+          REPORTS="$TMP_REPORT_DIR/reports"
+          # Manifest-driven AND fail-closed: list the artifacts the run indexed,
+          # verify every one exists BEFORE touching the published snapshot (so an
+          # incomplete run never replaces the last good report), copy with no
+          # error suppression, then verify the published set matches the manifest.
+          MANIFEST_FILES="$(mktemp)"
+          python3 -c "import json, os; print('\n'.join(os.path.basename(a) for a in json.load(open('$REPORTS/run_manifest.json'))['artifacts']))" > "$MANIFEST_FILES"
+          expected=$(grep -c . "$MANIFEST_FILES" || true)
+          if [ "$expected" -eq 0 ]; then
+            echo "ERROR: manifest lists no artifacts; refusing to publish"; exit 1
+          fi
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            if [ ! -f "$REPORTS/$f" ]; then
+              echo "ERROR: manifest artifact missing from run output: $f"; exit 1
+            fi
+          done < "$MANIFEST_FILES"
           rm -rf latest "history/$RUN_KEY"
           mkdir -p latest "history/$RUN_KEY"
-          for f in $(python3 -c "import json, os; print('\n'.join(os.path.basename(a) for a in json.load(open('$TMP_REPORT_DIR/reports/run_manifest.json'))['artifacts']))"); do
-            cp "$TMP_REPORT_DIR/reports/$f" "latest/$f" 2>/dev/null || true
-          done
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            cp "$REPORTS/$f" "latest/$f"
+          done < "$MANIFEST_FILES"
+          published=$(find latest -maxdepth 1 -type f | wc -l | tr -d ' ')
+          if [ "$published" -ne "$expected" ]; then
+            echo "ERROR: published $published files but manifest declared $expected"; exit 1
+          fi
           cp -R latest/. "history/$RUN_KEY/"
 
           git add latest "history/$RUN_KEY"

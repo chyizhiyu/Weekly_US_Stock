@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import time
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -451,7 +452,7 @@ class WeeklyUSStockPipeline:
             watchlist,
             robust,
         )
-        previous_dir = self._resolve_previous_dir(request, run_dir)
+        previous_dir = self._resolve_previous_dir(request)
         comparison = compare_with_previous(
             robust,
             upside,
@@ -524,7 +525,15 @@ class WeeklyUSStockPipeline:
         result_path = run_dir / "result.json"
         artifacts.append(str(result_path))
         artifacts.append(str(run_dir / "run_manifest.json"))
-        result.artifacts = list(dict.fromkeys(str(a) for a in artifacts))
+        # We write to a staging dir and atomically promote it on success below.
+        # Record the FINAL (post-swap) paths in result.json so they are valid
+        # once the run dir is in place.
+        final_dir = self._resolve_path(self.settings.app.output_dir) / request.as_of.strftime(
+            "%Y%m%d"
+        )
+        result.artifacts = list(
+            dict.fromkeys(str(a).replace(str(run_dir), str(final_dir)) for a in artifacts)
+        )
         export_json(result.model_dump(mode="json"), result_path)
 
         # P2-2: a self-describing manifest tying this run's archive to its
@@ -552,6 +561,13 @@ class WeeklyUSStockPipeline:
             paper_portfolio_size=int(len(eligible)),
         )
         export_json(manifest, run_dir / "run_manifest.json")
+        # Atomically promote the fully-written staging dir to the official run
+        # dir. Because nothing in the official dir is touched until the run has
+        # fully succeeded, a mid-run failure (network/provider/compute) leaves
+        # the last good report intact instead of destroying it.
+        if final_dir.exists():
+            shutil.rmtree(final_dir)
+        run_dir.rename(final_dir)
         return result
 
     # -- provider wiring ------------------------------------------------------
@@ -714,26 +730,25 @@ class WeeklyUSStockPipeline:
             "source_sha": os.environ.get("GITHUB_SHA", ""),
         }
 
-    def _resolve_previous_dir(self, request: PipelineRequest, run_dir: Path) -> Path | None:
+    def _resolve_previous_dir(self, request: PipelineRequest) -> Path | None:
         if request.previous_dir:
             path = Path(request.previous_dir)
             return path if path.exists() else None
         output_dir = self._resolve_path(self.settings.app.output_dir)
-        return find_previous_run_dir(output_dir, run_dir.name)
+        # Key on the run date, not the staging dir name (a non-digit ".tmp"
+        # dir that find_previous_run_dir intentionally ignores).
+        return find_previous_run_dir(output_dir, request.as_of.strftime("%Y%m%d"))
 
     def _run_dir(self, request: PipelineRequest) -> Path:
-        run_dir = self._resolve_path(self.settings.app.output_dir) / request.as_of.strftime(
-            "%Y%m%d"
-        )
-        if run_dir.exists():
-            # A same-date rerun must not leave the prior run's optional artifacts
-            # (e.g. roic_routed.csv on a week that has none) behind to be mistaken
-            # for this run's output or copied into the published history.
-            for stale in run_dir.iterdir():
-                if stale.is_file():
-                    stale.unlink()
-        run_dir.mkdir(parents=True, exist_ok=True)
-        return run_dir
+        # Write to a fresh staging dir; run() promotes it to runs/YYYYMMDD only
+        # after the run fully succeeds, so a failed same-date rerun never
+        # destroys the previous successful report.
+        output_dir = self._resolve_path(self.settings.app.output_dir)
+        staging = output_dir / f".{request.as_of.strftime('%Y%m%d')}.tmp"
+        if staging.exists():
+            shutil.rmtree(staging)  # leftover from a crashed run; safe to discard
+        staging.mkdir(parents=True, exist_ok=True)
+        return staging
 
     @staticmethod
     def _resolve_path(path: str | Path) -> Path:
