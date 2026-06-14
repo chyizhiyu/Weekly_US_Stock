@@ -78,8 +78,9 @@ weekly-us-stock expected-as-of
 | `upside_ranking.csv` / `research_queue.csv` | **高分散度研究队列**，明确标注"仅研究、非可执行" |
 | `turnaround_watchlist.csv` | 重大事件反转观察名单（状态机 + 重新进入排名所需证据） |
 | `invalid_or_watchlist.csv` | 不支持模型的行业 / 数据或估值异常 / 重大事件，统一观察名单 |
-| `invalid_valuations.csv` | 非有限或求解边界饱和的估值（fail closed 剔除，附原因） |
+| `invalid_valuations.csv` | 非有限、求解上界饱和（IRR>200%）、或 Base/Bull 触下界的估值（fail closed 剔除，附原因）；Bear 触下界（灾难下行）则保留在风险分布、按 robust 门槛惩罚 |
 | `roic_routed.csv` | ROIC 无经济意义（负投入资本等），待专用模型 |
+| `funnel_ledger.csv` | 全股票池逐只最终归因：去向 / 决策阶段 / 原因 / 排名 / 核心指标，一票一行 |
 | `paper_portfolio.csv` | 前向纸面组合入场快照（点时入场价，供未来样本外验证） |
 | `run_manifest.json` / `run_metadata.json` | 自描述归档：股票池/配置指纹、各类计数、产物清单 |
 

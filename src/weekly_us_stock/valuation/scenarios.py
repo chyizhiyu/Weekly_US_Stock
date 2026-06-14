@@ -359,10 +359,11 @@ def _classify_validity(
     """Decide whether a valuation is precise enough to be ranked.
 
     Returns (status, headline_reason, offending_fields). A name is invalid when
-    an IRR is above the solver bound, when any scenario produced a non-finite
-    output, or when any required aggregate metric is not finite. A below-bound
-    loss stays at the conservative lower-bound value so its tail risk remains
-    visible in the research queue.
+    an IRR is above the solver bound, when a base/bull IRR saturates the lower
+    bound, when any scenario produced a non-finite output, or when any required
+    aggregate metric is not finite. Only a bear below-bound loss stays ranked at
+    the conservative lower-bound value, so a plausible catastrophic downside is
+    priced into the risk distribution while a broken base/bull is routed out.
     """
 
     fields: list[str] = []
@@ -373,7 +374,15 @@ def _classify_validity(
         if status == "above_upper_bound":
             fields.append(f"irr_5y[{label}]")
             reasons.add("irr_above_solver_bound")
-        elif status not in {"valid", "below_lower_bound"}:
+        elif status == "below_lower_bound":
+            # Only the bear case may saturate the lower bound and stay ranked: a
+            # catastrophic downside is economically plausible and is floored into
+            # the risk distribution. A base/bull that solves below -95% is a
+            # broken valuation, not a ranking input — route it out.
+            if label != "bear":
+                fields.append(f"irr_5y[{label}]")
+                reasons.add("irr_below_solver_bound")
+        elif status != "valid":
             fields.append(f"irr_5y[{label}]")
             reasons.add("invalid_valuation_output")
         if not scenario.is_finite:
@@ -391,6 +400,7 @@ def _classify_validity(
     priority = (
         "irr_above_solver_bound",
         "invalid_valuation_output",
+        "irr_below_solver_bound",
     )
     headline = next((r for r in priority if r in reasons), sorted(reasons)[0])
     return "invalid", headline, sorted(set(fields))

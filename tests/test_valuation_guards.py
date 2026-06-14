@@ -105,6 +105,17 @@ def test_classify_validity_keeps_below_bound_loss_but_rejects_non_finite() -> No
     below = [_scenario("bear", status="below_lower_bound"), _scenario("base"), _scenario("bull")]
     assert _classify_validity(below, _OK_METRICS) == ("valid", None, [])
 
+    # only the bear case may saturate the lower bound and stay ranked; a base or
+    # bull that solves below -95% is a broken valuation and routes out
+    base_below = [
+        _scenario("bear"),
+        _scenario("base", status="below_lower_bound"),
+        _scenario("bull"),
+    ]
+    status, reason, fields = _classify_validity(base_below, _OK_METRICS)
+    assert status == "invalid" and reason == "irr_below_solver_bound"
+    assert "irr_5y[base]" in fields
+
     no_root = [_scenario("bear", status="no_root"), _scenario("base"), _scenario("bull")]
     assert _classify_validity(no_root, _OK_METRICS)[0] == "invalid"
 
@@ -196,16 +207,16 @@ def test_step6_partitions_invalid_out_of_metrics() -> None:
     assert "catastrophic_tail_floor_applied" in result.metrics.columns
 
 
-def test_step6_keeps_catastrophic_loss_in_rankable_risk_distribution() -> None:
+def test_step6_routes_all_scenario_floor_out_of_metrics() -> None:
+    # A name whose base AND bull also saturate the lower bound is a broken
+    # valuation, not just a catastrophic downside: it must route out, not rank.
+    # (Only a bear-only floor stays ranked — see _classify_validity unit tests.)
     row = _quality_row("TAIL", 100.0)
     row["net_debt"] = 5_000.0
     result = run_scenario_valuations(
         pd.DataFrame([row]), ScenarioSettings(), RiskPreferenceSettings()
     )
 
-    assert set(result.metrics["ticker"]) == {"TAIL"}
-    assert result.invalid.empty
-    metric = result.metrics.iloc[0]
-    assert bool(metric["catastrophic_tail_floor_applied"])
-    assert metric["catastrophic_tail_scenarios"] == "bear;base;bull"
-    assert metric["p10_irr"] == LOWER_BOUND
+    assert "TAIL" not in set(result.metrics["ticker"])
+    assert set(result.invalid["ticker"]) == {"TAIL"}
+    assert result.invalid.iloc[0]["invalid_reason"] == "irr_below_solver_bound"
