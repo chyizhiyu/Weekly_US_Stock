@@ -127,6 +127,7 @@ _REASON_CN = {
     "insufficient_confidence": "数据置信度不足",
     "insufficient_model_confidence": "模型置信度不足",
     "insufficient_post_valuation_model_confidence": "估值后模型置信度不足",
+    "incomplete_valuation_inputs": "估值输入缺失",
     "material_event_requires_reunderwriting": "重大事件待复核",
 }
 

@@ -216,12 +216,17 @@ jobs:
           fi
 
           RUN_KEY="${WEEKLY_AS_OF//-/}"
+          # Clear last week's snapshot first: an artifact that is absent this
+          # week (e.g. roic_routed.csv on a clean week) must not be silently
+          # carried over from the checked-out branch and misattributed here.
+          rm -rf latest
           mkdir -p latest "history/$RUN_KEY"
           for f in feishu_summary.md dashboard.md result.json run_metadata.json run_manifest.json \
                    universe.csv hard_filter_rejected.csv normalization_rejected.csv \
+                   normalized_financials.csv scenario_valuations.csv \
                    robust_ranking.csv upside_ranking.csv eligible_candidates.csv \
                    research_queue.csv watchlist.csv invalid_valuations.csv roic_routed.csv \
-                   turnaround_watchlist.csv funnel_ledger.csv; do
+                   paper_portfolio.csv turnaround_watchlist.csv funnel_ledger.csv; do
             cp "$TMP_REPORT_DIR/reports/$f" "latest/$f" 2>/dev/null || true
           done
           cp -R latest/. "history/$RUN_KEY/"

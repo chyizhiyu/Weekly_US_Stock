@@ -336,6 +336,12 @@ class WeeklyUSStockPipeline:
             summary.rejection_counts = (
                 valuation_result.skipped["skip_reason"].value_counts().to_dict()
             )
+            # Names that never entered the engine (incomplete valuation inputs)
+            # are un-rankable; route them to the watchlist so they are accounted
+            # for in the funnel ledger instead of silently going unaccounted.
+            skipped_watchlist = valuation_result.skipped.copy()
+            skipped_watchlist["watchlist_reason"] = skipped_watchlist["skip_reason"]
+            watchlist_frames.append(skipped_watchlist)
         self._export(
             run_dir, "scenario_valuations", valuation_result.scenario_rows, summary, artifacts
         )
@@ -515,6 +521,10 @@ class WeeklyUSStockPipeline:
         result_path = run_dir / "result.json"
         result.artifacts.append(str(result_path))
         export_json(result.model_dump(mode="json"), result_path)
+        # The manifest must index every artifact in the run dir, including the
+        # result payload and the manifest file itself.
+        artifacts.append(str(result_path))
+        artifacts.append(str(run_dir / "run_manifest.json"))
 
         # P2-2: a self-describing manifest tying this run's archive to its
         # universe/config fingerprints for later out-of-sample validation.

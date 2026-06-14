@@ -134,4 +134,6 @@ def _watchlist_stage(reason: str) -> str:
         return "step4_normalized_model"
     if reason == "insufficient_model_confidence":
         return "step5_quality_risk"
+    if reason == "incomplete_valuation_inputs":
+        return "step6_valuation_inputs"
     return "step6_scenario_valuation"
