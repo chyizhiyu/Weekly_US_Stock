@@ -449,3 +449,33 @@ def test_promotion_recovers_orphaned_backup_before_promoting(
     assert final.exists()
     assert (final / "result.json").read_text(encoding="utf-8") == "LAST_GOOD"
     assert not backup.exists()
+
+
+def test_startup_recovery_runs_before_provider_resolution(tmp_path: Path) -> None:
+    # If a prior promotion crashed (only a .bak survives) and the next run then
+    # fails at provider/credential resolution, the orphaned report must still be
+    # recovered — recovery runs before the provider is resolved.
+    import pytest
+
+    from weekly_us_stock.config import EnvSettings, load_settings
+    from weekly_us_stock.models.screening import PipelineRequest
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+    from weekly_us_stock.providers.base import DataProviderNotConfigured
+
+    settings = load_settings()
+    settings.app.output_dir = str(tmp_path)
+    backup = tmp_path / ".20260109.bak"
+    backup.mkdir()
+    (backup / "result.json").write_text("LAST_GOOD", encoding="utf-8")
+
+    pipeline = WeeklyUSStockPipeline(
+        settings=settings,
+        env=EnvSettings(fmp_api_key=None, polygon_api_key=None, fred_api_key=None),
+    )
+    with pytest.raises(DataProviderNotConfigured):
+        pipeline.run(PipelineRequest(as_of=AS_OF_DATE, provider="fmp"))
+
+    final = tmp_path / "20260109"
+    assert final.exists()
+    assert (final / "result.json").read_text(encoding="utf-8") == "LAST_GOOD"
+    assert not backup.exists()

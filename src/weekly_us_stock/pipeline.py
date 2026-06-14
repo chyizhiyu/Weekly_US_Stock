@@ -93,8 +93,12 @@ class WeeklyUSStockPipeline:
         self.provider = provider
 
     def run(self, request: PipelineRequest) -> PipelineResult:
+        # Recover any report orphaned by a crashed promotion BEFORE anything that
+        # can fail (provider/credential resolution), so a failed startup never
+        # leaves the last good report stranded in a backup dir.
+        self._recover_run_dir(request)
         provider = self._resolve_provider(request)
-        run_dir = self._run_dir(request)
+        run_dir = self._create_staging_dir(request)
         try:
             return self._execute(request, provider, run_dir)
         finally:
@@ -761,15 +765,23 @@ class WeeklyUSStockPipeline:
         # dir that find_previous_run_dir intentionally ignores).
         return find_previous_run_dir(output_dir, request.as_of.strftime("%Y%m%d"))
 
-    def _run_dir(self, request: PipelineRequest) -> Path:
-        # Write to a UNIQUE staging dir; run() promotes it to runs/YYYYMMDD only
-        # after the run fully succeeds. A failed rerun never destroys the
-        # previous report, and two same-date runs never share a staging dir.
+    def _recover_run_dir(self, request: PipelineRequest) -> None:
+        # Restore (or discard) a report left in a backup dir by a crashed
+        # promotion, under the per-date lock. Called before provider resolution
+        # so a startup failure can never skip recovery.
         output_dir = self._resolve_path(self.settings.app.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         date_key = request.as_of.strftime("%Y%m%d")
         with self._date_lock(output_dir, date_key):
             self._recover_promotion(output_dir / date_key)
+
+    def _create_staging_dir(self, request: PipelineRequest) -> Path:
+        # A UNIQUE staging dir; run() promotes it to runs/YYYYMMDD only after the
+        # run fully succeeds. A failed rerun never destroys the previous report,
+        # and two same-date runs never share a staging dir.
+        output_dir = self._resolve_path(self.settings.app.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        date_key = request.as_of.strftime("%Y%m%d")
         return Path(tempfile.mkdtemp(prefix=f".{date_key}.", suffix=".tmp", dir=output_dir))
 
     @staticmethod
