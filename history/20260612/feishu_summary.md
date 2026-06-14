@@ -21,10 +21,10 @@ Upside 研究队列 Top 10（高分散度，仅研究、非可执行）:
 9. HUM｜预期IRR 15.8%｜中位 16.5%｜P10 5.3% / P90 25.0%
 10. MO｜预期IRR 15.5%｜中位 17.4%｜P10 0.7% / P90 26.4%
 
-对比 2026-06-12：新进 INTU、MCK、PHM；退出 ADBE、APA、CF。
+对比 2026-06-12：新进 无；退出 无。
 观察名单：134 只（REIT27只、保险21只、估值后模型置信度不足18只、资产管理16只、银行14只、其他金融8只、模型置信度不足8只、消费信贷7只、roic_not_meaningful:meaningless_capital6只、重大事件待复核4只、未盈利生物科技3只、Base/Bull 越下界1只、估值输出非有限1只）
 重大事件反转观察：4 只 — ORCL(awaiting_new_evidence)、ADBE(awaiting_new_evidence)、CHTR(awaiting_new_evidence)、SMCI(awaiting_new_evidence)
 
 说明：仅研究参考，不构成交易指令。排名来自 Bear/Base/Bull 三情景估值与风险调整回报；情景权重为人工设定（默认25/50/25），达标权重、永亏权重等是情景加权值，并非经过校准的概率。硬过滤不可补偿，数据缺失个股已剔除。
 
-完整结果：GitHub Actions #10 https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27502472824
+完整结果：GitHub Actions #11 https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27503481917

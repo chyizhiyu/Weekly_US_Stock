@@ -92,18 +92,10 @@ The only names presented as actionable research — finite valuation, robust_ret
 
 Previous run: 2026-06-12
 
-- Entered Robust Top: INTU, MCK, PHM
-- Exited Robust Top: ADBE, APA, CF
-- Entered Upside Top: ELV, HCA, MCK, MKC, TSN
-- Exited Upside Top: ADBE, APA, CF, CI, DVN
-
-Largest robust-rank moves:
-
-- IQV: 94 → 266 (-172)
-- FISV: 26 → 122 (-96)
-- GEN: 115 → 164 (-49)
-- TGT: 57 → 102 (-45)
-- DLTR: 214 → 251 (-37)
+- Entered Robust Top: none
+- Exited Robust Top: none
+- Entered Upside Top: none
+- Exited Upside Top: none
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
