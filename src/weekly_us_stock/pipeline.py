@@ -9,12 +9,14 @@ runs/YYYYMMDD/.
 
 from __future__ import annotations
 
+import fcntl
 import logging
 import os
 import shutil
 import tempfile
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, TypeVar
@@ -93,6 +95,19 @@ class WeeklyUSStockPipeline:
     def run(self, request: PipelineRequest) -> PipelineResult:
         provider = self._resolve_provider(request)
         run_dir = self._run_dir(request)
+        try:
+            return self._execute(request, provider, run_dir)
+        finally:
+            # If the run did not reach promotion (it raised), drop its own
+            # staging dir so failed/retried runs do not accumulate partial
+            # reports. After a successful promotion the staging dir has been
+            # renamed away, so this is a no-op.
+            if run_dir.exists():
+                shutil.rmtree(run_dir, ignore_errors=True)
+
+    def _execute(
+        self, request: PipelineRequest, provider: DataProvider, run_dir: Path
+    ) -> PipelineResult:
         steps: list[StepSummary] = []
         artifacts: list[str] = []
         as_of = request.as_of
@@ -568,10 +583,10 @@ class WeeklyUSStockPipeline:
         )
         export_json(manifest, run_dir / "run_manifest.json")
         # Promote the fully-written staging dir to the official run dir through a
-        # recoverable backup, so a failure during promotion itself (rename/disk
-        # error, crash) is rolled back or recovered, never destroying the
-        # previous report.
-        self._promote_run_dir(run_dir, final_dir)
+        # recoverable backup, under a per-date lock so concurrent same-date runs
+        # cannot interleave their promotions and destroy each other's report.
+        with self._date_lock(final_dir.parent, final_dir.name):
+            self._promote_run_dir(run_dir, final_dir)
         return result
 
     # -- provider wiring ------------------------------------------------------
@@ -750,8 +765,22 @@ class WeeklyUSStockPipeline:
         output_dir = self._resolve_path(self.settings.app.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         date_key = request.as_of.strftime("%Y%m%d")
-        self._recover_promotion(output_dir / date_key)
+        with self._date_lock(output_dir, date_key):
+            self._recover_promotion(output_dir / date_key)
         return Path(tempfile.mkdtemp(prefix=f".{date_key}.", suffix=".tmp", dir=output_dir))
+
+    @staticmethod
+    @contextmanager
+    def _date_lock(output_dir: Path, date_key: str) -> Iterator[None]:
+        # A cross-process exclusive lock per run date. Recovery and promotion run
+        # inside it so two same-date processes serialize their backup/promote
+        # steps instead of interleaving and destroying each other's report.
+        with open(output_dir / f".{date_key}.lock", "w", encoding="utf-8") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle, fcntl.LOCK_UN)
 
     @staticmethod
     def _recover_promotion(final_dir: Path) -> None:

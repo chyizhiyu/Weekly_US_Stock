@@ -325,6 +325,8 @@ def test_failed_rerun_preserves_previous_report(
     # The official report is untouched; no staging dir is promoted on failure.
     assert (run_dir / "result.json").read_text("utf-8") == good_result
     assert sorted(p.name for p in run_dir.iterdir()) == good_files
+    # The failed run cleaned up its own staging dir (no partial-report leak).
+    assert [p.name for p in tmp_path.iterdir() if p.name.endswith(".tmp")] == []
 
 
 def test_promotion_failure_rolls_back_to_previous_report(
@@ -374,3 +376,34 @@ def test_recover_promotion_restores_orphaned_backup(tmp_path: Path) -> None:
     assert final.exists()
     assert (final / "result.json").read_text(encoding="utf-8") == "GOOD"
     assert not backup.exists()
+
+
+def test_concurrent_promotions_do_not_lose_reports(tmp_path: Path) -> None:
+    # Several same-date promotions running at once must serialize on the per-date
+    # lock so they never interleave their backup/promote steps and delete every
+    # report. Exactly one survives intact; no .bak/.tmp dirs are left behind.
+    import tempfile
+    import threading
+
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+
+    output = tmp_path
+    final = output / "20260109"
+    final.mkdir()
+    (final / "result.json").write_text("ORIGINAL", encoding="utf-8")
+
+    def promote(tag: str) -> None:
+        staging = Path(tempfile.mkdtemp(prefix=".20260109.", suffix=".tmp", dir=output))
+        (staging / "result.json").write_text(tag, encoding="utf-8")
+        with WeeklyUSStockPipeline._date_lock(output, "20260109"):
+            WeeklyUSStockPipeline._promote_run_dir(staging, final)
+
+    threads = [threading.Thread(target=promote, args=(f"RUN{i}",)) for i in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert final.exists()
+    assert (final / "result.json").read_text(encoding="utf-8").startswith("RUN")
+    assert [p.name for p in output.iterdir() if p.name.endswith((".tmp", ".bak"))] == []
