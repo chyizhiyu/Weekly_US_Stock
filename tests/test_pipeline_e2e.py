@@ -381,9 +381,10 @@ def test_recover_promotion_restores_orphaned_backup(tmp_path: Path) -> None:
 def test_concurrent_promotions_do_not_lose_reports(tmp_path: Path) -> None:
     # Several same-date promotions running at once must serialize on the per-date
     # lock so they never interleave their backup/promote steps and delete every
-    # report. Exactly one survives intact; no .bak/.tmp dirs are left behind.
+    # report. Every worker must succeed (the lock serializes them), exactly one
+    # report survives intact, and no .bak/.tmp dirs are left behind.
     import tempfile
-    import threading
+    from concurrent.futures import ThreadPoolExecutor
 
     from weekly_us_stock.pipeline import WeeklyUSStockPipeline
 
@@ -399,11 +400,11 @@ def test_concurrent_promotions_do_not_lose_reports(tmp_path: Path) -> None:
             WeeklyUSStockPipeline._recover_promotion(final)
             WeeklyUSStockPipeline._promote_run_dir(staging, final)
 
-    threads = [threading.Thread(target=promote, args=(f"RUN{i}",)) for i in range(4)]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = [pool.submit(promote, f"RUN{i}") for i in range(4)]
+    # .result() re-raises any exception a worker hit; no promotion may fail.
+    for future in futures:
+        future.result()
 
     assert final.exists()
     assert (final / "result.json").read_text(encoding="utf-8").startswith("RUN")
