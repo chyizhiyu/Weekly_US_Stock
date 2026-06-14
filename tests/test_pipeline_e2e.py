@@ -325,3 +325,52 @@ def test_failed_rerun_preserves_previous_report(
     # The official report is untouched; no staging dir is promoted on failure.
     assert (run_dir / "result.json").read_text("utf-8") == good_result
     assert sorted(p.name for p in run_dir.iterdir()) == good_files
+
+
+def test_promotion_failure_rolls_back_to_previous_report(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # If promotion itself fails (rename/disk error), the previous report must be
+    # rolled back into place, never left deleted.
+    import pytest
+
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+
+    final = tmp_path / "20260109"
+    final.mkdir()
+    (final / "result.json").write_text("GOOD", encoding="utf-8")
+    staging = tmp_path / ".20260109.unique.tmp"
+    staging.mkdir()
+    (staging / "result.json").write_text("NEW", encoding="utf-8")
+
+    real_rename = Path.rename
+
+    def flaky_rename(self: Path, target: object) -> Path:
+        if self == staging:
+            raise OSError("rename exploded mid-promotion")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    with pytest.raises(OSError):
+        WeeklyUSStockPipeline._promote_run_dir(staging, final)
+
+    assert final.exists()
+    assert (final / "result.json").read_text(encoding="utf-8") == "GOOD"
+
+
+def test_recover_promotion_restores_orphaned_backup(tmp_path: Path) -> None:
+    # Simulate a crash after the old report was stepped aside but before the new
+    # one landed: the next run must restore the backup, not start from nothing.
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+
+    final = tmp_path / "20260109"
+    backup = tmp_path / ".20260109.bak"
+    backup.mkdir()
+    (backup / "result.json").write_text("GOOD", encoding="utf-8")
+
+    WeeklyUSStockPipeline._recover_promotion(final)
+
+    assert final.exists()
+    assert (final / "result.json").read_text(encoding="utf-8") == "GOOD"
+    assert not backup.exists()

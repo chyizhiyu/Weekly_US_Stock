@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import os
 import shutil
+import tempfile
 import time
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -525,15 +526,20 @@ class WeeklyUSStockPipeline:
         result_path = run_dir / "result.json"
         artifacts.append(str(result_path))
         artifacts.append(str(run_dir / "run_manifest.json"))
-        # We write to a staging dir and atomically promote it on success below.
-        # Record the FINAL (post-swap) paths in result.json so they are valid
-        # once the run dir is in place.
+        # We write to a staging dir and promote it on success below. Record the
+        # FINAL (post-swap) paths in result.json — both the top-level artifact
+        # index and every step's artifact list — so they are valid once the run
+        # dir is in place.
         final_dir = self._resolve_path(self.settings.app.output_dir) / request.as_of.strftime(
             "%Y%m%d"
         )
-        result.artifacts = list(
-            dict.fromkeys(str(a).replace(str(run_dir), str(final_dir)) for a in artifacts)
-        )
+
+        def _to_final(path: object) -> str:
+            return str(path).replace(str(run_dir), str(final_dir))
+
+        result.artifacts = list(dict.fromkeys(_to_final(a) for a in artifacts))
+        for step in result.steps:
+            step.artifacts = [_to_final(a) for a in step.artifacts]
         export_json(result.model_dump(mode="json"), result_path)
 
         # P2-2: a self-describing manifest tying this run's archive to its
@@ -561,13 +567,11 @@ class WeeklyUSStockPipeline:
             paper_portfolio_size=int(len(eligible)),
         )
         export_json(manifest, run_dir / "run_manifest.json")
-        # Atomically promote the fully-written staging dir to the official run
-        # dir. Because nothing in the official dir is touched until the run has
-        # fully succeeded, a mid-run failure (network/provider/compute) leaves
-        # the last good report intact instead of destroying it.
-        if final_dir.exists():
-            shutil.rmtree(final_dir)
-        run_dir.rename(final_dir)
+        # Promote the fully-written staging dir to the official run dir through a
+        # recoverable backup, so a failure during promotion itself (rename/disk
+        # error, crash) is rolled back or recovered, never destroying the
+        # previous report.
+        self._promote_run_dir(run_dir, final_dir)
         return result
 
     # -- provider wiring ------------------------------------------------------
@@ -740,15 +744,51 @@ class WeeklyUSStockPipeline:
         return find_previous_run_dir(output_dir, request.as_of.strftime("%Y%m%d"))
 
     def _run_dir(self, request: PipelineRequest) -> Path:
-        # Write to a fresh staging dir; run() promotes it to runs/YYYYMMDD only
-        # after the run fully succeeds, so a failed same-date rerun never
-        # destroys the previous successful report.
+        # Write to a UNIQUE staging dir; run() promotes it to runs/YYYYMMDD only
+        # after the run fully succeeds. A failed rerun never destroys the
+        # previous report, and two same-date runs never share a staging dir.
         output_dir = self._resolve_path(self.settings.app.output_dir)
-        staging = output_dir / f".{request.as_of.strftime('%Y%m%d')}.tmp"
-        if staging.exists():
-            shutil.rmtree(staging)  # leftover from a crashed run; safe to discard
-        staging.mkdir(parents=True, exist_ok=True)
-        return staging
+        output_dir.mkdir(parents=True, exist_ok=True)
+        date_key = request.as_of.strftime("%Y%m%d")
+        self._recover_promotion(output_dir / date_key)
+        return Path(tempfile.mkdtemp(prefix=f".{date_key}.", suffix=".tmp", dir=output_dir))
+
+    @staticmethod
+    def _recover_promotion(final_dir: Path) -> None:
+        # A previous promotion that crashed between stepping the old report aside
+        # and moving the new one in leaves the old report in a .bak dir. Restore
+        # it if the new report never landed; drop it if it did.
+        backup = final_dir.with_name(f".{final_dir.name}.bak")
+        if not backup.exists():
+            return
+        if final_dir.exists():
+            shutil.rmtree(backup)
+        else:
+            backup.rename(final_dir)
+
+    @staticmethod
+    def _promote_run_dir(staging: Path, final_dir: Path) -> None:
+        # Replace final_dir with staging through a recoverable backup. The old
+        # report is only deleted AFTER the new one is in place; if the swap
+        # fails, it is rolled back. A crash mid-swap is repaired by
+        # _recover_promotion on the next run.
+        backup = final_dir.with_name(f".{final_dir.name}.bak")
+        if backup.exists():
+            shutil.rmtree(backup)
+        stepped_aside = False
+        if final_dir.exists():
+            final_dir.rename(backup)
+            stepped_aside = True
+        try:
+            staging.rename(final_dir)
+        except OSError:
+            if stepped_aside:
+                if final_dir.exists():
+                    shutil.rmtree(final_dir)
+                backup.rename(final_dir)
+            raise
+        if stepped_aside:
+            shutil.rmtree(backup)
 
     @staticmethod
     def _resolve_path(path: str | Path) -> Path:
