@@ -128,6 +128,9 @@ _REASON_CN = {
     "insufficient_model_confidence": "模型置信度不足",
     "insufficient_post_valuation_model_confidence": "估值后模型置信度不足",
     "incomplete_valuation_inputs": "估值输入缺失",
+    "irr_above_solver_bound": "估值越上界(IRR>200%)",
+    "irr_below_solver_bound": "Base/Bull 越下界",
+    "invalid_valuation_output": "估值输出非有限",
     "material_event_requires_reunderwriting": "重大事件待复核",
 }
 

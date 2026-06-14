@@ -345,9 +345,9 @@ class WeeklyUSStockPipeline:
         self._export(
             run_dir, "scenario_valuations", valuation_result.scenario_rows, summary, artifacts
         )
-        # P0-1: non-finite or implausibly high valuations are not precise enough
-        # to rank. Catastrophic below-bound losses remain in the distribution so
-        # their downside is visible in Robust and the research queue.
+        # P0-1: non-finite, implausibly high, or base/bull below-bound valuations
+        # are not precise enough to rank. Only a bear below-bound (catastrophic
+        # downside) stays in the distribution, visible in Robust and the queue.
         if not valuation_result.invalid.empty:
             flagged = valuation_result.invalid.copy()
             flagged["watchlist_reason"] = flagged["invalid_reason"].fillna(
@@ -360,7 +360,7 @@ class WeeklyUSStockPipeline:
                 **flagged["watchlist_reason"].value_counts().to_dict(),
             }
             summary.notes.append(
-                f"removed {len(flagged)} non-finite/implausibly-high valuations from ranking"
+                f"removed {len(flagged)} non-finite/out-of-bound valuations from ranking"
             )
         # P1-4: names whose ROIC is not economically meaningful are not valued
         # as low-but-positive; they wait on the watchlist for a dedicated model.
@@ -518,13 +518,14 @@ class WeeklyUSStockPipeline:
         metadata = self._run_metadata(request, provider, freshness, steps)
         metadata["time_consistency"] = _time_consistency(request, estimates, modeled)
         artifacts.append(str(export_json(metadata, run_dir / "run_metadata.json")))
+        # result.json and run_manifest.json are themselves self-describing
+        # entries: give BOTH the result and the manifest the same complete
+        # artifact index (every file in the run dir, these two included).
         result_path = run_dir / "result.json"
-        result.artifacts.append(str(result_path))
-        export_json(result.model_dump(mode="json"), result_path)
-        # The manifest must index every artifact in the run dir, including the
-        # result payload and the manifest file itself.
         artifacts.append(str(result_path))
         artifacts.append(str(run_dir / "run_manifest.json"))
+        result.artifacts = list(dict.fromkeys(str(a) for a in artifacts))
+        export_json(result.model_dump(mode="json"), result_path)
 
         # P2-2: a self-describing manifest tying this run's archive to its
         # universe/config fingerprints for later out-of-sample validation.
@@ -724,6 +725,13 @@ class WeeklyUSStockPipeline:
         run_dir = self._resolve_path(self.settings.app.output_dir) / request.as_of.strftime(
             "%Y%m%d"
         )
+        if run_dir.exists():
+            # A same-date rerun must not leave the prior run's optional artifacts
+            # (e.g. roic_routed.csv on a week that has none) behind to be mistaken
+            # for this run's output or copied into the published history.
+            for stale in run_dir.iterdir():
+                if stale.is_file():
+                    stale.unlink()
         run_dir.mkdir(parents=True, exist_ok=True)
         return run_dir
 

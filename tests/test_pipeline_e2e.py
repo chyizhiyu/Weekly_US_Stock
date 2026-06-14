@@ -259,3 +259,35 @@ def test_no_future_data_in_outputs(pipeline_runs: dict[str, Path]) -> None:
     normalized = pd.read_csv(pipeline_runs["first"] / "normalized_financials.csv")
     assert (pd.to_datetime(normalized["latest_filing_date"]) <= pd.Timestamp("2026-01-09")).all()
     assert int(normalized["latest_fiscal_year"].max()) == 2024
+
+
+def test_incomplete_valuation_inputs_routed_to_watchlist(
+    tmp_path: Path, sample_provider, monkeypatch
+) -> None:
+    # Guards the pipeline wiring (not just the funnel unit test): a name that
+    # reaches the engine with incomplete valuation inputs must be routed to the
+    # watchlist and accounted for in the ledger, never left unaccounted.
+    from weekly_us_stock.config import load_settings
+    from weekly_us_stock.models.screening import PipelineRequest
+    from weekly_us_stock.pipeline import WeeklyUSStockPipeline
+    from weekly_us_stock.steps import step6_valuation
+
+    original = step6_valuation._to_inputs
+
+    def drop_stbl(row: pd.Series) -> object:
+        return None if row.get("ticker") == "STBL" else original(row)
+
+    monkeypatch.setattr(step6_valuation, "_to_inputs", drop_stbl)
+
+    settings = load_settings()
+    settings.app.output_dir = str(tmp_path)
+    WeeklyUSStockPipeline(settings=settings, provider=sample_provider).run(
+        PipelineRequest(as_of=AS_OF_DATE, provider="sample")
+    )
+
+    run_dir = tmp_path / AS_OF_DATE.strftime("%Y%m%d")
+    watchlist = pd.read_csv(run_dir / "watchlist.csv").set_index("ticker")
+    assert watchlist.loc["STBL", "watchlist_reason"] == "incomplete_valuation_inputs"
+    ledger = pd.read_csv(run_dir / "funnel_ledger.csv").set_index("ticker")
+    assert ledger.loc["STBL", "final_bucket"] == "watchlist"
+    assert not (ledger["final_bucket"] == "unaccounted").any()
