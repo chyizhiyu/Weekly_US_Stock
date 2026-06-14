@@ -51,7 +51,7 @@ class ValuationStepResult:
     metrics: pd.DataFrame  # finite, in-bound, rankable companies only
     scenario_rows: pd.DataFrame
     skipped: pd.DataFrame  # incomplete inputs, never entered the engine
-    invalid: pd.DataFrame  # ran but failed the finite/solver-bound guard (P0-1)
+    invalid: pd.DataFrame  # ran but failed the finite/implausibly-high guard (P0-1)
     roic_routed: pd.DataFrame  # ROIC not meaningful; needs a dedicated model (P1-4)
 
 
@@ -84,15 +84,20 @@ def run_scenario_valuations(
         # route it to a dedicated-model watchlist with its status.
         roic_status = classify_roic(inputs)
         if roic_status != "ok":
-            roic_routed_rows.append(
-                {
-                    "ticker": inputs.ticker,
-                    "roic": inputs.roic,
-                    "incremental_roic": inputs.incremental_roic,
-                    "roic_status": roic_status,
-                    "watchlist_reason": f"roic_not_meaningful:{roic_status}",
-                }
-            )
+            routed = {
+                "ticker": inputs.ticker,
+                "price": inputs.price,
+                "roic": inputs.roic,
+                "incremental_roic": inputs.incremental_roic,
+                "roic_status": roic_status,
+                "watchlist_reason": f"roic_not_meaningful:{roic_status}",
+                "data_confidence": inputs.data_confidence,
+                "model_confidence": inputs.model_confidence,
+            }
+            for column in _CARRY_COLUMNS:
+                if column in row.index:
+                    routed[column] = row[column]
+            roic_routed_rows.append(routed)
             continue
         valuation = value_company(
             inputs,
@@ -101,6 +106,11 @@ def run_scenario_valuations(
             wacc_bounds=wacc_bounds,
             alerts=alert_settings,
         )
+        catastrophic_tail_scenarios = [
+            scenario.assumptions.name
+            for scenario in valuation.scenarios
+            if scenario.irr_5y_status == "below_lower_bound"
+        ]
 
         for scenario in valuation.scenarios:
             assumption = scenario.assumptions
@@ -166,6 +176,8 @@ def run_scenario_valuations(
             "valuation_alerts": ";".join(valuation.valuation_alerts),
             "requires_manual_review": valuation.requires_manual_review,
             "roic_status": roic_status,  # "ok" here; non-ok was routed out (P1-4)
+            "catastrophic_tail_floor_applied": bool(catastrophic_tail_scenarios),
+            "catastrophic_tail_scenarios": ";".join(catastrophic_tail_scenarios),
         }
         for column in _CARRY_COLUMNS:
             if column in row.index:

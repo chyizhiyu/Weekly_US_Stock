@@ -1,7 +1,8 @@
-"""P0-1: non-finite and solver-bound-saturated valuations must fail closed.
+"""P0-1: non-finite and implausibly high valuations must fail closed.
 
 Covers the IRR solver status enum, the validity classifier, end-to-end routing
-through value_company, and the step6 valid/invalid partition.
+through value_company, and the step6 valid/invalid partition. Catastrophic
+below-bound losses remain in the risk distribution.
 """
 
 from __future__ import annotations
@@ -100,9 +101,12 @@ def test_classify_validity_flags_irr_above_bound() -> None:
     assert "irr_5y[bull]" in fields
 
 
-def test_classify_validity_flags_below_bound_and_non_finite() -> None:
+def test_classify_validity_keeps_below_bound_loss_but_rejects_non_finite() -> None:
     below = [_scenario("bear", status="below_lower_bound"), _scenario("base"), _scenario("bull")]
-    assert _classify_validity(below, _OK_METRICS)[1] == "irr_below_solver_bound"
+    assert _classify_validity(below, _OK_METRICS) == ("valid", None, [])
+
+    no_root = [_scenario("bear", status="no_root"), _scenario("base"), _scenario("bull")]
+    assert _classify_validity(no_root, _OK_METRICS)[0] == "invalid"
 
     bad_metrics = {**_OK_METRICS, "median_irr": float("nan")}
     status, reason, fields = _classify_validity(
@@ -189,3 +193,19 @@ def test_step6_partitions_invalid_out_of_metrics() -> None:
     # every value used for ranking is finite
     for col in ("expected_irr", "median_irr", "p10_irr", "p90_irr", "hurdle_cvar"):
         assert result.metrics[col].map(math.isfinite).all()
+    assert "catastrophic_tail_floor_applied" in result.metrics.columns
+
+
+def test_step6_keeps_catastrophic_loss_in_rankable_risk_distribution() -> None:
+    row = _quality_row("TAIL", 100.0)
+    row["net_debt"] = 5_000.0
+    result = run_scenario_valuations(
+        pd.DataFrame([row]), ScenarioSettings(), RiskPreferenceSettings()
+    )
+
+    assert set(result.metrics["ticker"]) == {"TAIL"}
+    assert result.invalid.empty
+    metric = result.metrics.iloc[0]
+    assert bool(metric["catastrophic_tail_floor_applied"])
+    assert metric["catastrophic_tail_scenarios"] == "bear;base;bull"
+    assert metric["p10_irr"] == LOWER_BOUND

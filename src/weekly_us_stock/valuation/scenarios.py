@@ -41,8 +41,9 @@ from weekly_us_stock.valuation.irr import (
 _MIN_DENOMINATOR = 0.01
 
 # Aggregate outputs that must be finite for a company to be RANKED. A NaN,
-# Infinity or solver-bound-saturated value in any of these routes the name to
-# the watchlist (P0-1) instead of into a pseudo-precise ranking row.
+# Infinity or implausibly high bound-saturated value routes the name to the
+# watchlist (P0-1) instead of into a pseudo-precise ranking row. A catastrophic
+# below-bound loss stays in the risk distribution at the conservative floor.
 _REQUIRED_FINITE_METRICS = (
     "expected_irr",
     "median_irr",
@@ -202,9 +203,9 @@ def value_scenario(
     irr_5y = irr_solution.rate
     irr_5y_status = irr_solution.status
     if irr_5y is None and irr_5y_status == "below_lower_bound":
-        # Catastrophic bear (IRR < -95%): floor the magnitude so weighted
-        # aggregates stay finite, but the status still removes the company from
-        # rankings (it is a bound-saturated, not a precise, return).
+        # Catastrophic downside (IRR < -95%): floor the magnitude so weighted
+        # aggregates stay finite. This is an economically plausible loss case,
+        # so keep it in the risk distribution and let the robust gate penalize it.
         irr_5y = LOWER_BOUND
     elif irr_5y is None and irr_5y_status == "above_upper_bound":
         # IRR > 200%: the cap comment calls this a data artifact. Keep a finite
@@ -358,9 +359,10 @@ def _classify_validity(
     """Decide whether a valuation is precise enough to be ranked.
 
     Returns (status, headline_reason, offending_fields). A name is invalid when
-    any scenario IRR is solver-bound-saturated or non-finite, when any scenario
-    produced a non-finite output, or when any required aggregate metric is not
-    a finite number. Invalid names are routed to the watchlist, never ranked.
+    an IRR is above the solver bound, when any scenario produced a non-finite
+    output, or when any required aggregate metric is not finite. A below-bound
+    loss stays at the conservative lower-bound value so its tail risk remains
+    visible in the research queue.
     """
 
     fields: list[str] = []
@@ -371,10 +373,7 @@ def _classify_validity(
         if status == "above_upper_bound":
             fields.append(f"irr_5y[{label}]")
             reasons.add("irr_above_solver_bound")
-        elif status == "below_lower_bound":
-            fields.append(f"irr_5y[{label}]")
-            reasons.add("irr_below_solver_bound")
-        elif status == "non_finite_input":
+        elif status not in {"valid", "below_lower_bound"}:
             fields.append(f"irr_5y[{label}]")
             reasons.add("invalid_valuation_output")
         if not scenario.is_finite:
@@ -392,7 +391,6 @@ def _classify_validity(
     priority = (
         "irr_above_solver_bound",
         "invalid_valuation_output",
-        "irr_below_solver_bound",
     )
     headline = next((r for r in priority if r in reasons), sorted(reasons)[0])
     return "invalid", headline, sorted(set(fields))

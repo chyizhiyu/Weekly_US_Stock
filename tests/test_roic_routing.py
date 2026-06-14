@@ -57,6 +57,10 @@ def _quality_row(ticker: str, roic: float, margin: float) -> dict:
         "financial_persistence_score": 0.6,
         "data_confidence": 1.0,
         "model_confidence": 1.0,
+        "name": f"{ticker} Corp",
+        "sector": "Technology",
+        "industry": "Software",
+        "market_cap": 10_000.0,
     }
 
 
@@ -74,5 +78,8 @@ def test_step6_routes_non_meaningful_roic_to_watchlist() -> None:
     routed = result.roic_routed.iloc[0]
     assert routed["roic_status"] == "meaningless_capital"
     assert routed["watchlist_reason"] == "roic_not_meaningful:meaningless_capital"
+    assert routed["name"] == "NEGCAP Corp"
+    assert routed["sector"] == "Technology"
+    assert routed["financial_persistence_score"] == 0.6
     # the negative-ROIC name never received a forward 2% valuation
     assert "NEGCAP" not in set(result.scenario_rows.get("ticker", pd.Series(dtype=str)))

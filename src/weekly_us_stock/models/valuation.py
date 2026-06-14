@@ -99,10 +99,10 @@ class CompanyValuation(BaseModel):
     model_confidence: float
     data_confidence: float
     model_uncertainty: float
-    # P0-1: "valid" means every ranked output is finite and inside the IRR
-    # solver bounds. Otherwise the reason (e.g. "irr_above_solver_bound",
-    # "invalid_valuation_output") routes the name to the watchlist with an
-    # auditable list of offending fields instead of into a ranking.
+    # P0-1: "valid" means every ranked output is finite and not an implausibly
+    # high solver-bound result. Catastrophic below-bound loss cases remain in the
+    # distribution at a conservative floor; other invalid results route to the
+    # watchlist with an auditable list of offending fields.
     valuation_status: str = "valid"
     invalid_reason: str | None = None
     invalid_fields: list[str] = Field(default_factory=list)
