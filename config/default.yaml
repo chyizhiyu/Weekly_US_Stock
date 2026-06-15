@@ -35,6 +35,12 @@ normalization:
   default_tax_rate: 0.21
   min_tax_rate: 0.10
   max_tax_rate: 0.35
+  max_filing_age_days: 150
+  one_off_mad_threshold: 3.0
+  one_off_corroboration_z: 1.5
+  one_off_corroboration_ratio: 0.5
+  one_off_mad_abs_floor: 0.01
+  one_off_confidence_penalty: 0.15
 
 wacc:
   equity_risk_premium: 0.05

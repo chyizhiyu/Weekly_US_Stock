@@ -215,6 +215,7 @@ def test_fmp_build_ttm_row() -> None:
         {
             "date": d,
             "filingDate": f,
+            "netIncome": r * 0.15,
             "operatingCashFlow": r * 0.2,
             "capitalExpenditure": -r * 0.05,
             "depreciationAndAmortization": r * 0.04,

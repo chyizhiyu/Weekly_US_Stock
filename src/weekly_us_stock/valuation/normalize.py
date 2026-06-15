@@ -32,10 +32,13 @@ class _Anchor:
     cash: float
     total_equity: float
     depreciation: float
+    ocf: float
     interest_expense: float | None  # None == unknown, never assumed zero
     dividends_paid: float
     buybacks: float
     filing_date: str
+    cashflow_period_semantics: str
+    ttm_cashflow_status: str
 
     @classmethod
     def from_row(cls, row: pd.Series | dict) -> _Anchor:
@@ -51,6 +54,12 @@ class _Anchor:
         filing = row.get("filing_date")
         filing_text = str(filing.date()) if hasattr(filing, "date") else str(filing)
         is_ttm = bool(row.get("is_ttm")) if "is_ttm" in row else False
+        cashflow_period_semantics = str(
+            row.get("cashflow_period_semantics") or ("unknown" if is_ttm else "annual")
+        )
+        ttm_cashflow_status = str(
+            row.get("ttm_cashflow_status") or ("unverified" if is_ttm else "annual_anchor")
+        )
         return cls(
             source="ttm" if is_ttm else "annual",
             revenue=_value("revenue", None),
@@ -62,10 +71,13 @@ class _Anchor:
             cash=_value("cash") or 0.0,
             total_equity=_value("total_equity") or 0.0,
             depreciation=_value("depreciation") or 0.0,
+            ocf=_value("ocf") or 0.0,
             interest_expense=_value("interest_expense", None),
             dividends_paid=_value("dividends_paid") or 0.0,
             buybacks=_value("buybacks") or 0.0,
             filing_date=filing_text,
+            cashflow_period_semantics=cashflow_period_semantics,
+            ttm_cashflow_status=ttm_cashflow_status,
         )
 
 
@@ -145,12 +157,31 @@ def normalize_company(
         float(shares.iloc[max(len(shares) - 4, 0)]), latest_shares, min(3, len(shares) - 1)
     )
     ocf_to_net_income = _ocf_to_net_income(recent)
+    margin_signal = adj_margin
+    ocf_margin_signal = frame["ocf"].astype(float) / revenue
+    if anchor.source == "ttm":
+        # Confidence must judge the CURRENT valuation anchor. Appending TTM as
+        # the latest observation lets _mad_anomaly compare it with annual
+        # history while still excluding it from the robust baseline.
+        margin_signal = pd.concat(
+            [margin_signal, pd.Series([anchor_adj_op / latest_revenue])],
+            ignore_index=True,
+        )
+        ocf_margin_signal = pd.concat(
+            [ocf_margin_signal, pd.Series([anchor.ocf / latest_revenue])],
+            ignore_index=True,
+        )
+    margin_mad_z = _mad_anomaly(margin_signal, settings.one_off_mad_abs_floor)
+    ocf_margin_mad_z = _mad_anomaly(ocf_margin_signal, settings.one_off_mad_abs_floor)
+    one_off_suspected = _one_off_suspected(margin_mad_z, ocf_margin_mad_z, settings)
 
     return {
         "years_of_data": int(len(frame)),
         "latest_fiscal_year": int(latest["fiscal_year"]),
         "anchor_source": anchor.source,
         "latest_filing_date": anchor.filing_date,
+        "cashflow_period_semantics": anchor.cashflow_period_semantics,
+        "ttm_cashflow_status": anchor.ttm_cashflow_status,
         "revenue": latest_revenue,
         "revenue_cagr": revenue_cagr,
         "revenue_volatility": float(growth.std(ddof=0)) if len(growth) > 1 else 0.0,
@@ -173,12 +204,47 @@ def normalize_company(
         "interest_coverage": interest_coverage,
         "net_debt_to_ebitda": net_debt_to_ebitda,
         "sbc_intensity": sbc_intensity,
+        "margin_mad_z": margin_mad_z,
+        "ocf_margin_mad_z": ocf_margin_mad_z,
+        "one_off_suspected": one_off_suspected,
         "dividends_paid": anchor.dividends_paid,
         "buybacks": anchor.buybacks,
         "net_share_change_cagr": net_share_change_cagr,
         "ocf_to_net_income": ocf_to_net_income,
         "shares_diluted": latest_shares,
     }
+
+
+def _mad_anomaly(series: pd.Series, abs_floor: float) -> float:
+    """Signed deviation of the latest point from its EX-LATEST history, in
+    robust MAD units. The latest period is excluded so a one-off cannot
+    contaminate the baseline it is judged against; a near-zero MAD falls back
+    to an absolute floor. Returns 0.0 when history is too short."""
+
+    values = series.dropna().astype(float)
+    if len(values) < 4:
+        return 0.0
+    history = values.iloc[:-1]
+    median = float(history.median())
+    mad = float((history - median).abs().median())
+    scale = max(1.4826 * mad, abs_floor)
+    return (float(values.iloc[-1]) - median) / scale
+
+
+def _one_off_suspected(
+    margin_z: float, ocf_z: float, settings: NormalizationSettings
+) -> bool:
+    """A latest-period operating-margin spike is read as a likely one-off only
+    when OCF/revenue does NOT corroborate it (same direction, comparable
+    magnitude), so a real cash-backed operating improvement is not flagged."""
+
+    if abs(margin_z) <= settings.one_off_mad_threshold:
+        return False
+    corroborated = (margin_z > 0) == (ocf_z > 0) and abs(ocf_z) >= max(
+        settings.one_off_corroboration_z,
+        settings.one_off_corroboration_ratio * abs(margin_z),
+    )
+    return not corroborated
 
 
 def _clamped_tax_rate(frame: pd.DataFrame, settings: NormalizationSettings) -> float:

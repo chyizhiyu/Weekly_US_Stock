@@ -238,6 +238,113 @@ def transform_statements(
     return pd.DataFrame(rows)
 
 
+_CF_FLOW_FIELDS = (
+    "operatingCashFlow",
+    "capitalExpenditure",
+    "depreciationAndAmortization",
+    "stockBasedCompensation",
+    "commonDividendsPaid",
+    "netDividendsPaid",
+    "commonStockRepurchased",
+    "commonStockIssuance",
+    "netIncome",
+)
+
+_CF_REQUIRED_FIELDS = (
+    "netIncome",
+    "operatingCashFlow",
+    "capitalExpenditure",
+    "stockBasedCompensation",
+)
+
+
+def _cashflow_complete(
+    quarters: list[dict[str, Any]], cash_by_date: dict[str, dict[str, Any]]
+) -> bool:
+    """All four income quarters need a matching, auditable cash-flow row.
+
+    Missing rows or core flow fields make both direct summation and YTD
+    de-cumulation unsafe, so the caller must fall back to the annual anchor.
+    """
+
+    for quarter in quarters:
+        cash = cash_by_date.get(str(quarter.get("date")))
+        if cash is None or any(_f(cash.get(field), None) is None for field in _CF_REQUIRED_FIELDS):
+            return False
+    return True
+
+
+def _cashflow_period(
+    quarters: list[dict[str, Any]], cash_by_date: dict[str, dict[str, Any]]
+) -> str:
+    """Classify quarterly cash-flow as single-period ("discrete"), year-to-date
+    cumulative ("ytd"), or "unknown". The income statement's net income is a
+    reliable per-quarter (discrete) reference; if the cash-flow statement's net
+    income summed over the window is materially larger, it is cumulative."""
+
+    ni_income = sum(_f(q.get("netIncome"), 0.0) or 0.0 for q in quarters)
+    ni_cash = sum(
+        _f(cash_by_date.get(str(q.get("date")), {}).get("netIncome"), 0.0) or 0.0
+        for q in quarters
+    )
+    if ni_income <= 0.0:
+        return "unknown"  # losses/zero make the ratio unreliable
+    ratio = ni_cash / ni_income
+    if ratio >= 1.4:
+        return "ytd"
+    if 0.6 <= ratio <= 1.4:
+        return "discrete"
+    return "unknown"
+
+
+def _decumulate_cashflow(
+    rows: list[dict[str, Any]], fields: tuple[str, ...]
+) -> dict[str, dict[str, float]]:
+    """Convert YTD-cumulative quarterly cash-flow into single-quarter values by
+    differencing consecutive quarters WITHIN each fiscal year. The first quarter
+    of a fiscal year is already single-period."""
+
+    by_fy: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        fy = row.get("fiscalYear")
+        date_key = str(row.get("date") or "")
+        if fy is None or not date_key:
+            continue
+        by_fy.setdefault(str(fy), []).append(row)
+    out: dict[str, dict[str, float]] = {}
+    for fy_rows in by_fy.values():
+        ordered = sorted(fy_rows, key=lambda r: str(r.get("date")))
+        previous: dict[str, Any] | None = None
+        for row in ordered:
+            date_key = str(row.get("date"))
+            values: dict[str, float] = {}
+            for field in fields:
+                current = _f(row.get(field), 0.0) or 0.0
+                prior = (_f(previous.get(field), 0.0) or 0.0) if previous is not None else 0.0
+                values[field] = current - prior
+            out[date_key] = values
+            previous = row
+    return out
+
+
+def _decumulation_matches_income(
+    quarters: list[dict[str, Any]], decum: dict[str, dict[str, float]]
+) -> bool:
+    """Every de-cumulated quarter's net income must match the income statement's
+    (discrete) net income, or the conversion is unreliable (e.g. a missing
+    quarter) and the TTM cash-flow must be dropped."""
+
+    for quarter in quarters:
+        date_key = str(quarter.get("date"))
+        income_ni = _f(quarter.get("netIncome"), 0.0) or 0.0
+        decum_ni = decum.get(date_key, {}).get("netIncome")
+        if decum_ni is None:
+            return False
+        if abs(decum_ni - income_ni) > 0.10 * abs(income_ni) + 1.0:
+            return False
+    return True
+
+
 def build_ttm_row(
     income: list[dict[str, Any]],
     balance: list[dict[str, Any]],
@@ -269,6 +376,40 @@ def build_ttm_row(
     latest_balance = balance_rows[0] if balance_rows else {}
     latest = quarters[0]
 
+    # YTD guard: FMP can serve single-period OR year-to-date cumulative
+    # quarterly cash-flow. Summing four YTD quarters over-states OCF/capex/SBC
+    # ~2.5x, so de-cumulate to single quarters; if that cannot be done
+    # reliably, drop TTM cash-flow and let the caller anchor on the annual.
+    if not _cashflow_complete(quarters, cash_by_date):
+        logger.warning(
+            "TTM cash-flow for %s is incomplete; dropping TTM and anchoring on annual.",
+            latest.get("symbol"),
+        )
+        return pd.DataFrame()
+
+    cashflow_period_semantics = _cashflow_period(quarters, cash_by_date)
+    cash_source: dict[str, dict[str, Any]] = cash_by_date
+    ttm_cashflow_status = "ok"
+    if cashflow_period_semantics == "ytd":
+        decum = _decumulate_cashflow(_filed(cashflow), _CF_FLOW_FIELDS)
+        if _decumulation_matches_income(quarters, decum):
+            cash_source = decum
+            ttm_cashflow_status = "de_cumulated"
+        else:
+            logger.warning(
+                "TTM cash-flow for %s looks YTD-cumulative but cannot be reliably "
+                "de-cumulated; dropping TTM cash-flow and anchoring on annual.",
+                latest.get("symbol"),
+            )
+            return pd.DataFrame()
+    elif cashflow_period_semantics == "unknown":
+        logger.warning(
+            "TTM cash-flow period semantics for %s cannot be verified; "
+            "dropping TTM and anchoring on annual.",
+            latest.get("symbol"),
+        )
+        return pd.DataFrame()
+
     def _sum_income(field: str) -> float:
         return sum(_f(row.get(field), 0.0) or 0.0 for row in quarters)
 
@@ -279,7 +420,7 @@ def build_ttm_row(
 
     def _sum_cash(field: str) -> float:
         return sum(
-            _f(cash_by_date.get(str(row.get("date")), {}).get(field), 0.0) or 0.0
+            _f(cash_source.get(str(row.get("date")), {}).get(field), 0.0) or 0.0
             for row in quarters
         )
 
@@ -311,6 +452,8 @@ def build_ttm_row(
         "effective_tax_rate": tax / pretax if pretax and pretax > 0 else None,
         "is_estimate": False,
         "is_ttm": True,
+        "cashflow_period_semantics": cashflow_period_semantics,
+        "ttm_cashflow_status": ttm_cashflow_status,
         "as_of": as_of.isoformat(),
         "source": "fmp:statements-quarterly-ttm",
         "fetched_at": fetched_at,

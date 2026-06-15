@@ -70,6 +70,14 @@ class NormalizationSettings(BaseModel):
     min_tax_rate: float = 0.10
     max_tax_rate: float = 0.35
     max_filing_age_days: int = 150  # older anchor filings cut data confidence
+    # One-off detection (A): robust (MAD) deviation of the LATEST operating
+    # margin from its ex-latest history. A spike not corroborated by OCF/revenue
+    # reads as a likely one-off the vendor could not itemize -> lower confidence.
+    one_off_mad_threshold: float = 3.0
+    one_off_corroboration_z: float = 1.5
+    one_off_corroboration_ratio: float = 0.5
+    one_off_mad_abs_floor: float = 0.01  # MAD~0 floor (avoids div0 / oversensitivity)
+    one_off_confidence_penalty: float = 0.15
 
 
 class EventGateSettings(BaseModel):

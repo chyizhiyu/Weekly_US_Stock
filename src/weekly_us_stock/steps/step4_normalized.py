@@ -190,6 +190,10 @@ def _data_confidence(row: dict, normalization: NormalizationSettings) -> float:
     filing_age = row.get("filing_age_days")
     if filing_age is not None and filing_age > normalization.max_filing_age_days:
         confidence -= 0.15
+    if bool(row.get("one_off_suspected")):
+        # A likely one-off the vendor could not itemize is distorting the latest
+        # margin: distrust the anchor instead of silently normalizing it.
+        confidence -= normalization.one_off_confidence_penalty
     if row.get("anchor_source") != "ttm":
         confidence -= 0.15  # no TTM window: anchored on a possibly stale annual
     return max(confidence, 0.2)
