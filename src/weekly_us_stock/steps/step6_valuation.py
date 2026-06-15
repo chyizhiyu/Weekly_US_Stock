@@ -73,6 +73,15 @@ def run_scenario_valuations(
     skipped_rows: list[dict] = []
     roic_routed_rows: list[dict] = []
 
+    # Fade target per company: the industry (then sector) peer-median SBC
+    # intensity, falling back to the configured default for thin groups.
+    quality_frame = quality_frame.copy()
+    quality_frame["mature_sbc_intensity"] = _peer_mature_sbc(
+        quality_frame,
+        scenario_settings.mature_sbc_intensity_default,
+        scenario_settings.sbc_peer_min_count,
+    )
+
     for _, row in quality_frame.iterrows():
         inputs = _to_inputs(row)
         if inputs is None:
@@ -125,6 +134,7 @@ def run_scenario_valuations(
                     "forward_roic": assumption.forward_roic,
                     "terminal_roic": assumption.terminal_roic,
                     "share_change_rate": assumption.share_change_rate,
+                    "sbc_fade_speed": assumption.sbc_fade_speed,
                     "reinvestment_rate_y1": scenario.reinvestment_rate_y1,
                     "intrinsic_value_per_share": scenario.intrinsic_value_per_share,
                     "irr_3y": scenario.irr_3y,
@@ -204,6 +214,31 @@ def run_scenario_valuations(
     )
 
 
+def _peer_mature_sbc(frame: pd.DataFrame, default: float, min_count: int) -> pd.Series:
+    """Per-company SBC fade target: the median SBC intensity of its industry
+    peers, falling back to its sector peers, then the configured default.
+    Groups with fewer than ``min_count`` members are not trusted."""
+
+    if frame.empty or "sbc_intensity" not in frame.columns:
+        return pd.Series(default, index=frame.index, dtype=float)
+    own = pd.to_numeric(frame["sbc_intensity"], errors="coerce").clip(lower=0.0).fillna(0.0)
+    result = own.copy()  # no peer evidence => no fade (target = own intensity)
+    resolved = pd.Series(False, index=frame.index)
+    for column in ("industry", "sector"):  # finest grouping first
+        if column not in frame.columns:
+            continue
+        grouped = own.groupby(frame[column])
+        median = grouped.transform("median")
+        count = grouped.transform("count")
+        eligible = (
+            (~resolved) & frame[column].notna() & (count >= min_count) & median.notna()
+        )
+        result = result.mask(eligible, median)
+        resolved = resolved | eligible
+    # Never assume SBC fades below the configured floor.
+    return result.clip(lower=default)
+
+
 def _to_inputs(row: pd.Series) -> CompanyInputs | None:
     required = [
         "ticker",
@@ -246,6 +281,8 @@ def _to_inputs(row: pd.Series) -> CompanyInputs | None:
         cyclicality=float(row.get("cyclicality") or 0.0),
         margin_volatility=float(row.get("margin_volatility") or 0.0),
         net_share_change_rate=float(row.get("net_share_change_cagr") or 0.0),
+        sbc_intensity=float(row.get("sbc_intensity") or 0.0),
+        mature_sbc_intensity=float(row.get("mature_sbc_intensity") or 0.02),
         data_confidence=float(row.get("data_confidence") or 1.0),
         model_confidence=float(row.get("model_confidence") or 1.0),
     )

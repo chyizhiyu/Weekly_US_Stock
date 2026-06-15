@@ -112,6 +112,14 @@ class ScenarioSettings(BaseModel):
     price_anchor_growth: float = 0.05
     max_share_change_rate: float = 0.08
     min_share_change_rate: float = -0.05
+    # SBC is kept as a fading operating expense (never re-diluted): intensity
+    # glides from the company level toward an industry peer median. Bear fades
+    # slowest (SBC stays elevated longest); bull fastest.
+    mature_sbc_intensity_default: float = 0.02
+    sbc_peer_min_count: int = 3
+    sbc_fade_speed: dict[str, float] = Field(
+        default_factory=lambda: {"bear": 0.5, "base": 1.0, "bull": 1.5}
+    )
     # P1-3: buybacks are not mechanically extrapolated. The retirement rate
     # decays toward zero each year, spend is capped at a fraction of positive
     # distributable FCF, and buybacks stop when leverage is too high. Dilution

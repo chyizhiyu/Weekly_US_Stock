@@ -33,6 +33,8 @@ class CompanyInputs(BaseModel):
     cyclicality: float = 0.0  # stdev of yoy revenue growth
     margin_volatility: float = 0.0  # stdev of operating margin
     net_share_change_rate: float = 0.0  # historical net share count CAGR (+ dilutes)
+    sbc_intensity: float = 0.0  # median SBC / revenue; expensed and faded, never re-diluted
+    mature_sbc_intensity: float = 0.02  # industry peer-median SBC intensity (fade target)
     data_confidence: float = 1.0
     model_confidence: float = 1.0
 
@@ -46,6 +48,7 @@ class ScenarioAssumptions(BaseModel):
     forward_roic: float
     terminal_roic: float
     share_change_rate: float
+    sbc_fade_speed: float = 1.0  # per-scenario SBC fade speed (bear < base < bull)
 
 
 class ScenarioValuation(BaseModel):

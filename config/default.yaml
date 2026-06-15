@@ -73,6 +73,12 @@ scenarios:
   price_anchor_growth: 0.05          # price path used to translate buyback spend into share count
   max_share_change_rate: 0.08
   min_share_change_rate: -0.05
+  mature_sbc_intensity_default: 0.02   # fallback fade target when no peer median
+  sbc_peer_min_count: 3                # min peers before an SBC median is trusted
+  sbc_fade_speed:
+    bear: 0.5                          # bear: SBC normalizes slowly
+    base: 1.0                          # base: reaches the peer median by the horizon
+    bull: 1.5                          # bull: SBC normalizes fastest
 
 risk_preferences:
   # Investor risk preferences. These shape the Robust Ranking; they are NOT factor weights.

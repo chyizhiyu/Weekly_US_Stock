@@ -60,8 +60,19 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
     spread = _growth_spread(inputs, cfg)
 
     forward_roic = _forward_roic(inputs)
+    # SBC is captured as a fading operating expense (see value_scenario), so the
+    # SBC-driven slice of historical share growth is stripped out here to avoid
+    # double-counting it. What remains is real buybacks / M&A / other issuance.
+    market_cap = max(inputs.price * inputs.shares_outstanding, _MIN_DENOMINATOR)
+    sbc_dilution_proxy = inputs.sbc_intensity * inputs.latest_revenue / market_cap
+    effective_share_change = inputs.net_share_change_rate - sbc_dilution_proxy
+    if inputs.net_share_change_rate >= 0.0:
+        # A net diluter must never become a phantom repurchaser when the SBC
+        # proxy exceeds realized net issuance (SBC intensity and reported share
+        # growth need not reconcile). Floor the residual dilution at zero.
+        effective_share_change = max(effective_share_change, 0.0)
     share_change = min(
-        max(inputs.net_share_change_rate, cfg.min_share_change_rate),
+        max(effective_share_change, cfg.min_share_change_rate),
         cfg.max_share_change_rate,
     )
 
@@ -98,6 +109,7 @@ def build_scenarios(inputs: CompanyInputs, cfg: ScenarioSettings) -> list[Scenar
             forward_roic=roic,
             terminal_roic=max(terminal_roic, terminal_growth + _MIN_DENOMINATOR),
             share_change_rate=share,
+            sbc_fade_speed=cfg.sbc_fade_speed.get(name, 1.0),
         )
 
     wacc = inputs.wacc
@@ -150,12 +162,21 @@ def value_scenario(
     )
 
     revenue = inputs.latest_revenue
+    # SBC stays an operating expense but its intensity fades from the company's
+    # level toward the industry peer median; re-expressing the GAAP margin with
+    # the FADED SBC means adding back the shrinking gap between the historical and
+    # projected SBC intensity. SBC is never returned to the share count, so it is
+    # counted exactly once. sbc_intensity <= mature => sbc_gap 0 => margin path
+    # untouched, so a zero-SBC name is byte-for-byte unchanged.
+    sbc_gap = max(inputs.sbc_intensity - inputs.mature_sbc_intensity, 0.0)
+    fade_denom = max(horizon - 1, 1)
     nopat_path: list[float] = []
     fcf_path: list[float] = []
     reinvest_y1 = 0.0
     for year in range(1, horizon + 1):
         revenue *= 1.0 + growth_path[year - 1]
-        nopat = revenue * margin_path[year - 1] * (1.0 - tax)
+        fade_frac = min(1.0, assumption.sbc_fade_speed * (year - 1) / fade_denom)
+        nopat = revenue * (margin_path[year - 1] + sbc_gap * fade_frac) * (1.0 - tax)
         next_growth = (
             growth_path[year] if year < horizon else assumption.terminal_growth
         )
