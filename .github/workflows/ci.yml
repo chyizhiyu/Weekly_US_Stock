@@ -8,7 +8,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -32,7 +37,4 @@ jobs:
       - name: Offline end-to-end smoke run (sample provider)
         run: |
           weekly-us-stock run --provider sample --as-of 2026-01-09
-          test -f runs/20260109/robust_ranking.csv
-          test -f runs/20260109/upside_ranking.csv
-          test -f runs/20260109/feishu_summary.md
-          test -f runs/20260109/run_metadata.json
+          python -c "from pathlib import Path; required=['robust_ranking.csv','upside_ranking.csv','feishu_summary.md','run_metadata.json']; missing=[f for f in required if not (Path('runs/20260109') / f).is_file()]; assert not missing, f'missing artifacts: {missing}'"

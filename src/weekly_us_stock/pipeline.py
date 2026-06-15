@@ -9,7 +9,7 @@ runs/YYYYMMDD/.
 
 from __future__ import annotations
 
-import fcntl
+import errno
 import logging
 import os
 import shutil
@@ -75,6 +75,64 @@ from weekly_us_stock.utils.fingerprint import (
 from weekly_us_stock.valuation.eligibility import classify_eligibility
 from weekly_us_stock.valuation.industry import route_unsupported_industries
 from weekly_us_stock.valuation.ranking import build_rankings
+
+# Cross-process run-date lock. Retry ONLY on genuine lock contention, re-raise
+# every other OSError (bad descriptor, a filesystem that does not support
+# locks), and time out instead of spinning forever (e.g. a network share that
+# never grants the lock) so the run fails closed rather than hanging.
+_LOCK_TIMEOUT_SECONDS = 120.0
+_LOCK_POLL_SECONDS = 0.1
+
+if os.name == "nt":  # pragma: no cover - exercised only on Windows
+    import msvcrt
+
+    _LOCK_RETRY_ERRNOS = frozenset({errno.EACCES, errno.EDEADLOCK})
+
+    def _try_acquire(handle: Any) -> bool:
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            return True
+        except OSError as exc:
+            if exc.errno not in _LOCK_RETRY_ERRNOS:
+                raise
+            return False
+
+    def _unlock(handle: Any) -> None:
+        handle.seek(0)
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        except OSError:
+            pass  # closing the handle releases the lock regardless
+
+else:  # POSIX
+    import fcntl
+
+    _LOCK_RETRY_ERRNOS = frozenset({errno.EAGAIN, errno.EWOULDBLOCK, errno.EACCES})
+
+    def _try_acquire(handle: Any) -> bool:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except OSError as exc:
+            if exc.errno not in _LOCK_RETRY_ERRNOS:
+                raise
+            return False
+
+    def _unlock(handle: Any) -> None:
+        fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def _lock_exclusive(handle: Any) -> None:
+    handle.seek(0)
+    deadline = time.monotonic() + _LOCK_TIMEOUT_SECONDS
+    while not _try_acquire(handle):
+        if time.monotonic() >= deadline:
+            raise TimeoutError(
+                "could not acquire run-date lock within "
+                f"{_LOCK_TIMEOUT_SECONDS:g}s"
+            )
+        time.sleep(_LOCK_POLL_SECONDS)
+
 
 logger = logging.getLogger(__name__)
 
@@ -791,11 +849,11 @@ class WeeklyUSStockPipeline:
         # inside it so two same-date processes serialize their backup/promote
         # steps instead of interleaving and destroying each other's report.
         with open(output_dir / f".{date_key}.lock", "w", encoding="utf-8") as handle:
-            fcntl.flock(handle, fcntl.LOCK_EX)
+            _lock_exclusive(handle)
             try:
                 yield
             finally:
-                fcntl.flock(handle, fcntl.LOCK_UN)
+                _unlock(handle)
 
     @staticmethod
     def _recover_promotion(final_dir: Path) -> None:
