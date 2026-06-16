@@ -85,8 +85,13 @@ class CompanyValuation(BaseModel):
     p90_irr: float
     above_hurdle_weight: float
     permanent_loss_weight: float
+    worst_case_shortfall: float
+    worst_case_hurdle_gap: float
+    # Legacy output aliases kept for downstream compatibility. With the
+    # default 25/50/25 bear/base/bull grid these are deterministic worst-case
+    # stress metrics, not calibrated CVaR.
     expected_shortfall: float
-    hurdle_cvar: float  # tail mean of max(0, hurdle - irr): shortfall vs the hurdle
+    hurdle_cvar: float
     # P1-1: keep the NAMED scenario values and the STATISTICAL interval separate.
     # low/high are min/max of the three scenarios (so low <= base <= high holds
     # by construction); intrinsic_value_bear/bull keep the economic identity of

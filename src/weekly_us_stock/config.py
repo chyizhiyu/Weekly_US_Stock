@@ -144,14 +144,19 @@ class RiskPreferenceSettings(BaseModel):
     downside_aversion: float = 1.0
     ambiguity_aversion: float = 0.5
     permanent_loss_penalty: float = 0.5
+    # Legacy config key retained for older YAML files. The default three-point
+    # model now reports deterministic worst-case stress instead of CVaR because
+    # alpha=25% on a 25/50/25 grid collapses to the bear point.
     cvar_alpha: float = 0.25
     permanent_loss_threshold: float = -0.30
     uncertainty_per_missing_confidence: float = 0.03
-    # hurdle_cvar (default): confidence-scaled positive excess over the hurdle
-    # minus the hurdle-relative tail shortfall. "penalized_expected": E[IRR]
+    # hurdle_gap (default): confidence-scaled positive excess over the hurdle
+    # minus the worst-scenario hurdle gap. Legacy "hurdle_cvar" maps here.
+    # "penalized_expected": E[IRR]
     # minus all three penalties (the original spec decomposition).
-    # "median_cvar": Median IRR - downside_aversion x zero-anchored CVaR.
-    formula: str = "hurdle_cvar"
+    # "median_stress": Median IRR - downside_aversion x worst-case shortfall
+    # (legacy "median_cvar" maps here).
+    formula: str = "hurdle_gap"
 
 
 class ConfidenceSettings(BaseModel):

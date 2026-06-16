@@ -156,6 +156,9 @@ def run_scenario_valuations(
             "above_hurdle_weight": valuation.above_hurdle_weight,
             "hurdle_rate": hurdle,
             "permanent_loss_weight": valuation.permanent_loss_weight,
+            "worst_case_shortfall": valuation.worst_case_shortfall,
+            "worst_case_hurdle_gap": valuation.worst_case_hurdle_gap,
+            # Legacy aliases kept for old CSV consumers.
             "expected_shortfall": valuation.expected_shortfall,
             "hurdle_cvar": valuation.hurdle_cvar,
             "intrinsic_value_low": valuation.intrinsic_value_low,

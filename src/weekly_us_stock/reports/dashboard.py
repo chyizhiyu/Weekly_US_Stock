@@ -144,8 +144,8 @@ def build_dashboard(
         "- Stocks missing core financials were rejected (fail closed), never estimated.",
         "- Banks, insurers, REITs and pre-profit biotech are watchlisted: the general",
         "  owner-earnings DCF does not apply and no substitute model is forced on them.",
-        "- Scenario set is discrete (bear/base/bull); a Monte Carlo layer is a planned",
-        "  extension and the aggregation already operates on generic distributions.",
+        "- Scenario set is discrete (bear/base/bull); worst-case stress metrics are",
+        "  deterministic bear/base/bull stress labels, not calibrated CVaR.",
         "- Ad-hoc market closures are not in the calendar; freshness checks catch them.",
     ]
     return "\n".join(lines) + "\n"
@@ -159,7 +159,7 @@ def _ranking_section(
         return lines + ["- No candidates survived to ranking."]
     if robust_columns:
         lines += [
-            "| # | Ticker | Robust | Med IRR | P10 | P90 | Hurdle CVaR "
+            "| # | Ticker | Robust | Med IRR | P10 | P90 | Worst Hurdle Gap "
             "| W(perm loss) | Quality | Evidence |",
             "|---|---|---|---|---|---|---|---|---|---|",
         ]
@@ -173,7 +173,7 @@ def _ranking_section(
             lines.append(
                 f"| {int(row['rank'])} | {row['ticker']} | {row['robust_return']:.1%} "
                 f"| {row['median_irr']:.1%} | {row['p10_irr']:.1%} | {row['p90_irr']:.1%} "
-                f"| {row['hurdle_cvar']:.1%} | {row['permanent_loss_weight']:.0%} "
+                f"| {_worst_hurdle_gap(row):.1%} | {row['permanent_loss_weight']:.0%} "
                 f"| {row['business_quality']:.2f} | {row['evidence_confidence']:.2f} |"
             )
         else:
@@ -185,6 +185,11 @@ def _ranking_section(
                 f"| {row['above_hurdle_weight']:.0%} | {upside_text} |"
             )
     return lines
+
+
+def _worst_hurdle_gap(row: pd.Series) -> float:
+    value = row.get("worst_case_hurdle_gap", row.get("hurdle_cvar", 0.0))
+    return float(value) if pd.notna(value) else 0.0
 
 
 def _scenario_section(robust: pd.DataFrame, scenarios: pd.DataFrame, top_n: int) -> list[str]:

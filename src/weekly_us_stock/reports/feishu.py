@@ -82,11 +82,16 @@ def _candidate_lines(robust: pd.DataFrame, top_n: int) -> list[str]:
             f"{int(row['rank'])}. {row['ticker']}"
             f"｜中位IRR {row['median_irr']:.1%}"
             f"｜P10 {row['p10_irr']:.1%}"
-            f"｜门槛CVaR {row['hurdle_cvar']:.1%}"
+            f"｜最差缺口 {_worst_hurdle_gap(row):.1%}"
             f"｜质量 {row['business_quality']:.2f}"
             f"｜置信 {row['evidence_confidence']:.2f}"
         )
     return lines
+
+
+def _worst_hurdle_gap(row: pd.Series) -> float:
+    value = row.get("worst_case_hurdle_gap", row.get("hurdle_cvar", 0.0))
+    return float(value) if pd.notna(value) else 0.0
 
 
 def _upside_lines(upside: pd.DataFrame, top_n: int) -> list[str]:

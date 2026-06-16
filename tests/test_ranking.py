@@ -8,7 +8,7 @@ import pytest
 from weekly_us_stock.config import RiskPreferenceSettings
 from weekly_us_stock.valuation.ranking import add_robust_components, build_rankings
 
-PREFS = RiskPreferenceSettings()  # default formula: hurdle_cvar
+PREFS = RiskPreferenceSettings()  # default formula: hurdle_gap
 
 
 def _metrics() -> pd.DataFrame:
@@ -20,6 +20,8 @@ def _metrics() -> pd.DataFrame:
                 "expected_irr": 0.13,
                 "median_irr": 0.14,
                 "hurdle_rate": 0.12,
+                "worst_case_shortfall": 0.00,
+                "worst_case_hurdle_gap": 0.02,
                 "expected_shortfall": 0.00,
                 "hurdle_cvar": 0.02,  # bear lands at 10% vs the 12% hurdle
                 "model_uncertainty": 0.05,
@@ -33,6 +35,8 @@ def _metrics() -> pd.DataFrame:
                 "expected_irr": 0.20,
                 "median_irr": 0.18,
                 "hurdle_rate": 0.12,
+                "worst_case_shortfall": 0.30,
+                "worst_case_hurdle_gap": 0.42,
                 "expected_shortfall": 0.30,
                 "hurdle_cvar": 0.42,  # bear at -30% vs the 12% hurdle
                 "model_uncertainty": 0.30,
@@ -44,7 +48,7 @@ def _metrics() -> pd.DataFrame:
     )
 
 
-def test_hurdle_cvar_formula_is_transparent() -> None:
+def test_hurdle_gap_formula_is_transparent() -> None:
     scored = add_robust_components(_metrics(), PREFS)
     row = scored.set_index("ticker").loc["LOTTERY"]
     expected = (0.70 * 0.45) * max(0.18 - 0.12, 0.0) - PREFS.downside_aversion * 0.42
@@ -76,11 +80,32 @@ def test_penalized_expected_formula_matches_spec_decomposition() -> None:
     assert row["robust_return"] == pytest.approx(expected)
 
 
-def test_median_cvar_formula_uses_a_single_penalty() -> None:
-    prefs = RiskPreferenceSettings(formula="median_cvar", downside_aversion=1.5)
+def test_median_stress_formula_uses_a_single_penalty() -> None:
+    prefs = RiskPreferenceSettings(formula="median_stress", downside_aversion=1.5)
     scored = add_robust_components(_metrics(), prefs)
     row = scored.set_index("ticker").loc["LOTTERY"]
     assert row["robust_return"] == pytest.approx(0.18 - 1.5 * 0.30)
+
+
+def test_legacy_cvar_formula_names_still_map_to_stress_metrics() -> None:
+    metrics = _metrics().drop(columns=["worst_case_shortfall", "worst_case_hurdle_gap"])
+    legacy_hurdle = add_robust_components(
+        metrics, RiskPreferenceSettings(formula="hurdle_cvar")
+    )
+    current_hurdle = add_robust_components(_metrics(), RiskPreferenceSettings())
+    assert legacy_hurdle["robust_return"].tolist() == pytest.approx(
+        current_hurdle["robust_return"].tolist()
+    )
+
+    legacy_median = add_robust_components(
+        metrics, RiskPreferenceSettings(formula="median_cvar")
+    )
+    current_median = add_robust_components(
+        _metrics(), RiskPreferenceSettings(formula="median_stress")
+    )
+    assert legacy_median["robust_return"].tolist() == pytest.approx(
+        current_median["robust_return"].tolist()
+    )
 
 
 def test_high_variance_name_is_downweighted_in_robust_ranking_only() -> None:

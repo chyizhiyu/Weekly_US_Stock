@@ -49,8 +49,8 @@ _REQUIRED_FINITE_METRICS = (
     "median_irr",
     "p10_irr",
     "p90_irr",
-    "hurdle_cvar",
-    "expected_shortfall",
+    "worst_case_hurdle_gap",
+    "worst_case_shortfall",
     "intrinsic_value_base",
 )
 
@@ -297,14 +297,17 @@ def aggregate_valuation(
         for s in scenarios
         if s.total_return_5y < prefs.permanent_loss_threshold
     )
-    expected_shortfall = _expected_shortfall(distribution, prefs.cvar_alpha)
+    worst_irr = min(irr for irr, _p in distribution)
+    worst_case_shortfall = max(0.0, -worst_irr)
     # Shortfall measured against the investor's hurdle, not just zero: a bear
-    # case earning 7% against a 12% hurdle is still a 5-point miss.
-    hurdle_cvar = _tail_mean(
-        [(max(0.0, prefs.hurdle_rate - irr), p) for irr, p in distribution],
-        prefs.cvar_alpha,
-        worst="largest",
-    )
+    # case earning 7% against a 12% hurdle is still a 5-point miss. On the
+    # default 25/50/25 three-scenario grid this is exactly what the old
+    # alpha=25% CVaR calculation reduced to, so ranking numbers are unchanged.
+    worst_case_hurdle_gap = max(0.0, prefs.hurdle_rate - worst_irr)
+    # Backward-compatible aliases. These names are intentionally no longer used
+    # in ranking/report labels because they implied calibrated tail statistics.
+    expected_shortfall = worst_case_shortfall
+    hurdle_cvar = worst_case_hurdle_gap
 
     half_spread = max(p90_irr - p10_irr, 0.0) / 2.0
     model_uncertainty = half_spread + prefs.uncertainty_per_missing_confidence * (
@@ -326,8 +329,8 @@ def aggregate_valuation(
         "median_irr": median_irr,
         "p10_irr": p10_irr,
         "p90_irr": p90_irr,
-        "hurdle_cvar": hurdle_cvar,
-        "expected_shortfall": expected_shortfall,
+        "worst_case_hurdle_gap": worst_case_hurdle_gap,
+        "worst_case_shortfall": worst_case_shortfall,
         "intrinsic_value_base": base_iv,
     }
     status, reason, invalid_fields = _classify_validity(scenarios, required_metrics)
@@ -341,6 +344,8 @@ def aggregate_valuation(
         p90_irr=p90_irr,
         above_hurdle_weight=above_hurdle_weight,
         permanent_loss_weight=permanent_loss_weight,
+        worst_case_shortfall=worst_case_shortfall,
+        worst_case_hurdle_gap=worst_case_hurdle_gap,
         expected_shortfall=expected_shortfall,
         hurdle_cvar=hurdle_cvar,
         intrinsic_value_low=min(bear_iv, base_iv, bull_iv),
@@ -654,33 +659,3 @@ def _quantile(distribution: list[tuple[float, float]], q: float) -> float:
         if cumulative >= q - 1e-12:
             return value
     return ordered[-1][0]
-
-
-def _expected_shortfall(distribution: list[tuple[float, float]], alpha: float) -> float:
-    """CVaR of the IRR distribution: mean of the worst alpha tail, reported as
-    a non-negative loss magnitude."""
-
-    return max(0.0, -_tail_mean(distribution, alpha, worst="smallest"))
-
-
-def _tail_mean(
-    distribution: list[tuple[float, float]],
-    alpha: float,
-    *,
-    worst: str,
-) -> float:
-    """Mean of the worst alpha tail of a discrete (value, weight) distribution.
-
-    worst="smallest" treats LOW values as bad (IRRs); worst="largest" treats
-    HIGH values as bad (shortfalls)."""
-
-    ordered = sorted(distribution, key=lambda item: item[0], reverse=worst == "largest")
-    remaining = alpha
-    weighted = 0.0
-    for value, probability in ordered:
-        take = min(probability, remaining)
-        weighted += value * take
-        remaining -= take
-        if remaining <= 1e-12:
-            break
-    return weighted / alpha

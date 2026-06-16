@@ -3,30 +3,31 @@
 Two rankings are published side by side:
 - Upside Ranking: expected 5y IRR, descending.
 - Robust Ranking: risk-adjusted return under a configurable formula whose
-  weights are investor risk preferences (NOT factor weights):
+  weights are investor risk preferences, not factor weights.
 
-  formula = "hurdle_cvar" (default — hurdle-relative downside, single
-  penalty, confidence-scaled; a bear case earning 7% against a 12% hurdle
-  is a miss even though the return is positive):
+The current scenario set is a deterministic bear/base/bull stress grid. With
+25/50/25 scenario weights, an alpha=25% CVaR calculation collapses to the bear
+point, so the public metric names are explicit worst-case stress terms:
+
+  formula = "hurdle_gap" (default):
     robust_return = data_confidence * model_confidence
                       * max(median_irr - hurdle_rate, 0)
-                    - downside_aversion * hurdle_cvar
-    where hurdle_cvar = tail mean of max(0, hurdle - scenario_irr).
+                    - downside_aversion * worst_case_hurdle_gap
 
-  formula = "penalized_expected" (the original spec decomposition; the three
-  penalties are correlated because all derive partly from the bear scenario):
+  formula = "penalized_expected":
     robust_return = expected_irr
-                    - downside_aversion       * expected_shortfall (CVaR)
+                    - downside_aversion       * worst_case_shortfall
                     - ambiguity_aversion      * model_uncertainty
                     - permanent_loss_penalty  * permanent_loss_weight
 
-  formula = "median_cvar" (zero-anchored single penalty):
-    robust_return = median_irr - downside_aversion * expected_shortfall
+  formula = "median_stress":
+    robust_return = median_irr - downside_aversion * worst_case_shortfall
 
-Every component stays in the output regardless of formula, so a rank can
-always be traced back to its inputs; nothing is compressed into an opaque
-score. Bear/base/bull weights are analyst-set scenario weights, not
-calibrated probabilities — see the report disclaimers.
+Legacy formula names "hurdle_cvar" and "median_cvar" are still accepted and
+map to the same formulas. Every component stays in the output regardless of
+formula, so a rank can be traced back to its inputs; nothing is compressed into
+an opaque score. Bear/base/bull weights are analyst-set scenario weights, not
+calibrated probabilities.
 """
 
 from __future__ import annotations
@@ -40,19 +41,21 @@ def add_robust_components(
     frame: pd.DataFrame, prefs: RiskPreferenceSettings
 ) -> pd.DataFrame:
     result = frame.copy()
-    result["downside_penalty"] = prefs.downside_aversion * result["expected_shortfall"]
+    shortfall = _metric(result, "worst_case_shortfall", "expected_shortfall")
+    hurdle_gap = _metric(result, "worst_case_hurdle_gap", "hurdle_cvar")
+    result["downside_penalty"] = prefs.downside_aversion * shortfall
     result["ambiguity_penalty"] = prefs.ambiguity_aversion * result["model_uncertainty"]
     result["permanent_loss_penalty"] = (
         prefs.permanent_loss_penalty * result["permanent_loss_weight"]
     )
     result["evidence_confidence"] = result["data_confidence"] * result["model_confidence"]
-    if prefs.formula == "hurdle_cvar":
+    if prefs.formula in {"hurdle_gap", "hurdle_cvar"}:
         positive_excess = (result["median_irr"] - result["hurdle_rate"]).clip(lower=0.0)
-        result["hurdle_penalty"] = prefs.downside_aversion * result["hurdle_cvar"]
+        result["hurdle_penalty"] = prefs.downside_aversion * hurdle_gap
         result["robust_return"] = (
             result["evidence_confidence"] * positive_excess - result["hurdle_penalty"]
         )
-    elif prefs.formula == "median_cvar":
+    elif prefs.formula in {"median_stress", "median_cvar"}:
         result["robust_return"] = result["median_irr"] - result["downside_penalty"]
     else:  # penalized_expected
         result["robust_return"] = (
@@ -62,6 +65,12 @@ def add_robust_components(
             - result["permanent_loss_penalty"]
         )
     return result
+
+
+def _metric(frame: pd.DataFrame, primary: str, legacy: str) -> pd.Series:
+    if primary in frame.columns:
+        return frame[primary]
+    return frame[legacy]
 
 
 def build_rankings(

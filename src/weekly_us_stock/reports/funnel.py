@@ -18,7 +18,7 @@ _OUTPUT_COLUMNS = [
     "expected_irr",
     "median_irr",
     "p10_irr",
-    "hurdle_cvar",
+    "worst_case_hurdle_gap",
     "business_quality",
     "model_confidence",
     "data_confidence",

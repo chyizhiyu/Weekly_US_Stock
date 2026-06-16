@@ -77,6 +77,8 @@ _OK_METRICS = {
     "median_irr": 0.12,
     "p10_irr": -0.2,
     "p90_irr": 0.4,
+    "worst_case_hurdle_gap": 0.03,
+    "worst_case_shortfall": 0.1,
     "hurdle_cvar": 0.03,
     "expected_shortfall": 0.1,
     "intrinsic_value_base": 100.0,
@@ -157,7 +159,11 @@ def test_value_company_normal_inputs_are_valid() -> None:
     assert valuation.valuation_status == "valid"
     assert all(
         math.isfinite(v)
-        for v in (valuation.expected_irr, valuation.median_irr, valuation.hurdle_cvar)
+        for v in (
+            valuation.expected_irr,
+            valuation.median_irr,
+            valuation.worst_case_hurdle_gap,
+        )
     )
 
 
@@ -202,7 +208,13 @@ def test_step6_partitions_invalid_out_of_metrics() -> None:
     # nothing silently lost: every company is either ranked or flagged
     assert len(result.metrics) + len(result.invalid) == 2
     # every value used for ranking is finite
-    for col in ("expected_irr", "median_irr", "p10_irr", "p90_irr", "hurdle_cvar"):
+    for col in (
+        "expected_irr",
+        "median_irr",
+        "p10_irr",
+        "p90_irr",
+        "worst_case_hurdle_gap",
+    ):
         assert result.metrics[col].map(math.isfinite).all()
     assert "catastrophic_tail_floor_applied" in result.metrics.columns
 

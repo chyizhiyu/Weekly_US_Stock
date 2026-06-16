@@ -24,19 +24,19 @@ NYSE / Nasdaq / NYSE American）中，经四层决策结构生成风险调整后
    及未盈利生物科技路由到**观察名单**，不强行套用通用 DCF。模型置信度低于阈值的个股同样进观察名单。
 3. **Layer 3 情景估值**：每家公司 Bear/Base/Bull 三情景（收入增长、利润率、再投资 = g/ROIC、
    终值 = NOPAT×(1−g/ROIC_t)/(WACC−g)），输出预期 IRR、中位 IRR、P10/P90、达标权重、
-   永久亏损权重、Expected Shortfall (CVaR)、内在价值区间、模型/数据置信度。
+   永久亏损权重、最差情景压力缺口、内在价值区间、模型/数据置信度。
    **情景权重为人工设定（默认 25/50/25），不是校准概率**——所有 W(...) 指标是情景加权值，
    应当作压力标签阅读；概率校准（Monte Carlo + 滚动回测）在路线图中。
    增量 ROIC ≤ WACC 时增长不创造价值（终值自动塌缩为 NOPAT/WACC）。
    护城河证据只影响回报持续期、利润率稳定性、情景宽度和模型置信度，不是加分项。
 4. **Layer 4 风险调整排名**：同时输出两个榜单——
    - `upside_ranking.csv`：按预期 IRR 排名；
-   - `robust_ranking.csv`：默认 `formula: hurdle_cvar`——
+   - `robust_ranking.csv`：默认 `formula: hurdle_gap`——
      `robust_return = 数据置信×模型置信 × max(中位IRR − hurdle, 0) −
-     downside_aversion × 门槛相对CVaR`，其中门槛相对 CVaR = 最差情景尾部的
+     downside_aversion × 最差情景门槛缺口`，其中最差情景门槛缺口 =
      `max(0, hurdle − IRR)` 均值（Bear 赚 7% 但门槛 12% 仍计 5 个点的缺口）；
      单一下行惩罚，不重复扣减。可切换 `penalized_expected`（原任务书三项分解）
-     或 `median_cvar`。
+     或 `median_stress`（旧配置名 `hurdle_cvar` / `median_cvar` 仍兼容）。
    每只股票同时给出三个独立维度（绝不压缩成单一总分）：
    **Business Quality**（financial_persistence_score，历史财务持续性）、
    **Valuation**（中位 IRR 相对门槛的超额）、**Evidence Confidence**（数据×模型置信度）。

@@ -138,6 +138,8 @@ def test_rankings_keep_raw_metrics_no_opaque_score(pipeline_runs: dict[str, Path
         "p90_irr",
         "above_hurdle_weight",
         "permanent_loss_weight",
+        "worst_case_shortfall",
+        "worst_case_hurdle_gap",
         "expected_shortfall",
         "hurdle_cvar",
         "model_uncertainty",
@@ -186,7 +188,7 @@ def test_feishu_summary_content(pipeline_runs: dict[str, Path]) -> None:
     assert "达标候选" in summary
     assert "Upside 研究队列" in summary and "非可执行" in summary
     assert "预期IRR" in summary and "P10" in summary
-    assert "门槛CVaR" in summary and "质量" in summary and "置信" in summary
+    assert "最差缺口" in summary and "质量" in summary and "置信" in summary
     assert "观察名单" in summary
     assert "不构成交易指令" in summary
     # Scenario weights must never masquerade as calibrated probabilities.

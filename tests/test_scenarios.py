@@ -136,6 +136,10 @@ class TestAggregation:
         assert valuation.p10_irr <= valuation.median_irr <= valuation.p90_irr
         assert 0.0 <= valuation.above_hurdle_weight <= 1.0
         assert 0.0 <= valuation.permanent_loss_weight <= 1.0
+        assert valuation.worst_case_shortfall >= 0.0
+        assert valuation.worst_case_hurdle_gap >= 0.0
+        assert valuation.expected_shortfall == pytest.approx(valuation.worst_case_shortfall)
+        assert valuation.hurdle_cvar == pytest.approx(valuation.worst_case_hurdle_gap)
         assert valuation.expected_shortfall >= 0.0
         assert valuation.hurdle_cvar >= 0.0
         assert valuation.intrinsic_value_low <= valuation.intrinsic_value_high
