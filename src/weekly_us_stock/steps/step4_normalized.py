@@ -68,6 +68,16 @@ def run_normalized_model(
             continue
 
         row = {**base, **metrics}
+        row["sec_status"] = _sec_value(history, "sec_status", "unchecked")
+        row["sec_max_divergence"] = _sec_value(history, "sec_max_divergence", None)
+        row["sec_confidence_penalty"] = float(
+            _sec_value(history, "sec_confidence_penalty", 0.0) or 0.0
+        )
+        if row["sec_status"] == "hard_divergence":
+            # FMP and the SEC 10-K disagree materially: the inputs are not
+            # trustworthy enough to rank -> route to the watchlist.
+            watchlist_rows.append({**row, "watchlist_reason": "sec_hard_divergence"})
+            continue
         route = route_model_family(
             candidate.get("sector"),
             candidate.get("industry"),
@@ -165,6 +175,17 @@ def _filing_age_days(row: dict, as_of: date | None) -> int | None:
     return (as_of - filing).days
 
 
+def _sec_value(history: pd.DataFrame | None, column: str, default: object) -> object:
+    """Read a per-ticker SEC-reconciliation field off the fundamentals history."""
+
+    if history is None or column not in getattr(history, "columns", []):
+        return default
+    value = history.iloc[-1].get(column)
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return default
+    return value
+
+
 def _data_confidence(row: dict, normalization: NormalizationSettings) -> float:
     """0.2..1.0 — how complete and FRESH the inputs behind this company are.
 
@@ -194,6 +215,7 @@ def _data_confidence(row: dict, normalization: NormalizationSettings) -> float:
         # A likely one-off the vendor could not itemize is distorting the latest
         # margin: distrust the anchor instead of silently normalizing it.
         confidence -= normalization.one_off_confidence_penalty
+    confidence -= float(row.get("sec_confidence_penalty") or 0.0)
     if row.get("anchor_source") != "ttm":
         confidence -= 0.15  # no TTM window: anchored on a possibly stale annual
     return max(confidence, 0.2)

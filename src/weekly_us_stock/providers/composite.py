@@ -19,11 +19,12 @@ from datetime import UTC, date, datetime
 
 import pandas as pd
 
-from weekly_us_stock.config import EnvSettings, WaccSettings
+from weekly_us_stock.config import EnvSettings, SecReconciliationSettings, WaccSettings
 from weekly_us_stock.providers.base import CodeList, DataProviderNotConfigured, IndexConstituents
 from weekly_us_stock.providers.fmp import FMPProvider
 from weekly_us_stock.providers.fred import FredProvider
 from weekly_us_stock.providers.polygon import PolygonProvider
+from weekly_us_stock.providers.sec import SecProvider, sec_divergence
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +39,23 @@ class CompositeProvider:
         fmp: FMPProvider | None = None,
         polygon: PolygonProvider | None = None,
         fred: FredProvider | None = None,
+        sec: SecProvider | None = None,
+        sec_reconciliation: SecReconciliationSettings | None = None,
     ) -> None:
         self._degraded: list[str] = []
         self.wacc_settings = wacc_settings
+        self.sec_reconciliation = sec_reconciliation or SecReconciliationSettings()
 
         self.fmp = fmp or FMPProvider(env.fmp_api_key)  # raises when unconfigured
+
+        # SEC is an optional filing-grade cross-check; without credentials the
+        # fundamentals are simply left unannotated (status "unchecked").
+        self.sec = sec
+        if self.sec is None and self.sec_reconciliation.enabled and env.sec_user_agent:
+            try:
+                self.sec = SecProvider(env.sec_user_agent)
+            except DataProviderNotConfigured:
+                self.sec = None
 
         self.polygon = polygon
         if self.polygon is None and env.polygon_api_key:
@@ -72,7 +85,33 @@ class CompositeProvider:
         return self.fmp.load_prices(tickers, as_of, lookback_days)
 
     def load_fundamentals(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
-        return self.fmp.load_fundamentals(tickers, as_of)
+        return self._reconcile_with_sec(self.fmp.load_fundamentals(tickers, as_of))
+
+    def _reconcile_with_sec(self, fundamentals: pd.DataFrame) -> pd.DataFrame:
+        cfg = self.sec_reconciliation
+        if fundamentals.empty or self.sec is None or not cfg.enabled:
+            return fundamentals
+        exempt = {t.upper() for t in cfg.exempt_tickers}
+        frame = fundamentals.copy()
+        status: dict[str, str] = {}
+        divergence: dict[str, float | None] = {}
+        penalty: dict[str, float] = {}
+        for ticker, group in frame.groupby("ticker"):
+            key = str(ticker)
+            try:
+                facts = self.sec.fetch_annual_facts(key)
+            except Exception:
+                logger.exception("SEC reconciliation failed for %s; unchecked", key)
+                self._degraded.append("sec:fetch-error")
+                facts = {}
+            status[key], divergence[key], penalty[key] = _reconcile_one(
+                group, facts, cfg, key.upper() in exempt
+            )
+        keys = frame["ticker"].astype(str)
+        frame["sec_status"] = keys.map(status)
+        frame["sec_max_divergence"] = keys.map(divergence)
+        frame["sec_confidence_penalty"] = keys.map(penalty)
+        return frame
 
     def load_ttm(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
         try:
@@ -124,9 +163,60 @@ class CompositeProvider:
         return list(dict.fromkeys(self._degraded + self.fmp.degraded_sources()))
 
 
-def build_composite(env: EnvSettings, wacc_settings: WaccSettings) -> CompositeProvider:
+def _opt_float(value: object) -> float | None:
+    try:
+        result = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    return None if pd.isna(result) else result
+
+
+def _reconcile_one(
+    group: pd.DataFrame,
+    facts: dict[str, dict[int, float]],
+    cfg: SecReconciliationSettings,
+    is_exempt: bool,
+) -> tuple[str, float | None, float]:
+    """Reconcile one ticker's FMP fundamentals against SEC 10-K facts on the
+    latest fiscal year they share."""
+
+    if not facts:
+        return "unchecked", None, 0.0
+    years = pd.to_numeric(group["fiscal_year"], errors="coerce")
+    fmp_years = {int(y) for y in years.dropna()}
+    sec_years = {int(fy) for series in facts.values() for fy in series}
+    common = sorted(fmp_years & sec_years, reverse=True)
+    if not common:
+        return "unchecked", None, 0.0
+    fiscal_year = common[0]
+    fmp_row = group.loc[years == fiscal_year].iloc[-1]
+    fmp_metrics = {
+        "revenue": _opt_float(fmp_row.get("revenue")),
+        "operating_income": _opt_float(fmp_row.get("operating_income")),
+        "net_income": _opt_float(fmp_row.get("net_income")),
+        "shares_diluted": _opt_float(fmp_row.get("shares_diluted")),
+    }
+    status, max_divergence, _worst = sec_divergence(
+        fmp_metrics,
+        facts,
+        fiscal_year,
+        soft=cfg.soft_divergence,
+        hard=cfg.hard_divergence,
+        min_metrics=cfg.min_metrics,
+    )
+    if status == "hard_divergence" and is_exempt:
+        status = "exempt"
+    penalty = cfg.confidence_penalty if status == "soft_divergence" else 0.0
+    return status, max_divergence, penalty
+
+
+def build_composite(
+    env: EnvSettings,
+    wacc_settings: WaccSettings,
+    sec_reconciliation: SecReconciliationSettings | None = None,
+) -> CompositeProvider:
     if not env.fmp_api_key:
         raise DataProviderNotConfigured(
             "Composite provider requires FMP_API_KEY; set it or run --provider sample"
         )
-    return CompositeProvider(env, wacc_settings)
+    return CompositeProvider(env, wacc_settings, sec_reconciliation=sec_reconciliation)

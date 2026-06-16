@@ -117,3 +117,11 @@ report:
 freshness:
   max_price_staleness_days: 3
   min_fresh_price_coverage: 0.8      # below this --strict-freshness exits with retry code 75
+
+sec_reconciliation:
+  enabled: true
+  soft_divergence: 0.10              # FMP vs SEC 10-K: soft gap lowers data confidence
+  hard_divergence: 0.25              # hard gap routes the name to the watchlist
+  min_metrics: 2                     # need >= this many common metrics to judge
+  confidence_penalty: 0.20           # data_confidence haircut on a soft divergence
+  exempt_tickers: []                 # known, legitimate vendor/SEC tag differences

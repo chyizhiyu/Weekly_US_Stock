@@ -668,7 +668,9 @@ class WeeklyUSStockPipeline:
             # sample provider is only ever an EXPLICIT choice.
             from weekly_us_stock.providers.composite import build_composite
 
-            return build_composite(self.env, self.settings.wacc)
+            return build_composite(
+                self.env, self.settings.wacc, self.settings.sec_reconciliation
+            )
         raise ValueError(f"Unsupported data source: {source}")
 
     # -- universe restriction --------------------------------------------------
