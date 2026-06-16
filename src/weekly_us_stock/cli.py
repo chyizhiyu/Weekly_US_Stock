@@ -15,6 +15,7 @@ from weekly_us_stock.providers.base import (
     PointInTimeUnavailable,
 )
 from weekly_us_stock.utils.calendar import expected_weekly_as_of, parse_date
+from weekly_us_stock.validation.runner import run_forward_validation
 
 app = typer.Typer(help="Weekly US stock screener. Research and reports only; no trading.")
 
@@ -104,6 +105,60 @@ def expected_as_of_command() -> None:
     """Print the as_of date the current weekly run should use."""
 
     typer.echo(expected_weekly_as_of().isoformat())
+
+
+@app.command("forward-validate")
+def forward_validate(
+    archive: Annotated[
+        Path,
+        typer.Option("--archive", help="Dir of archived runs (local runs/ or a results history/)."),
+    ],
+    provider: Annotated[
+        str, typer.Option("--provider", help="Price source: sample | fmp | auto.")
+    ] = "auto",
+    benchmark: Annotated[
+        str, typer.Option("--benchmark", help="Excess-return benchmark ticker.")
+    ] = "SPY",
+    out: Annotated[
+        Path | None, typer.Option("--out", help="Write forward_validation.csv/.md here.")
+    ] = None,
+    config: Annotated[Path | None, typer.Option("--config", help="Path to YAML config.")] = None,
+) -> None:
+    """Score archived weekly rankings against realized forward returns (out-of-sample)."""
+
+    configure_logging()
+    settings = load_settings(config)
+    try:
+        loader = _forward_price_loader(provider, settings)
+    except (DataProviderNotConfigured, ValueError) as exc:
+        typer.echo(f"Refusing to run: {exc}", err=True)
+        raise typer.Exit(code=78) from exc  # EX_CONFIG
+    _long, report = run_forward_validation(archive, loader, benchmark=benchmark, out_dir=out)
+    if report.empty:
+        typer.echo("No fully-elapsed forward windows yet - need archived runs ~1 month old.")
+        return
+    typer.echo(report.to_string(index=False))
+    if out is not None:
+        typer.echo(f"Report written under {out}")
+
+
+def _forward_price_loader(provider: str, settings: object):
+    source = (provider or "auto").lower()
+    if source == "sample":
+        from weekly_us_stock.config import project_root
+        from weekly_us_stock.providers.sample import SampleDataProvider
+
+        data_dir = project_root() / settings.app.sample_data_dir  # type: ignore[attr-defined]
+        return SampleDataProvider(data_dir).load_prices
+    if source not in {"fmp", "composite", "auto"}:
+        raise ValueError(f"Unsupported data source: {source}")
+    from weekly_us_stock.config import EnvSettings
+    from weekly_us_stock.providers.composite import build_composite
+
+    composite = build_composite(
+        EnvSettings(), settings.wacc, settings.sec_reconciliation  # type: ignore[attr-defined]
+    )
+    return composite.load_prices
 
 
 if __name__ == "__main__":
