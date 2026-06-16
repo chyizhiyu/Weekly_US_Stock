@@ -50,7 +50,11 @@ from weekly_us_stock.reports.feishu import build_feishu_summary
 from weekly_us_stock.reports.funnel import build_funnel_ledger
 from weekly_us_stock.reports.turnaround import build_turnaround_watchlist
 from weekly_us_stock.steps.step1_universe import build_market_snapshot, fetch_universe
-from weekly_us_stock.steps.step2_events import MATERIAL_EVENT_REASON, detect_material_events
+from weekly_us_stock.steps.step2_events import (
+    MATERIAL_EVENT_REASON,
+    build_material_events_frame,
+    detect_material_events,
+)
 from weekly_us_stock.steps.step2_hard_filters import (
     combine_results,
     drop_duplicate_share_classes,
@@ -249,9 +253,23 @@ class WeeklyUSStockPipeline:
             routed_candidates, fundamentals, self.settings.hard_filters
         )
         # Material-event gate (the VRRM trap): a price already reflecting bad
-        # news must not be ranked against pre-event earning power.
+        # news - or a material 8-K already filed - must not be ranked against
+        # pre-event earning power.
+        gate_candidates = financial_result.candidates
+        filings_by_ticker = self._recent_filings(provider, gate_candidates)
         event_result = detect_material_events(
-            financial_result.candidates, prices, self.settings.events
+            gate_candidates,
+            prices,
+            self.settings.events,
+            filings_by_ticker=filings_by_ticker,
+            as_of=as_of,
+        )
+        events_frame = build_material_events_frame(
+            gate_candidates,
+            prices,
+            self.settings.events,
+            filings_by_ticker=filings_by_ticker,
+            as_of=as_of,
         )
         financial_result = FilterFrameResult(
             candidates=event_result.candidates,
@@ -289,6 +307,7 @@ class WeeklyUSStockPipeline:
             run_dir, "hard_filter_candidates", financial_result.candidates, summary, artifacts
         )
         self._export(run_dir, "hard_filter_rejected", rejected, summary, artifacts)
+        self._export(run_dir, "material_events", events_frame, summary, artifacts)
         steps.append(summary)
         _log_step(summary)
 
@@ -655,6 +674,21 @@ class WeeklyUSStockPipeline:
         return result
 
     # -- provider wiring ------------------------------------------------------
+
+    def _recent_filings(
+        self, provider: DataProvider, candidates: pd.DataFrame
+    ) -> dict[str, list[dict]]:
+        """Recent EDGAR filings for the candidate set, for the 8-K event gate.
+        Empty unless 8-K detection is enabled and the provider can supply them
+        (the sample provider cannot), so price-only runs are unaffected."""
+
+        if (
+            not self.settings.events.sec_8k_enabled
+            or candidates.empty
+            or not hasattr(provider, "recent_filings")
+        ):
+            return {}
+        return provider.recent_filings(candidates["ticker"].astype(str).tolist())
 
     def _resolve_provider(self, request: PipelineRequest) -> DataProvider:
         if self.provider is not None:

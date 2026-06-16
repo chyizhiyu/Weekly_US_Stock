@@ -113,6 +113,22 @@ class CompositeProvider:
         frame["sec_confidence_penalty"] = keys.map(penalty)
         return frame
 
+    def recent_filings(self, tickers: CodeList) -> dict[str, list[dict]]:
+        """Recent EDGAR filings per ticker for the event gate (8-K detection).
+        Empty when SEC is unconfigured; per-ticker errors degrade softly."""
+
+        if self.sec is None:
+            return {}
+        out: dict[str, list[dict]] = {}
+        for ticker in tickers:
+            key = str(ticker)
+            try:
+                out[key] = self.sec.fetch_recent_filings(key)
+            except Exception:
+                logger.exception("SEC filings fetch failed for %s", key)
+                self._degraded.append("sec:filings-error")
+        return out
+
     def load_ttm(self, tickers: CodeList, as_of: date) -> pd.DataFrame:
         try:
             return self.fmp.load_ttm(tickers, as_of)

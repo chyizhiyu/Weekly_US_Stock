@@ -73,3 +73,28 @@ def test_sec_soft_divergence_docks_data_confidence() -> None:
     clean = _data_confidence({**base, "sec_confidence_penalty": 0.0}, s)
     docked = _data_confidence({**base, "sec_confidence_penalty": 0.20}, s)
     assert abs((clean - docked) - 0.20) < 1e-9
+
+
+class _FilingSEC:
+    def fetch_recent_filings(self, ticker: str) -> list[dict]:
+        if ticker == "BAD":
+            raise RuntimeError("boom")
+        return [{"form": "8-K", "filing_date": "2026-01-05", "items": "4.02"}]
+
+
+def test_recent_filings_collects_per_ticker_and_degrades_softly() -> None:
+    comp = CompositeProvider(
+        EnvSettings(), WaccSettings(), fmp=_FakeFMP(), sec=_FilingSEC(),
+        sec_reconciliation=SecReconciliationSettings(),
+    )
+    out = comp.recent_filings(["AAA", "BAD"])
+    assert out["AAA"][0]["form"] == "8-K"
+    assert "BAD" not in out  # per-ticker fetch error degrades softly
+
+
+def test_recent_filings_empty_without_sec() -> None:
+    comp = CompositeProvider(
+        EnvSettings(), WaccSettings(), fmp=_FakeFMP(), sec=None,
+        sec_reconciliation=SecReconciliationSettings(enabled=False),
+    )
+    assert comp.recent_filings(["AAA"]) == {}

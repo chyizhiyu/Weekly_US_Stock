@@ -13,6 +13,7 @@ EXPECTED_ARTIFACTS = [
     "universe.csv",
     "hard_filter_candidates.csv",
     "hard_filter_rejected.csv",
+    "material_events.csv",
     "normalized_financials.csv",
     "scenario_valuations.csv",
     "robust_ranking.csv",
@@ -78,6 +79,13 @@ def test_material_event_goes_to_watchlist_not_ranking(pipeline_runs: dict[str, P
     assert "EVNT" not in set(robust["ticker"])
     flags = watchlist.set_index("ticker").loc["EVNT", "event_flags"]
     assert "weekly_drop" in str(flags)
+    events = pd.read_csv(pipeline_runs["first"] / "material_events.csv")
+    evnt_events = events.loc[events["ticker"] == "EVNT"]
+    assert not evnt_events.empty
+    assert set(
+        ["ticker", "event_date", "source", "event_type", "detail", "revaluation_status"]
+    ).issubset(events.columns)
+    assert "weekly_drop" in set(evnt_events["event_type"])
 
 
 def test_watchlist_routing(pipeline_runs: dict[str, Path]) -> None:
