@@ -81,14 +81,19 @@ class NormalizationSettings(BaseModel):
 
 
 class EventGateSettings(BaseModel):
-    """Price-shock proxies for material events (contract loss, guidance cut,
-    regulatory action...). Flagged names go to the event watchlist for manual
-    re-underwriting instead of being ranked on stale earning power."""
+    """Material-event gate settings. Price shocks and configured SEC 8-K items
+    pull names to the event watchlist for manual re-underwriting instead of
+    ranking them on stale earning power."""
 
     enabled: bool = True
     weekly_drop_threshold: float = 0.25
     drawdown_threshold: float = 0.40
     lookback_high_days: int = 60
+    sec_8k_enabled: bool = True
+    sec_8k_lookback_days: int = 90
+    material_8k_items: list[str] = Field(
+        default_factory=lambda: ["1.02", "2.06", "4.01", "4.02", "5.02"]
+    )
 
 
 class WaccSettings(BaseModel):

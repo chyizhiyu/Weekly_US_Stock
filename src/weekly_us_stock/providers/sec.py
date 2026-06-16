@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 
 _REVENUE_TAGS = ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"]
 _OPERATING_INCOME_TAGS = ["OperatingIncomeLoss"]
@@ -92,6 +93,28 @@ class SecProvider:
                 payload, _SHARES_TAGS, unit="shares"
             ),
         }
+
+    def fetch_recent_filings(self, ticker: str) -> list[dict[str, str]]:
+        """Recent EDGAR filings for a ticker: [{form, filing_date, items}, ...]."""
+
+        cik = self.cik_for_ticker(ticker)
+        if cik is None:
+            return []
+        payload = self._get(SUBMISSIONS_URL.format(cik=cik))
+        recent = ((payload or {}).get("filings") or {}).get("recent") or {}
+        forms = recent.get("form") or []
+        dates = recent.get("filingDate") or []
+        items = recent.get("items") or []
+        filings: list[dict[str, str]] = []
+        for index, form in enumerate(forms):
+            filings.append(
+                {
+                    "form": str(form),
+                    "filing_date": str(dates[index]) if index < len(dates) else "",
+                    "items": str(items[index]) if index < len(items) else "",
+                }
+            )
+        return filings
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, max=30), reraise=True)
     def _get(self, url: str) -> Any:

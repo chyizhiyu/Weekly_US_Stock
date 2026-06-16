@@ -52,14 +52,16 @@ wacc:
   max_wacc: 0.14
 
 events:
-  # Material-event gate: price shocks proxy contract losses, guidance cuts,
-  # regulatory hits etc. until 8-K/news ingestion lands. Flagged names go to
-  # the event watchlist for manual re-underwriting instead of being ranked
-  # on stale (pre-event) earning power.
+  # Material-event gate: price shocks plus material SEC 8-K items. Flagged
+  # names go to the event watchlist for manual re-underwriting instead of
+  # being ranked on stale (pre-event) earning power.
   enabled: true
   weekly_drop_threshold: 0.25     # 1-week drop of 25%+
   drawdown_threshold: 0.40        # 40%+ below the 60-session high
   lookback_high_days: 60
+  sec_8k_enabled: true
+  sec_8k_lookback_days: 90
+  material_8k_items: ["1.02", "2.06", "4.01", "4.02", "5.02"]
 
 scenarios:
   horizon_years: 5
