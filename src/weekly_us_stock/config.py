@@ -202,6 +202,20 @@ class FreshnessSettings(BaseModel):
     min_fresh_price_coverage: float = 0.8
 
 
+class SecReconciliationSettings(BaseModel):
+    """FMP-vs-SEC 10-K cross-check (same fiscal year, same unit). Soft
+    divergence lowers data confidence; hard divergence routes to the
+    watchlist. A small exempt list covers names with known, legitimate
+    vendor/SEC tag differences."""
+
+    enabled: bool = True
+    soft_divergence: float = 0.10
+    hard_divergence: float = 0.25
+    min_metrics: int = 2
+    confidence_penalty: float = 0.20
+    exempt_tickers: list[str] = Field(default_factory=list)
+
+
 class Settings(BaseModel):
     app: AppSettings = Field(default_factory=AppSettings)
     universe: UniverseSettings = Field(default_factory=UniverseSettings)
@@ -217,6 +231,9 @@ class Settings(BaseModel):
     alerts: AlertSettings = Field(default_factory=AlertSettings)
     report: ReportSettings = Field(default_factory=ReportSettings)
     freshness: FreshnessSettings = Field(default_factory=FreshnessSettings)
+    sec_reconciliation: SecReconciliationSettings = Field(
+        default_factory=SecReconciliationSettings
+    )
 
 
 class EnvSettings(BaseSettings):
