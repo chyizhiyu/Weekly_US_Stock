@@ -24,6 +24,13 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.5",
 ]
+# Stage 1 of the GNN-Transformer-DRL quant stack (quant/stage1) uses aiohttp for
+# its async FMP gateway. The pure parsers/resampler import without it; only the
+# networked AsyncFMPClient needs it, so it is an opt-in extra.
+quant = [
+  "aiohttp>=3.9",
+  "numpy>=1.26",
+]
 
 [project.scripts]
 weekly-us-stock = "weekly_us_stock.cli:app"
