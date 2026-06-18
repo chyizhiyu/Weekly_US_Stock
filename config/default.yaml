@@ -110,6 +110,21 @@ confidence:
   watchlist_data_confidence: 0.45    # below this the name goes to the watchlist, not the ranking
   watchlist_model_confidence: 0.35   # low model trust is a hard gate too
 
+specialist_models:
+  enabled: true
+  min_years: 5
+  lookback_years: 5
+  model_confidence: 0.60             # v1 proxies lack regulatory capital / NOI detail
+  data_confidence: 0.80
+  terminal_growth: 0.025
+  growth_floor: -0.02
+  growth_cap: 0.06
+  roe_bear_haircut: 0.30
+  roe_bull_uplift: 0.15
+  max_roe: 0.30
+  reit_maintenance_capex_haircut: 0.15
+  reit_growth_spread: 0.02
+
 ranking:
   top_n: 20
 

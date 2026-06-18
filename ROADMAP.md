@@ -14,20 +14,22 @@ conscious choice, not a gap.
 - Event gate: structured events + SEC 8-K detector wired into the pipeline; `material_events.csv` archived.
 - Forward validation: point-in-time archive (paper portfolio + fingerprints) + `forward-validate` CLI (rank IC, hit rate, excess, cohorted by config_fingerprint).
 - Cross-asset evaluation spine skeleton + equity plugin (shared Layer 4; per-asset Layer 1-3 plugins).
+- Financial-sector specialist v1: banks/insurers via justified P/B residual-income proxy; REITs via conservative P/AFFO proxy; incomplete specialist inputs stay watchlisted.
 
 ## Deferred (intentional)
 
-### 1. Financial-sector specialist models
-Banks, insurers, REITs, asset managers and consumer-finance names are routed to
-the watchlist (`*_model_not_supported`), never force-ranked through the general
-owner-earnings DCF. The routing taxonomy already exists in `valuation/industry.py`;
-the per-family valuation logic does not.
-- **Next step (by priority):** banks (ROTCE, P/TBV, excess-capital return),
-  REITs (AFFO, NAV, rate sensitivity), insurers (combined ratio, underwriting,
-  book value), asset managers (AUM, fee rate, net flows). Each is a new
-  `model_family` with its own anchor + scenario shape.
-- **Why deferred:** each is a distinct methodology; the general-DCF fixes came
-  first because they affect names already in the ranking.
+### 1. Financial-sector specialist model depth
+Banks, insurers and REITs now have conservative v1 specialist models and can
+enter ranking when inputs are complete. The intentionally deferred work is model
+depth, not basic coverage.
+- **Next step (by priority):** banks (ROTCE/TBV, CET1/excess capital, deposit
+  beta), REITs (reported AFFO, NAV, same-store NOI, rate sensitivity), insurers
+  (combined ratio, underwriting margin, reserve development, statutory capital),
+  asset managers (AUM, fee rate, net flows), consumer finance (credit losses and
+  funding spread).
+- **Why deferred:** the standard FMP statement payload does not expose these
+  specialist operating drivers cleanly. v1 is deliberately capped in model
+  confidence and should be upgraded only with better fields or forward evidence.
 
 ### 2. Estimate-revision events
 The event gate covers price shocks + SEC 8-K, but not analyst guidance / estimate

@@ -171,6 +171,31 @@ class ConfidenceSettings(BaseModel):
     watchlist_model_confidence: float = 0.35
 
 
+class SpecialistModelSettings(BaseModel):
+    """Dedicated valuation models for industries where the general DCF is wrong.
+
+    v1 deliberately uses conservative, auditable public-statement proxies:
+    banks/insurers use justified P/B from normalized ROE; REITs use a P/AFFO
+    Gordon model. These models are less complete than the general DCF because
+    regulatory capital, reserve quality and property-level NOI are not available
+    in the standard provider payload, so model confidence is capped.
+    """
+
+    enabled: bool = True
+    min_years: int = 5
+    lookback_years: int = 5
+    model_confidence: float = 0.60
+    data_confidence: float = 0.80
+    terminal_growth: float = 0.025
+    growth_floor: float = -0.02
+    growth_cap: float = 0.06
+    roe_bear_haircut: float = 0.30
+    roe_bull_uplift: float = 0.15
+    max_roe: float = 0.30
+    reit_maintenance_capex_haircut: float = 0.15
+    reit_growth_spread: float = 0.02
+
+
 class RankingSettings(BaseModel):
     top_n: int = 20
 
@@ -236,6 +261,7 @@ class Settings(BaseModel):
     events: EventGateSettings = Field(default_factory=EventGateSettings)
     risk_preferences: RiskPreferenceSettings = Field(default_factory=RiskPreferenceSettings)
     confidence: ConfidenceSettings = Field(default_factory=ConfidenceSettings)
+    specialist_models: SpecialistModelSettings = Field(default_factory=SpecialistModelSettings)
     ranking: RankingSettings = Field(default_factory=RankingSettings)
     eligibility: EligibilitySettings = Field(default_factory=EligibilitySettings)
     alerts: AlertSettings = Field(default_factory=AlertSettings)

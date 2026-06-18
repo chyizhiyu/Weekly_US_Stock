@@ -69,6 +69,7 @@ from weekly_us_stock.steps.step3_standardize import (
 )
 from weekly_us_stock.steps.step4_normalized import run_normalized_model
 from weekly_us_stock.steps.step5_quality import run_quality_assessment
+from weekly_us_stock.steps.step6_specialists import run_specialist_valuations
 from weekly_us_stock.steps.step6_valuation import run_scenario_valuations
 from weekly_us_stock.utils.calendar import week_key
 from weekly_us_stock.utils.fingerprint import (
@@ -343,6 +344,45 @@ class WeeklyUSStockPipeline:
         steps.append(summary)
         _log_step(summary)
 
+        # Dedicated models for rows that cannot pass through the general DCF:
+        # banks/insurers use justified P/B; REITs use a conservative P/AFFO
+        # proxy. Unsupported or incomplete specialist rows remain watchlisted.
+        specialist_result, summary = self._timed(
+            "step4_specialist_models",
+            input_count=len(early_watchlist),
+            work=lambda: run_specialist_valuations(
+                early_watchlist,
+                fundamentals,
+                risk_free=risk_free,
+                settings=self.settings.specialist_models,
+                wacc_settings=self.settings.wacc,
+                risk_preferences=self.settings.risk_preferences,
+            ),
+            output_count=lambda result: len(result.metrics),
+        )
+        if not specialist_result.metrics.empty:
+            self._export(
+                run_dir,
+                "specialist_valuations",
+                specialist_result.metrics,
+                summary,
+                artifacts,
+            )
+        if not specialist_result.scenario_rows.empty:
+            self._export(
+                run_dir,
+                "specialist_scenario_valuations",
+                specialist_result.scenario_rows,
+                summary,
+                artifacts,
+            )
+        if not specialist_result.watchlist.empty:
+            summary.rejection_counts = (
+                specialist_result.watchlist["watchlist_reason"].value_counts().to_dict()
+            )
+        steps.append(summary)
+        _log_step(summary)
+
         # Trailing-twelve-month anchors so valuation does not lag the latest
         # quarters; missing TTM rows fall back to the latest annual report.
         ttm = self._timed_data(
@@ -367,8 +407,8 @@ class WeeklyUSStockPipeline:
         )
         summary.rejection_counts = normalized.rejection_counts
         watchlist_frames = []
-        if not early_watchlist.empty:
-            watchlist_frames.append(early_watchlist)
+        if not specialist_result.watchlist.empty:
+            watchlist_frames.append(specialist_result.watchlist)
         if not event_result.rejected.empty:
             watchlist_frames.append(event_result.rejected)
         if not normalized.watchlist.empty:
@@ -498,12 +538,17 @@ class WeeklyUSStockPipeline:
         steps.append(summary)
         _log_step(summary)
 
+        rankable_metrics = pd.concat(
+            [valuation_result.metrics, specialist_result.metrics],
+            ignore_index=True,
+        )
+
         # Step 7: dual rankings --------------------------------------------------
         (robust, upside), summary = self._timed(
             "step7_risk_adjusted_ranking",
-            input_count=len(valuation_result.metrics),
+            input_count=len(rankable_metrics),
             work=lambda: build_rankings(
-                valuation_result.metrics, self.settings.risk_preferences
+                rankable_metrics, self.settings.risk_preferences
             ),
             output_count=lambda result: len(result[0]),
         )

@@ -65,7 +65,7 @@ def test_funnel_ledger_accounts_for_every_universe_ticker(
     assert len(ledger) == len(universe)
     assert not (ledger["final_bucket"] == "unaccounted").any()
     assert ledger.loc["ADRX", "decision_reason"] == "adr_excluded"
-    assert ledger.loc["BNKA", "decision_reason"] == "bank_model_not_supported"
+    assert ledger.loc["BNKA", "decision_reason"] == "specialist_missing_fundamentals"
     assert ledger.loc["STBL", "final_bucket"] == "eligible"
 
 
@@ -91,9 +91,9 @@ def test_material_event_goes_to_watchlist_not_ranking(pipeline_runs: dict[str, P
 def test_watchlist_routing(pipeline_runs: dict[str, Path]) -> None:
     watchlist = pd.read_csv(pipeline_runs["first"] / "watchlist.csv")
     reasons = dict(zip(watchlist["ticker"], watchlist["watchlist_reason"], strict=True))
-    assert reasons["BNKA"] == "bank_model_not_supported"
-    assert reasons["INSU"] == "insurance_model_not_supported"
-    assert reasons["RLTY"] == "reit_model_not_supported"
+    assert reasons["BNKA"] == "specialist_missing_fundamentals"
+    assert reasons["INSU"] == "specialist_missing_fundamentals"
+    assert reasons["RLTY"] == "specialist_missing_fundamentals"
     assert reasons["BIOX"] == "preprofit_biotech_not_supported"
     # Watchlisted names never appear in the rankings.
     robust = pd.read_csv(pipeline_runs["first"] / "robust_ranking.csv")
