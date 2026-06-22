@@ -1,4 +1,4 @@
 ticker,event_triggers,weekly_drop,drawdown_from_high,event_detected_as_of,latest_filing_date,price_as_of,status,reason_unrankable,evidence_needed
-ACN,weekly_drop,-0.28,,2026-06-18,,2026-06-18 00:00:00,awaiting_new_evidence,price already reflects the event; pre-event earning power is stale,a post-event 10-Q/10-K or updated guidance reflecting the event
-SMCI,weekly_drop,-0.35,,2026-06-18,,2026-06-18 00:00:00,awaiting_new_evidence,price already reflects the event; pre-event earning power is stale,a post-event 10-Q/10-K or updated guidance reflecting the event
+ACN,weekly_drop,-0.27,,2026-06-18,,2026-06-18 00:00:00,awaiting_new_evidence,price already reflects the event; pre-event earning power is stale,a post-event 10-Q/10-K or updated guidance reflecting the event
+SMCI,weekly_drop,-0.3,,2026-06-18,,2026-06-18 00:00:00,awaiting_new_evidence,price already reflects the event; pre-event earning power is stale,a post-event 10-Q/10-K or updated guidance reflecting the event
 CHTR,drawdown_from_high,,-0.48,2026-06-18,,2026-06-18 00:00:00,awaiting_new_evidence,price already reflects the event; pre-event earning power is stale,a post-event 10-Q/10-K or updated guidance reflecting the event

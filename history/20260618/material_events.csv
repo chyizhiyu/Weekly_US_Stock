@@ -1,4 +1,4 @@
 ticker,event_date,source,event_type,detail,revaluation_status
-ACN,2026-06-18,price_shock,weekly_drop,-28%,requires_reunderwriting
+ACN,2026-06-18,price_shock,weekly_drop,-27%,requires_reunderwriting
 CHTR,2026-06-18,price_shock,drawdown_from_high,-48%,requires_reunderwriting
-SMCI,2026-06-18,price_shock,weekly_drop,-35%,requires_reunderwriting
+SMCI,2026-06-18,price_shock,weekly_drop,-30%,requires_reunderwriting

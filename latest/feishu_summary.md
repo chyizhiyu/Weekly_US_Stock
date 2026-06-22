@@ -32,4 +32,4 @@ Upside 研究队列 Top 10（高分散度，仅研究、非可执行）:
 
 说明：仅研究参考，不构成交易指令。排名来自 Bear/Base/Bull 三情景估值与风险调整回报；情景权重为人工设定（默认25/50/25），达标权重、永亏权重等是情景加权值，并非经过校准的概率。硬过滤不可补偿，数据缺失个股已剔除。
 
-完整结果：GitHub Actions #15 https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27925744634
+完整结果：GitHub Actions #16 https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27937737191

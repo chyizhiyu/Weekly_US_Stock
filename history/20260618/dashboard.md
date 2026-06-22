@@ -107,14 +107,6 @@ Previous run: 2026-06-18
 - Entered Upside Top: none
 - Exited Upside Top: none
 
-Largest robust-rank moves:
-
-- BIIB: 86 → 82 (+4)
-- YUM: 69 → 71 (-2)
-- COR: 71 → 70 (+1)
-- SNA: 70 → 69 (+1)
-- ALLE: 73 → 72 (+1)
-
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
 | Ticker | Scenario | P | Growth y1 | Margin | Terminal ROIC | Value/share | IRR 5y | Return 5y |
@@ -186,8 +178,8 @@ Largest robust-rank moves:
 
 | Ticker | Triggers | Wk drop | Drawdown | Status | Evidence needed |
 |---|---|---|---|---|---|
-| ACN | weekly_drop | -28% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| SMCI | weekly_drop | -35% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| ACN | weekly_drop | -27% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| SMCI | weekly_drop | -30% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 | CHTR | drawdown_from_high | nan% | -48% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 
 ## Key Risks and Failure Conditions
