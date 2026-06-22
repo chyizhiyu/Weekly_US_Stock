@@ -17,15 +17,15 @@ are scenario-weighted figures, to be read as stress labels.
 | Step | Input | Output | Top rejections |
 |---|---|---|---|
 | step1_universe | 0 | 512 | - |
-| step2_hard_filters | 512 | 321 | persistent_negative_fcf: 22, interest_coverage: 21, adr_excluded: 17 |
-| step3_standardize | 321 | 321 | - |
+| step2_hard_filters | 512 | 322 | persistent_negative_fcf: 22, interest_coverage: 21, adr_excluded: 17 |
+| step3_standardize | 322 | 322 | - |
 | step4_specialist_models | 95 | 59 | asset_management_model_not_supported: 17, financial_sector_model_not_supported: 8, consumer_finance_model_not_supported: 7 |
-| step4_normalized_model | 321 | 314 | no_normalized_earnings: 7 |
-| step5_quality_risk | 314 | 305 | - |
-| step6_scenario_valuation | 305 | 279 | insufficient_post_valuation_model_confidence: 19, roic_not_meaningful:meaningless_capital: 6, invalid_valuation_output: 1 |
-| step7_risk_adjusted_ranking | 338 | 338 | - |
+| step4_normalized_model | 322 | 315 | no_normalized_earnings: 7 |
+| step5_quality_risk | 315 | 306 | - |
+| step6_scenario_valuation | 306 | 280 | insufficient_post_valuation_model_confidence: 19, roic_not_meaningful:meaningless_capital: 6, invalid_valuation_output: 1 |
+| step7_risk_adjusted_ranking | 339 | 339 | - |
 
-## Eligible Candidates (14)
+## Eligible Candidates (13)
 
 The only names presented as actionable research — finite valuation, robust_return > 0, median IRR > hurdle.
 
@@ -35,18 +35,17 @@ The only names presented as actionable research — finite valuation, robust_ret
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | UHS | 17.1% | 34.3% | 16.4% | 44.4% | 0.0% | 0% | 0.79 | 0.77 |
 | 2 | FOXA | 13.3% | 33.7% | 13.9% | 44.0% | 0.0% | 0% | 0.90 | 0.62 |
-| 3 | KLAC | 11.7% | 29.0% | 15.4% | 37.3% | 0.0% | 0% | 0.97 | 0.68 |
-| 4 | VICI | 10.8% | 34.6% | 15.7% | 34.6% | 0.0% | 0% | 0.47 | 0.48 |
-| 5 | CTSH | 10.7% | 24.2% | 14.1% | 30.6% | 0.0% | 0% | 0.87 | 0.87 |
-| 6 | OMC | 8.4% | 28.3% | 19.0% | 34.8% | 0.0% | 0% | 0.80 | 0.52 |
-| 7 | TTD | 7.9% | 28.5% | 8.1% | 37.0% | 3.9% | 0% | 0.91 | 0.71 |
-| 8 | ARE | 6.9% | 26.3% | 16.9% | 26.3% | 0.0% | 0% | 0.68 | 0.48 |
-| 9 | BXP | 5.1% | 22.6% | 12.1% | 22.6% | 0.0% | 0% | 0.64 | 0.48 |
-| 10 | CPT | 3.9% | 24.1% | 10.1% | 24.1% | 1.9% | 0% | 0.55 | 0.48 |
-| 11 | CMCSA | 3.6% | 19.8% | 16.5% | 25.2% | 0.0% | 0% | 0.76 | 0.46 |
-| 12 | AVB | 2.5% | 23.5% | 9.0% | 23.5% | 3.0% | 0% | 0.54 | 0.48 |
-| 13 | ADBE | 2.0% | 19.3% | 8.3% | 25.8% | 3.7% | 0% | 0.98 | 0.78 |
-| 14 | UDR | 0.1% | 23.0% | 6.8% | 23.0% | 5.2% | 0% | 0.49 | 0.48 |
+| 3 | VICI | 10.8% | 34.6% | 15.7% | 34.6% | 0.0% | 0% | 0.47 | 0.48 |
+| 4 | CTSH | 10.7% | 24.2% | 14.1% | 30.6% | 0.0% | 0% | 0.87 | 0.87 |
+| 5 | OMC | 8.4% | 28.3% | 19.0% | 34.8% | 0.0% | 0% | 0.80 | 0.52 |
+| 6 | TTD | 7.9% | 28.5% | 8.1% | 37.0% | 3.9% | 0% | 0.91 | 0.71 |
+| 7 | ARE | 6.9% | 26.3% | 16.9% | 26.3% | 0.0% | 0% | 0.68 | 0.48 |
+| 8 | BXP | 5.1% | 22.6% | 12.1% | 22.6% | 0.0% | 0% | 0.64 | 0.48 |
+| 9 | CPT | 3.9% | 24.1% | 10.1% | 24.1% | 1.9% | 0% | 0.55 | 0.48 |
+| 10 | CMCSA | 3.6% | 19.8% | 16.5% | 25.2% | 0.0% | 0% | 0.76 | 0.46 |
+| 11 | AVB | 2.5% | 23.5% | 9.0% | 23.5% | 3.0% | 0% | 0.54 | 0.48 |
+| 12 | ADBE | 2.0% | 19.3% | 8.3% | 25.8% | 3.7% | 0% | 0.98 | 0.78 |
+| 13 | UDR | 0.1% | 23.0% | 6.8% | 23.0% | 5.2% | 0% | 0.49 | 0.48 |
 
 ## Full Robust Ranking (audit — includes ineligible names)
 
@@ -54,24 +53,24 @@ The only names presented as actionable research — finite valuation, robust_ret
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | UHS | 17.1% | 34.3% | 16.4% | 44.4% | 0.0% | 0% | 0.79 | 0.77 |
 | 2 | FOXA | 13.3% | 33.7% | 13.9% | 44.0% | 0.0% | 0% | 0.90 | 0.62 |
-| 3 | KLAC | 11.7% | 29.0% | 15.4% | 37.3% | 0.0% | 0% | 0.97 | 0.68 |
-| 4 | VICI | 10.8% | 34.6% | 15.7% | 34.6% | 0.0% | 0% | 0.47 | 0.48 |
-| 5 | CTSH | 10.7% | 24.2% | 14.1% | 30.6% | 0.0% | 0% | 0.87 | 0.87 |
-| 6 | OMC | 8.4% | 28.3% | 19.0% | 34.8% | 0.0% | 0% | 0.80 | 0.52 |
-| 7 | TTD | 7.9% | 28.5% | 8.1% | 37.0% | 3.9% | 0% | 0.91 | 0.71 |
-| 8 | ARE | 6.9% | 26.3% | 16.9% | 26.3% | 0.0% | 0% | 0.68 | 0.48 |
-| 9 | BXP | 5.1% | 22.6% | 12.1% | 22.6% | 0.0% | 0% | 0.64 | 0.48 |
-| 10 | CPT | 3.9% | 24.1% | 10.1% | 24.1% | 1.9% | 0% | 0.55 | 0.48 |
-| 11 | CMCSA | 3.6% | 19.8% | 16.5% | 25.2% | 0.0% | 0% | 0.76 | 0.46 |
-| 12 | AVB | 2.5% | 23.5% | 9.0% | 23.5% | 3.0% | 0% | 0.54 | 0.48 |
-| 13 | ADBE | 2.0% | 19.3% | 8.3% | 25.8% | 3.7% | 0% | 0.98 | 0.78 |
-| 14 | UDR | 0.1% | 23.0% | 6.8% | 23.0% | 5.2% | 0% | 0.49 | 0.48 |
-| 15 | CPAY | -0.2% | 19.3% | 5.7% | 26.8% | 6.3% | 0% | 0.99 | 0.84 |
-| 16 | ELV | -0.9% | 12.5% | 10.7% | 18.7% | 1.3% | 0% | 0.84 | 0.67 |
-| 17 | IT | -1.2% | 22.7% | 2.9% | 34.5% | 9.1% | 0% | 0.91 | 0.74 |
-| 18 | HUM | -2.1% | 17.7% | 6.4% | 26.3% | 5.6% | 0% | 0.66 | 0.60 |
-| 19 | EQR | -2.4% | 18.2% | 6.6% | 26.0% | 5.4% | 0% | 0.60 | 0.48 |
-| 20 | HPQ | -2.8% | 9.2% | 9.2% | 14.3% | 2.8% | 0% | 0.97 | 0.67 |
+| 3 | VICI | 10.8% | 34.6% | 15.7% | 34.6% | 0.0% | 0% | 0.47 | 0.48 |
+| 4 | CTSH | 10.7% | 24.2% | 14.1% | 30.6% | 0.0% | 0% | 0.87 | 0.87 |
+| 5 | OMC | 8.4% | 28.3% | 19.0% | 34.8% | 0.0% | 0% | 0.80 | 0.52 |
+| 6 | TTD | 7.9% | 28.5% | 8.1% | 37.0% | 3.9% | 0% | 0.91 | 0.71 |
+| 7 | ARE | 6.9% | 26.3% | 16.9% | 26.3% | 0.0% | 0% | 0.68 | 0.48 |
+| 8 | BXP | 5.1% | 22.6% | 12.1% | 22.6% | 0.0% | 0% | 0.64 | 0.48 |
+| 9 | CPT | 3.9% | 24.1% | 10.1% | 24.1% | 1.9% | 0% | 0.55 | 0.48 |
+| 10 | CMCSA | 3.6% | 19.8% | 16.5% | 25.2% | 0.0% | 0% | 0.76 | 0.46 |
+| 11 | AVB | 2.5% | 23.5% | 9.0% | 23.5% | 3.0% | 0% | 0.54 | 0.48 |
+| 12 | ADBE | 2.0% | 19.3% | 8.3% | 25.8% | 3.7% | 0% | 0.98 | 0.78 |
+| 13 | UDR | 0.1% | 23.0% | 6.8% | 23.0% | 5.2% | 0% | 0.49 | 0.48 |
+| 14 | CPAY | -0.2% | 19.3% | 5.7% | 26.8% | 6.3% | 0% | 0.99 | 0.84 |
+| 15 | ELV | -0.9% | 12.5% | 10.7% | 18.7% | 1.3% | 0% | 0.84 | 0.67 |
+| 16 | IT | -1.2% | 22.7% | 2.9% | 34.5% | 9.1% | 0% | 0.91 | 0.74 |
+| 17 | HUM | -2.1% | 17.7% | 6.4% | 26.3% | 5.6% | 0% | 0.66 | 0.60 |
+| 18 | EQR | -2.4% | 18.2% | 6.6% | 26.0% | 5.4% | 0% | 0.60 | 0.48 |
+| 19 | HPQ | -2.8% | 9.2% | 9.2% | 14.3% | 2.8% | 0% | 0.97 | 0.67 |
+| 20 | GIS | -3.1% | 16.3% | 5.4% | 20.5% | 6.6% | 0% | 0.83 | 0.80 |
 
 ## Upside Ranking — high-dispersion RESEARCH QUEUE (not actionable)
 
@@ -80,32 +79,40 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 1 | UHS | 32.4% | 34.3% | 16.4% | 44.4% | 100% | 143% |
 | 2 | FOXA | 31.3% | 33.7% | 13.9% | 44.0% | 100% | 162% |
 | 3 | VICI | 29.9% | 34.6% | 15.7% | 34.6% | 100% | 341% |
-| 4 | KLAC | 27.7% | 29.0% | 15.4% | 37.3% | 100% | 74% |
-| 5 | OMC | 27.6% | 28.3% | 19.0% | 34.8% | 100% | 161% |
-| 6 | TTD | 25.5% | 28.5% | 8.1% | 37.0% | 75% | 103% |
-| 7 | FISV | 25.0% | 32.8% | -21.9% | 56.4% | 75% | 160% |
-| 8 | EOG | 24.7% | 26.4% | -0.5% | 46.5% | 75% | 122% |
-| 9 | ARE | 24.0% | 26.3% | 16.9% | 26.3% | 100% | 222% |
-| 10 | CTSH | 23.3% | 24.2% | 14.1% | 30.6% | 100% | 79% |
-| 11 | IT | 20.7% | 22.7% | 2.9% | 34.5% | 75% | 68% |
-| 12 | CPT | 20.6% | 24.1% | 10.1% | 24.1% | 75% | 195% |
-| 13 | CMCSA | 20.3% | 19.8% | 16.5% | 25.2% | 100% | 73% |
-| 14 | BXP | 19.9% | 22.6% | 12.1% | 22.6% | 100% | 176% |
-| 15 | AVB | 19.9% | 23.5% | 9.0% | 23.5% | 75% | 187% |
-| 16 | UDR | 19.0% | 23.0% | 6.8% | 23.0% | 75% | 182% |
-| 17 | ADBE | 18.2% | 19.3% | 8.3% | 25.8% | 75% | 33% |
-| 18 | ACGL | 17.9% | 19.9% | 5.0% | 26.6% | 75% | 148% |
-| 19 | CPAY | 17.8% | 19.3% | 5.7% | 26.8% | 75% | 57% |
-| 20 | LDOS | 17.6% | 20.7% | -4.7% | 33.6% | 75% | 73% |
+| 4 | OMC | 27.6% | 28.3% | 19.0% | 34.8% | 100% | 161% |
+| 5 | TTD | 25.5% | 28.5% | 8.1% | 37.0% | 75% | 103% |
+| 6 | FISV | 25.0% | 32.8% | -21.9% | 56.4% | 75% | 160% |
+| 7 | EOG | 24.7% | 26.4% | -0.5% | 46.5% | 75% | 122% |
+| 8 | ARE | 24.0% | 26.3% | 16.9% | 26.3% | 100% | 222% |
+| 9 | CTSH | 23.3% | 24.2% | 14.1% | 30.6% | 100% | 79% |
+| 10 | IT | 20.7% | 22.7% | 2.9% | 34.5% | 75% | 68% |
+| 11 | CPT | 20.6% | 24.1% | 10.1% | 24.1% | 75% | 195% |
+| 12 | CMCSA | 20.3% | 19.8% | 16.5% | 25.2% | 100% | 73% |
+| 13 | BXP | 19.9% | 22.6% | 12.1% | 22.6% | 100% | 176% |
+| 14 | AVB | 19.9% | 23.5% | 9.0% | 23.5% | 75% | 187% |
+| 15 | UDR | 19.0% | 23.0% | 6.8% | 23.0% | 75% | 182% |
+| 16 | ADBE | 18.2% | 19.3% | 8.3% | 25.8% | 75% | 33% |
+| 17 | ACGL | 17.9% | 19.9% | 5.0% | 26.6% | 75% | 148% |
+| 18 | CPAY | 17.8% | 19.3% | 5.7% | 26.8% | 75% | 57% |
+| 19 | LDOS | 17.6% | 20.7% | -4.7% | 33.6% | 75% | 73% |
+| 20 | EQR | 17.2% | 18.2% | 6.6% | 26.0% | 75% | 130% |
 
 ## Week-over-week
 
 Previous run: 2026-06-18
 
-- Entered Robust Top: none
-- Exited Robust Top: none
-- Entered Upside Top: none
-- Exited Upside Top: none
+- Entered Robust Top: GIS
+- Exited Robust Top: KLAC
+- Entered Upside Top: EQR
+- Exited Upside Top: KLAC
+
+Largest robust-rank moves:
+
+- KLAC: 3 → 250 (-247)
+- NTAP: 156 → 152 (+4)
+- GLW: 302 → 304 (-2)
+- HAL: 303 → 305 (-2)
+- CMI: 207 → 208 (-1)
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
@@ -117,9 +124,6 @@ Previous run: 2026-06-18
 | FOXA | bear | 25% | -1.1% | 17.5% | 6.5% | 69.31 | 13.9% | 77% |
 | FOXA | base | 50% | 4.7% | 20.1% | 54.7% | 137.04 | 33.7% | 297% |
 | FOXA | bull | 25% | 9.3% | 22.0% | 60.0% | 193.42 | 44.0% | 472% |
-| KLAC | bear | 25% | 7.9% | 32.5% | 11.9% | 293.14 | 15.4% | 83% |
-| KLAC | base | 50% | 14.6% | 37.6% | 58.4% | 452.16 | 29.0% | 218% |
-| KLAC | bull | 25% | 19.9% | 41.9% | 60.0% | 590.54 | 37.3% | 326% |
 | CTSH | bear | 25% | 0.1% | 12.9% | 8.3% | 54.67 | 14.1% | 77% |
 | CTSH | base | 50% | 4.9% | 15.0% | 14.2% | 78.15 | 24.2% | 175% |
 | CTSH | bull | 25% | 8.7% | 16.6% | 15.0% | 98.67 | 30.6% | 255% |
@@ -150,6 +154,9 @@ Previous run: 2026-06-18
 | HPQ | bear | 25% | -3.6% | 5.7% | 8.8% | 24.85 | 11.2% | 57% |
 | HPQ | base | 50% | 1.8% | 6.6% | 8.8% | 23.06 | 9.2% | 58% |
 | HPQ | bull | 25% | 6.2% | 7.3% | 8.8% | 29.71 | 14.3% | 103% |
+| GIS | bear | 25% | -6.5% | 14.8% | 6.5% | 30.39 | 5.4% | 25% |
+| GIS | base | 50% | -1.3% | 17.0% | 6.5% | 47.20 | 16.3% | 93% |
+| GIS | bull | 25% | 2.9% | 18.6% | 6.5% | 57.72 | 20.5% | 139% |
 
 **Scenario order inversions** (named bear/base/bull intrinsic value is not monotone — this is economic, not a bug):
 - HPQ: growth destroys value: forward ROIC 2.0% at/below WACC 8.8%, so higher-growth scenarios reinvest below the cost of capital and are worth less than the bear case
@@ -158,7 +165,6 @@ Previous run: 2026-06-18
 
 - UHS — bounds: share_change_floor_hit;intrinsic_2x_price
 - FOXA — bounds: forward_roic_cap_hit;share_change_floor_hit;wacc_floor_hit;intrinsic_2x_price
-- KLAC — bounds: forward_roic_cap_hit
 - VICI — bounds: specialist_model_v1
 - OMC — bounds: base_growth_cap_hit;wacc_floor_hit;reinvestment_cap_hit;intrinsic_2x_price
 - TTD — bounds: intrinsic_2x_price
@@ -173,13 +179,13 @@ Previous run: 2026-06-18
 - HUM — bounds: forward_roic_floor_hit;reinvestment_cap_hit
 - EQR — bounds: specialist_model_v1
 - HPQ — bounds: forward_roic_floor_hit;reinvestment_cap_hit
+- GIS — bounds: wacc_floor_hit
 
 ## Turnaround Watchlist (material events)
 
 | Ticker | Triggers | Wk drop | Drawdown | Status | Evidence needed |
 |---|---|---|---|---|---|
-| ACN | weekly_drop | -27% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| SMCI | weekly_drop | -30% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| ACN | weekly_drop | -26% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 | CHTR | drawdown_from_high | nan% | -48% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 
 ## Key Risks and Failure Conditions
@@ -199,6 +205,7 @@ Previous run: 2026-06-18
 - HUM: thin_interest_coverage, incremental_roic_below_wacc
 - EQR: nan
 - HPQ: incremental_roic_below_wacc
+- GIS: elevated_leverage, incremental_roic_below_wacc
 
 ## Watchlist (not rankable under the general model)
 
@@ -239,7 +246,6 @@ Previous run: 2026-06-18
 - INSM Insmed Incorporated — preprofit_biotech_not_supported
 - SBAC SBA Communications Corporation — specialist_missing_book_or_price
 - ACN Accenture plc — material_event_requires_reunderwriting
-- SMCI Super Micro Computer, Inc. — material_event_requires_reunderwriting
 - CHTR Charter Communications, Inc. — material_event_requires_reunderwriting
 - XOM Exxon Mobil Corporation — insufficient_model_confidence
 - CVX Chevron Corporation — insufficient_model_confidence

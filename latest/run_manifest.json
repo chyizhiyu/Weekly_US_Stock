@@ -7,18 +7,18 @@
     "sp500",
     "nasdaq100"
   ],
-  "source_sha": "916fcff8e3c5826df75ee30012af4ebb92716a13",
+  "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
   "counts": {
     "universe": 512,
-    "ranked": 338,
-    "eligible": 14,
-    "research_queue": 324,
-    "watchlist": 74,
-    "turnaround": 3,
+    "ranked": 339,
+    "eligible": 13,
+    "research_queue": 326,
+    "watchlist": 73,
+    "turnaround": 2,
     "invalid_valuations": 1,
     "roic_routed": 6
   },
-  "paper_portfolio_size": 14,
+  "paper_portfolio_size": 13,
   "artifacts": [
     "dashboard.md",
     "eligible_candidates.csv",

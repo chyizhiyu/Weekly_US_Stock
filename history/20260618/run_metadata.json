@@ -2,7 +2,7 @@
   "as_of": "2026-06-18",
   "week_key": "2026-W25",
   "universe_limit": null,
-  "generated_at": "2026-06-22T08:08:33.367399+00:00",
+  "generated_at": "2026-06-22T08:47:21.235704+00:00",
   "pipeline_version": "0.1.0",
   "provider": "composite",
   "data_source_setting": "auto",
@@ -12,14 +12,14 @@
   "stale_tickers": 0,
   "funnel": {
     "step1_universe": 512,
-    "step2_hard_filters": 321,
-    "step3_standardize": 321,
+    "step2_hard_filters": 322,
+    "step3_standardize": 322,
     "step4_specialist_models": 59,
-    "step4_normalized_model": 314,
-    "step5_quality_risk": 305,
-    "step6_scenario_valuation": 279,
-    "step7_risk_adjusted_ranking": 338,
-    "step8_reports": 338
+    "step4_normalized_model": 315,
+    "step5_quality_risk": 306,
+    "step6_scenario_valuation": 280,
+    "step7_risk_adjusted_ranking": 339,
+    "step8_reports": 339
   },
   "index_membership": [
     "sp500",
@@ -49,19 +49,19 @@
   "universe_fingerprint": "79ff19e592a8c461",
   "universe_ticker_hash": "5ca760c9f309695a",
   "config_fingerprint": "52313c1272eb8933",
-  "source_sha": "916fcff8e3c5826df75ee30012af4ebb92716a13",
+  "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
   "time_consistency": {
     "price_as_of": "2026-06-18",
     "material_event_checked_at": "2026-06-18",
     "estimate_as_of": "2026-06-18",
     "filing_age_days_median": 48,
     "filing_age_days_max": 343,
-    "ttm_anchor_coverage": 0.9235668789808917
+    "ttm_anchor_coverage": 0.9238095238095239
   },
   "tag": "",
   "ref": "refs/heads/main",
-  "run_id": "27937737191",
-  "run_number": "16",
+  "run_id": "27939792575",
+  "run_number": "17",
   "run_attempt": "1",
-  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27937737191"
+  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/27939792575"
 }
