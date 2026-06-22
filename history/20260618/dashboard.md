@@ -45,7 +45,7 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 10 | CPT | 3.9% | 24.1% | 10.1% | 24.1% | 1.9% | 0% | 0.55 | 0.48 |
 | 11 | CMCSA | 3.6% | 19.8% | 16.5% | 25.2% | 0.0% | 0% | 0.76 | 0.46 |
 | 12 | AVB | 2.5% | 23.5% | 9.0% | 23.5% | 3.0% | 0% | 0.54 | 0.48 |
-| 13 | ADBE | 2.2% | 19.3% | 8.4% | 25.7% | 3.6% | 0% | 0.98 | 0.79 |
+| 13 | ADBE | 2.0% | 19.3% | 8.3% | 25.8% | 3.7% | 0% | 0.98 | 0.78 |
 | 14 | UDR | 0.1% | 23.0% | 6.8% | 23.0% | 5.2% | 0% | 0.49 | 0.48 |
 
 ## Full Robust Ranking (audit — includes ineligible names)
@@ -64,7 +64,7 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 10 | CPT | 3.9% | 24.1% | 10.1% | 24.1% | 1.9% | 0% | 0.55 | 0.48 |
 | 11 | CMCSA | 3.6% | 19.8% | 16.5% | 25.2% | 0.0% | 0% | 0.76 | 0.46 |
 | 12 | AVB | 2.5% | 23.5% | 9.0% | 23.5% | 3.0% | 0% | 0.54 | 0.48 |
-| 13 | ADBE | 2.2% | 19.3% | 8.4% | 25.7% | 3.6% | 0% | 0.98 | 0.79 |
+| 13 | ADBE | 2.0% | 19.3% | 8.3% | 25.8% | 3.7% | 0% | 0.98 | 0.78 |
 | 14 | UDR | 0.1% | 23.0% | 6.8% | 23.0% | 5.2% | 0% | 0.49 | 0.48 |
 | 15 | CPAY | -0.2% | 19.3% | 5.7% | 26.8% | 6.3% | 0% | 0.99 | 0.84 |
 | 16 | ELV | -0.9% | 12.5% | 10.7% | 18.7% | 1.3% | 0% | 0.84 | 0.67 |
@@ -93,27 +93,27 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 14 | BXP | 19.9% | 22.6% | 12.1% | 22.6% | 100% | 176% |
 | 15 | AVB | 19.9% | 23.5% | 9.0% | 23.5% | 75% | 187% |
 | 16 | UDR | 19.0% | 23.0% | 6.8% | 23.0% | 75% | 182% |
-| 17 | ADBE | 18.2% | 19.3% | 8.4% | 25.7% | 75% | 33% |
+| 17 | ADBE | 18.2% | 19.3% | 8.3% | 25.8% | 75% | 33% |
 | 18 | ACGL | 17.9% | 19.9% | 5.0% | 26.6% | 75% | 148% |
 | 19 | CPAY | 17.8% | 19.3% | 5.7% | 26.8% | 75% | 57% |
 | 20 | LDOS | 17.6% | 20.7% | -4.7% | 33.6% | 75% | 73% |
 
 ## Week-over-week
 
-Previous run: 2026-06-17
+Previous run: 2026-06-18
 
-- Entered Robust Top: EQR, IT
-- Exited Robust Top: ACN, ZTS
+- Entered Robust Top: none
+- Exited Robust Top: none
 - Entered Upside Top: none
 - Exited Upside Top: none
 
 Largest robust-rank moves:
 
-- EFX: 330 → 308 (+22)
-- CVS: 323 → 310 (+13)
-- JBL: 253 → 241 (+12)
-- ROP: 176 → 165 (+11)
-- TXT: 147 → 136 (+11)
+- BIIB: 86 → 82 (+4)
+- YUM: 69 → 71 (-2)
+- COR: 71 → 70 (+1)
+- SNA: 70 → 69 (+1)
+- ALLE: 73 → 72 (+1)
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
@@ -125,9 +125,9 @@ Largest robust-rank moves:
 | FOXA | bear | 25% | -1.1% | 17.5% | 6.5% | 69.31 | 13.9% | 77% |
 | FOXA | base | 50% | 4.7% | 20.1% | 54.7% | 137.04 | 33.7% | 297% |
 | FOXA | bull | 25% | 9.3% | 22.0% | 60.0% | 193.42 | 44.0% | 472% |
-| KLAC | bear | 25% | 7.9% | 32.5% | 11.9% | 293.12 | 15.4% | 83% |
-| KLAC | base | 50% | 14.6% | 37.6% | 58.4% | 452.11 | 29.0% | 218% |
-| KLAC | bull | 25% | 19.9% | 41.9% | 60.0% | 590.48 | 37.3% | 326% |
+| KLAC | bear | 25% | 7.9% | 32.5% | 11.9% | 293.14 | 15.4% | 83% |
+| KLAC | base | 50% | 14.6% | 37.6% | 58.4% | 452.16 | 29.0% | 218% |
+| KLAC | bull | 25% | 19.9% | 41.9% | 60.0% | 590.54 | 37.3% | 326% |
 | CTSH | bear | 25% | 0.1% | 12.9% | 8.3% | 54.67 | 14.1% | 77% |
 | CTSH | base | 50% | 4.9% | 15.0% | 14.2% | 78.15 | 24.2% | 175% |
 | CTSH | bull | 25% | 8.7% | 16.6% | 15.0% | 98.67 | 30.6% | 255% |
@@ -140,9 +140,9 @@ Largest robust-rank moves:
 | CMCSA | bear | 25% | -6.0% | 16.1% | 6.5% | 30.85 | 16.5% | 92% |
 | CMCSA | base | 50% | 1.2% | 18.7% | 6.5% | 38.90 | 19.8% | 151% |
 | CMCSA | bull | 25% | 7.0% | 20.4% | 6.5% | 52.43 | 25.2% | 239% |
-| ADBE | bear | 25% | 8.8% | 29.7% | 10.9% | 176.23 | 8.4% | 42% |
+| ADBE | bear | 25% | 8.5% | 29.7% | 10.9% | 175.09 | 8.3% | 41% |
 | ADBE | base | 50% | 13.2% | 33.6% | 57.2% | 258.74 | 19.3% | 129% |
-| ADBE | bull | 25% | 16.8% | 36.9% | 58.3% | 322.36 | 25.7% | 192% |
+| ADBE | bull | 25% | 17.0% | 36.9% | 58.3% | 324.15 | 25.8% | 194% |
 | CPAY | bear | 25% | 7.7% | 39.8% | 7.4% | 317.74 | 5.7% | 29% |
 | CPAY | base | 50% | 13.3% | 44.0% | 30.0% | 541.51 | 19.3% | 137% |
 | CPAY | bull | 25% | 17.9% | 47.4% | 30.3% | 716.67 | 26.8% | 219% |
@@ -187,7 +187,7 @@ Largest robust-rank moves:
 | Ticker | Triggers | Wk drop | Drawdown | Status | Evidence needed |
 |---|---|---|---|---|---|
 | ACN | weekly_drop | -28% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| SMCI | weekly_drop | -26% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| SMCI | weekly_drop | -35% | nan% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 | CHTR | drawdown_from_high | nan% | -48% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 
 ## Key Risks and Failure Conditions
