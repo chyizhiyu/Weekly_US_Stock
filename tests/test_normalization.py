@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
 import pytest
 
-from weekly_us_stock.config import NormalizationSettings
+from weekly_us_stock.config import NormalizationSettings, WaccSettings
+from weekly_us_stock.steps.step4_normalized import run_normalized_model
 from weekly_us_stock.valuation.industry import route_model_family
 from weekly_us_stock.valuation.normalize import normalize_company
 
@@ -101,6 +104,48 @@ def test_sbc_is_a_real_expense_not_an_ocf_addback(
     sbc = float(latest["sbc"])
     assert metrics["normalized_fcf"] == pytest.approx(naive_fcf - sbc, rel=1e-6)
     assert metrics["sbc_intensity"] == pytest.approx(0.08)
+
+
+def test_split_adjusted_market_shares_replace_stale_statement_shares(
+    normalization: NormalizationSettings,
+) -> None:
+    # Recent stock splits can make the quote and universe share count adjust
+    # before the latest filed diluted-share figure does. Valuation must use the
+    # split-adjusted market share count; otherwise every per-share value is
+    # inflated by the split factor.
+    history = _history([0.20] * 6)
+    candidate = pd.DataFrame(
+        [
+            {
+                "ticker": "TEST",
+                "sector": "Technology",
+                "industry": "Semiconductors",
+                "shares_outstanding": 1_000e6,  # 10x the filed diluted shares
+                "beta": 1.0,
+                "price": 25.0,
+                "market_cap": 25_000e6,
+                "is_price_fresh": True,
+            }
+        ]
+    )
+
+    result = run_normalized_model(
+        candidate,
+        history,
+        pd.DataFrame(),
+        0.04,
+        normalization,
+        WaccSettings(),
+        as_of=date(2026, 6, 18),
+    )
+
+    row = result.modeled.iloc[0]
+    assert row["shares_diluted"] == pytest.approx(1_000e6)
+    assert row["statement_shares_diluted_raw"] == pytest.approx(100e6)
+    assert row["share_count_alignment"] == "market_split_adjusted:10x"
+    assert row["normalized_fcf_per_share"] == pytest.approx(
+        row["normalized_fcf"] / 1_000e6
+    )
 
 
 def test_short_history_returns_none_fail_closed(

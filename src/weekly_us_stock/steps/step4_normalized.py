@@ -67,6 +67,7 @@ def run_normalized_model(
             rejected_rows.append({**base, "rejection_reason": "normalization_failed"})
             continue
 
+        metrics = _align_split_adjusted_shares(candidate, metrics)
         row = {**base, **metrics}
         row["sec_status"] = _sec_value(history, "sec_status", "unchecked")
         row["sec_max_divergence"] = _sec_value(history, "sec_max_divergence", None)
@@ -159,6 +160,51 @@ def _estimate_growth_map(estimates: pd.DataFrame) -> dict[str, dict[str, float]]
             if dispersion is not None:
                 entry["dispersion"] = dispersion
             result[str(ticker)] = entry
+    return result
+
+
+def _align_split_adjusted_shares(candidate: pd.Series, metrics: dict) -> dict:
+    """Use market snapshot shares when statements lag a recent stock split.
+
+    A split-adjusted quote with pre-split diluted shares makes every per-share
+    valuation look roughly the split factor too cheap. The universe snapshot
+    derives shares from market cap / price, so it usually updates immediately
+    with the split-adjusted quote. Only align on obvious common split factors;
+    other divergences remain untouched for the existing data-confidence gates.
+    """
+
+    market_shares = _float_or_none(candidate.get("shares_outstanding"))
+    statement_shares = _float_or_none(metrics.get("shares_diluted"))
+    if market_shares is None or statement_shares is None:
+        return metrics
+
+    factor = _common_split_factor(market_shares / statement_shares)
+    if factor is None:
+        return metrics
+
+    aligned = dict(metrics)
+    aligned["shares_diluted"] = market_shares
+    if aligned.get("normalized_fcf") is not None:
+        aligned["normalized_fcf_per_share"] = float(aligned["normalized_fcf"]) / market_shares
+    aligned["share_count_alignment"] = f"market_split_adjusted:{factor:g}x"
+    aligned["statement_shares_diluted_raw"] = statement_shares
+    return aligned
+
+
+def _common_split_factor(ratio: float) -> float | None:
+    for factor in (2.0, 3.0, 4.0, 5.0, 10.0):
+        if abs(ratio - factor) / factor <= 0.05:
+            return factor
+    return None
+
+
+def _float_or_none(value: object) -> float | None:
+    try:
+        result = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if pd.isna(result) or result <= 0:
+        return None
     return result
 
 
