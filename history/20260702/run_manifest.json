@@ -2,23 +2,23 @@
   "as_of": "2026-07-02",
   "universe_fingerprint": "79ff19e592a8c461",
   "config_fingerprint": "52313c1272eb8933",
-  "universe_ticker_hash": "0b7f825e0c8e60ef",
+  "universe_ticker_hash": "4e948b41cd8d4e0b",
   "index_membership": [
     "sp500",
     "nasdaq100"
   ],
   "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
   "counts": {
-    "universe": 514,
-    "ranked": 323,
-    "eligible": 13,
-    "research_queue": 310,
+    "universe": 512,
+    "ranked": 321,
+    "eligible": 10,
+    "research_queue": 311,
     "watchlist": 73,
     "turnaround": 4,
-    "invalid_valuations": 1,
+    "invalid_valuations": 2,
     "roic_routed": 6
   },
-  "paper_portfolio_size": 13,
+  "paper_portfolio_size": 10,
   "artifacts": [
     "dashboard.md",
     "eligible_candidates.csv",

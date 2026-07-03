@@ -2,7 +2,7 @@
   "as_of": "2026-07-02",
   "week_key": "2026-W27",
   "universe_limit": null,
-  "generated_at": "2026-07-02T02:33:03.359806+00:00",
+  "generated_at": "2026-07-03T07:33:53.441850+00:00",
   "pipeline_version": "0.1.0",
   "provider": "composite",
   "data_source_setting": "auto",
@@ -11,15 +11,15 @@
   "fresh_price_coverage": 1.0,
   "stale_tickers": 0,
   "funnel": {
-    "step1_universe": 514,
+    "step1_universe": 512,
     "step2_hard_filters": 307,
     "step3_standardize": 307,
-    "step4_specialist_models": 58,
+    "step4_specialist_models": 56,
     "step4_normalized_model": 300,
     "step5_quality_risk": 291,
     "step6_scenario_valuation": 265,
-    "step7_risk_adjusted_ranking": 323,
-    "step8_reports": 323
+    "step7_risk_adjusted_ranking": 321,
+    "step8_reports": 321
   },
   "index_membership": [
     "sp500",
@@ -37,16 +37,18 @@
       "nasdaq100": 101
     },
     "union_count": 517,
-    "matched_count": 514,
-    "unmatched_count": 3,
+    "matched_count": 512,
+    "unmatched_count": 5,
     "unmatched_symbols": [
       "CBOE",
+      "CPT",
       "ESS",
+      "FRT",
       "NTRS"
     ]
   },
   "universe_fingerprint": "79ff19e592a8c461",
-  "universe_ticker_hash": "0b7f825e0c8e60ef",
+  "universe_ticker_hash": "4e948b41cd8d4e0b",
   "config_fingerprint": "52313c1272eb8933",
   "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
   "time_consistency": {
@@ -59,8 +61,8 @@
   },
   "tag": "",
   "ref": "refs/heads/main",
-  "run_id": "28560697646",
-  "run_number": "19",
+  "run_id": "28644998701",
+  "run_number": "20",
   "run_attempt": "1",
-  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/28560697646"
+  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/28644998701"
 }
