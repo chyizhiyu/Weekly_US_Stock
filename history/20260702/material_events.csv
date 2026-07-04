@@ -1,6 +1,6 @@
 ticker,event_date,source,event_type,detail,revaluation_status
-CHTR,2026-07-02,price_shock,drawdown_from_high,-44%,requires_reunderwriting
-HON,2026-07-02,price_shock,weekly_drop,-50%,requires_reunderwriting
-HON,2026-07-02,price_shock,drawdown_from_high,-51%,requires_reunderwriting
+CHTR,2026-07-02,price_shock,drawdown_from_high,-43%,requires_reunderwriting
+HON,2026-07-02,price_shock,weekly_drop,-48%,requires_reunderwriting
+HON,2026-07-02,price_shock,drawdown_from_high,-52%,requires_reunderwriting
 ORCL,2026-07-02,price_shock,drawdown_from_high,-43%,requires_reunderwriting
-SMCI,2026-07-02,price_shock,drawdown_from_high,-43%,requires_reunderwriting
+SMCI,2026-07-02,price_shock,drawdown_from_high,-46%,requires_reunderwriting

@@ -39,7 +39,7 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 4 | VICI | 10.2% | 33.2% | 14.8% | 33.2% | 0.0% | 0% | 0.47 | 0.48 |
 | 5 | OMC | 7.9% | 25.7% | 16.6% | 32.0% | 0.0% | 0% | 0.80 | 0.58 |
 | 6 | ARE | 6.4% | 25.4% | 16.1% | 25.4% | 0.0% | 0% | 0.68 | 0.48 |
-| 7 | TTD | 6.3% | 27.5% | 7.3% | 35.9% | 4.7% | 0% | 0.91 | 0.71 |
+| 7 | TTD | 5.9% | 27.2% | 7.1% | 35.5% | 4.9% | 0% | 0.91 | 0.71 |
 | 8 | ACN | 5.6% | 20.1% | 10.5% | 25.3% | 1.5% | 0% | 0.99 | 0.88 |
 | 9 | CMCSA | 3.0% | 18.4% | 14.9% | 23.8% | 0.0% | 0% | 0.76 | 0.46 |
 | 10 | BXP | 2.6% | 20.7% | 10.5% | 20.7% | 1.5% | 0% | 0.64 | 0.48 |
@@ -54,14 +54,14 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 4 | VICI | 10.2% | 33.2% | 14.8% | 33.2% | 0.0% | 0% | 0.47 | 0.48 |
 | 5 | OMC | 7.9% | 25.7% | 16.6% | 32.0% | 0.0% | 0% | 0.80 | 0.58 |
 | 6 | ARE | 6.4% | 25.4% | 16.1% | 25.4% | 0.0% | 0% | 0.68 | 0.48 |
-| 7 | TTD | 6.3% | 27.5% | 7.3% | 35.9% | 4.7% | 0% | 0.91 | 0.71 |
+| 7 | TTD | 5.9% | 27.2% | 7.1% | 35.5% | 4.9% | 0% | 0.91 | 0.71 |
 | 8 | ACN | 5.6% | 20.1% | 10.5% | 25.3% | 1.5% | 0% | 0.99 | 0.88 |
 | 9 | CMCSA | 3.0% | 18.4% | 14.9% | 23.8% | 0.0% | 0% | 0.76 | 0.46 |
 | 10 | BXP | 2.6% | 20.7% | 10.5% | 20.7% | 1.5% | 0% | 0.64 | 0.48 |
 | 11 | AVB | -0.8% | 21.0% | 6.9% | 21.0% | 5.1% | 0% | 0.54 | 0.48 |
-| 12 | ZTS | -0.8% | 18.8% | 5.1% | 26.2% | 6.9% | 0% | 0.98 | 0.90 |
+| 12 | ZTS | -0.9% | 18.8% | 5.1% | 26.2% | 6.9% | 0% | 0.98 | 0.90 |
 | 13 | HPQ | -1.2% | 10.8% | 10.8% | 15.9% | 1.2% | 0% | 0.97 | 0.67 |
-| 14 | CPAY | -1.5% | 18.5% | 5.1% | 26.0% | 6.9% | 0% | 0.99 | 0.84 |
+| 14 | CPAY | -1.7% | 18.4% | 5.0% | 25.7% | 7.0% | 0% | 0.99 | 0.84 |
 | 15 | UDR | -3.2% | 20.5% | 4.7% | 20.5% | 7.3% | 0% | 0.50 | 0.48 |
 | 16 | ELV | -3.3% | 10.7% | 8.7% | 16.8% | 3.3% | 0% | 0.83 | 0.67 |
 | 17 | ADBE | -3.8% | 15.8% | 5.2% | 22.1% | 6.8% | 0% | 0.98 | 0.78 |
@@ -77,9 +77,9 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 2 | VICI | 28.6% | 33.2% | 14.8% | 33.2% | 100% | 320% |
 | 3 | UHS | 28.0% | 29.8% | 12.7% | 39.6% | 100% | 108% |
 | 4 | OMC | 25.0% | 25.7% | 16.6% | 32.0% | 100% | 134% |
-| 5 | TTD | 24.5% | 27.5% | 7.3% | 35.9% | 75% | 96% |
-| 6 | APA | 24.5% | 25.2% | 2.6% | 44.8% | 75% | 153% |
-| 7 | CTSH | 24.4% | 25.3% | 15.1% | 31.8% | 100% | 85% |
+| 5 | APA | 24.5% | 25.2% | 2.6% | 44.8% | 75% | 153% |
+| 6 | CTSH | 24.4% | 25.3% | 15.1% | 31.8% | 100% | 85% |
+| 7 | TTD | 24.2% | 27.2% | 7.1% | 35.5% | 75% | 93% |
 | 8 | EOG | 23.8% | 25.7% | -1.5% | 45.5% | 75% | 115% |
 | 9 | ARE | 23.1% | 25.4% | 16.1% | 25.4% | 100% | 210% |
 | 10 | FISV | 22.1% | 29.8% | -24.3% | 53.0% | 75% | 134% |
@@ -90,7 +90,7 @@ The only names presented as actionable research — finite valuation, robust_ret
 | 15 | AVB | 17.5% | 21.0% | 6.9% | 21.0% | 75% | 159% |
 | 16 | ZTS | 17.2% | 18.8% | 5.1% | 26.2% | 75% | 51% |
 | 17 | LDOS | 17.1% | 20.3% | -5.1% | 33.1% | 75% | 70% |
-| 18 | CPAY | 17.0% | 18.5% | 5.1% | 26.0% | 75% | 52% |
+| 18 | CPAY | 16.9% | 18.4% | 5.0% | 25.7% | 75% | 51% |
 | 19 | UDR | 16.5% | 20.5% | 4.7% | 20.5% | 75% | 154% |
 | 20 | MO | 15.2% | 17.1% | 0.4% | 26.1% | 75% | 50% |
 
@@ -98,18 +98,18 @@ The only names presented as actionable research — finite valuation, robust_ret
 
 Previous run: 2026-07-02
 
-- Entered Robust Top: APA, ZTS
-- Exited Robust Top: CPT, HUM
-- Entered Upside Top: APA, MO, ZTS
-- Exited Upside Top: ADBE, CPT, EQR
+- Entered Robust Top: none
+- Exited Robust Top: none
+- Entered Upside Top: none
+- Exited Upside Top: none
 
 Largest robust-rank moves:
 
-- KLAC: 247 → 222 (+25)
-- CDW: 96 → 79 (+17)
-- JBL: 236 → 219 (+17)
-- TER: 265 → 248 (+17)
-- AMAT: 246 → 230 (+16)
+- DVA: 240 → 235 (+5)
+- FITB: 112 → 108 (+4)
+- PH: 231 → 227 (+4)
+- L: 106 → 103 (+3)
+- COO: 236 → 233 (+3)
 
 ## Scenarios for Ranked Names (Bear / Base / Bull)
 
@@ -127,27 +127,27 @@ Largest robust-rank moves:
 | OMC | bear | 25% | 18.4% | 12.7% | 6.6% | 123.76 | 16.6% | 124% |
 | OMC | base | 50% | 25.0% | 14.6% | 6.6% | 183.69 | 25.7% | 230% |
 | OMC | bull | 25% | 30.3% | 15.9% | 6.6% | 237.99 | 32.0% | 326% |
-| TTD | bear | 25% | 13.6% | 13.1% | 9.4% | 17.86 | 7.3% | 38% |
-| TTD | base | 50% | 19.8% | 17.1% | 41.0% | 37.39 | 27.5% | 226% |
-| TTD | bull | 25% | 24.8% | 20.7% | 44.1% | 49.61 | 35.9% | 341% |
+| TTD | bear | 25% | 13.6% | 13.1% | 9.5% | 17.66 | 7.1% | 37% |
+| TTD | base | 50% | 19.8% | 17.1% | 41.0% | 36.79 | 27.2% | 222% |
+| TTD | bull | 25% | 24.8% | 20.7% | 44.1% | 48.75 | 35.5% | 334% |
 | ACN | bear | 25% | 2.1% | 13.4% | 9.4% | 144.38 | 10.5% | 55% |
 | ACN | base | 50% | 6.9% | 14.7% | 18.9% | 203.06 | 20.1% | 137% |
 | ACN | bull | 25% | 10.8% | 15.8% | 19.0% | 246.05 | 25.3% | 193% |
 | CMCSA | bear | 25% | -6.1% | 16.1% | 6.5% | 30.82 | 14.9% | 81% |
 | CMCSA | base | 50% | 1.2% | 18.7% | 6.5% | 38.95 | 18.4% | 136% |
 | CMCSA | bull | 25% | 7.0% | 20.4% | 6.5% | 52.39 | 23.8% | 219% |
-| ZTS | bear | 25% | 0.9% | 32.2% | 7.4% | 66.14 | 5.1% | 25% |
-| ZTS | base | 50% | 5.3% | 36.0% | 24.5% | 113.29 | 18.8% | 128% |
-| ZTS | bull | 25% | 8.8% | 39.1% | 24.8% | 149.72 | 26.2% | 207% |
+| ZTS | bear | 25% | 0.9% | 32.2% | 7.4% | 66.05 | 5.1% | 24% |
+| ZTS | base | 50% | 5.2% | 36.0% | 24.5% | 113.14 | 18.8% | 127% |
+| ZTS | bull | 25% | 8.7% | 39.1% | 24.8% | 149.52 | 26.2% | 206% |
 | HPQ | bear | 25% | -3.6% | 5.7% | 8.8% | 25.03 | 13.2% | 69% |
 | HPQ | base | 50% | 1.8% | 6.6% | 8.8% | 23.29 | 10.8% | 70% |
 | HPQ | bull | 25% | 6.2% | 7.3% | 8.8% | 30.00 | 15.9% | 119% |
-| CPAY | bear | 25% | 7.7% | 39.8% | 7.5% | 315.42 | 5.1% | 25% |
-| CPAY | base | 50% | 13.3% | 44.0% | 30.0% | 535.90 | 18.5% | 129% |
-| CPAY | bull | 25% | 17.9% | 47.4% | 30.3% | 708.45 | 26.0% | 209% |
-| ELV | bear | 25% | -1.3% | 4.9% | 7.0% | 448.75 | 8.7% | 45% |
-| ELV | base | 50% | 4.9% | 5.9% | 7.0% | 498.19 | 10.7% | 68% |
-| ELV | bull | 25% | 9.9% | 6.6% | 7.0% | 654.94 | 16.8% | 121% |
+| CPAY | bear | 25% | 7.7% | 39.8% | 7.5% | 313.43 | 5.0% | 25% |
+| CPAY | base | 50% | 13.3% | 44.0% | 30.0% | 531.09 | 18.4% | 127% |
+| CPAY | bull | 25% | 17.9% | 47.4% | 30.3% | 701.41 | 25.7% | 206% |
+| ELV | bear | 25% | -1.3% | 4.9% | 7.1% | 448.49 | 8.7% | 45% |
+| ELV | base | 50% | 4.9% | 5.9% | 7.1% | 497.84 | 10.7% | 68% |
+| ELV | bull | 25% | 9.9% | 6.6% | 7.1% | 654.49 | 16.8% | 121% |
 | ADBE | bear | 25% | 8.6% | 29.7% | 11.0% | 173.89 | 5.2% | 25% |
 | ADBE | base | 50% | 13.3% | 33.6% | 57.2% | 256.42 | 15.8% | 99% |
 | ADBE | bull | 25% | 17.1% | 36.9% | 58.3% | 320.98 | 22.1% | 157% |
@@ -183,9 +183,9 @@ Largest robust-rank moves:
 | Ticker | Triggers | Wk drop | Drawdown | Status | Evidence needed |
 |---|---|---|---|---|---|
 | ORCL | drawdown_from_high | nan% | -43% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| HON | weekly_drop;drawdown_from_high | -50% | -51% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| CHTR | drawdown_from_high | nan% | -44% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
-| SMCI | drawdown_from_high | nan% | -43% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| HON | weekly_drop;drawdown_from_high | -48% | -52% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| CHTR | drawdown_from_high | nan% | -43% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
+| SMCI | drawdown_from_high | nan% | -46% | awaiting_new_evidence | a post-event 10-Q/10-K or updated guidance reflecting the event |
 
 ## Key Risks and Failure Conditions
 

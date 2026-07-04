@@ -2,7 +2,7 @@
   "as_of": "2026-07-02",
   "week_key": "2026-W27",
   "universe_limit": null,
-  "generated_at": "2026-07-03T07:33:53.441850+00:00",
+  "generated_at": "2026-07-04T02:20:53.859208+00:00",
   "pipeline_version": "0.1.0",
   "provider": "composite",
   "data_source_setting": "auto",
@@ -61,8 +61,8 @@
   },
   "tag": "",
   "ref": "refs/heads/main",
-  "run_id": "28644998701",
-  "run_number": "20",
+  "run_id": "28691609163",
+  "run_number": "21",
   "run_attempt": "1",
-  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/28644998701"
+  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/28691609163"
 }
