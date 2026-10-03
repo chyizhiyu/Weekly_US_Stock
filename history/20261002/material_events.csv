@@ -1,0 +1,6 @@
+ticker,event_date,source,event_type,detail,revaluation_status
+APP,2026-10-02,price_shock,drawdown_from_high,-41%,requires_reunderwriting
+CTVA,2026-10-02,price_shock,weekly_drop,-85%,requires_reunderwriting
+CTVA,2026-10-02,price_shock,drawdown_from_high,-87%,requires_reunderwriting
+FICO,2026-10-02,price_shock,weekly_drop,-28%,requires_reunderwriting
+FICO,2026-10-02,price_shock,drawdown_from_high,-51%,requires_reunderwriting
