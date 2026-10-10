@@ -1,0 +1,2 @@
+ticker,event_date,source,event_type,detail,revaluation_status
+FICO,2026-10-09,price_shock,drawdown_from_high,-50%,requires_reunderwriting

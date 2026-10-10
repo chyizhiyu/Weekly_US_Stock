@@ -1,0 +1,50 @@
+{
+  "as_of": "2026-10-09",
+  "universe_fingerprint": "79ff19e592a8c461",
+  "config_fingerprint": "52313c1272eb8933",
+  "universe_ticker_hash": "36f1e2689a8adcdc",
+  "index_membership": [
+    "sp500",
+    "nasdaq100"
+  ],
+  "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
+  "counts": {
+    "universe": 515,
+    "ranked": 333,
+    "eligible": 7,
+    "research_queue": 326,
+    "watchlist": 66,
+    "turnaround": 1,
+    "invalid_valuations": 2,
+    "roic_routed": 5
+  },
+  "paper_portfolio_size": 7,
+  "artifacts": [
+    "dashboard.md",
+    "eligible_candidates.csv",
+    "feishu_summary.md",
+    "funnel_ledger.csv",
+    "hard_filter_candidates.csv",
+    "hard_filter_rejected.csv",
+    "invalid_or_watchlist.csv",
+    "invalid_valuations.csv",
+    "material_events.csv",
+    "normalization_rejected.csv",
+    "normalized_financials.csv",
+    "paper_portfolio.csv",
+    "research_queue.csv",
+    "result.json",
+    "robust_ranking.csv",
+    "roic_routed.csv",
+    "run_manifest.json",
+    "run_metadata.json",
+    "scenario_valuations.csv",
+    "specialist_scenario_valuations.csv",
+    "specialist_valuations.csv",
+    "turnaround_watchlist.csv",
+    "universe.csv",
+    "upside_ranking.csv",
+    "watchlist.csv"
+  ],
+  "calibration_note": "Scenario weights are analyst-set, NOT calibrated probabilities. Out-of-sample validation requires accumulated archived runs (P2-2); do not report W(...) figures as calibrated until that forward history exists."
+}
