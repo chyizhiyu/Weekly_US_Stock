@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-09",
+  "as_of": "2026-10-16",
   "universe_fingerprint": "79ff19e592a8c461",
   "config_fingerprint": "52313c1272eb8933",
   "universe_ticker_hash": "36f1e2689a8adcdc",
@@ -10,13 +10,13 @@
   "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
   "counts": {
     "universe": 515,
-    "ranked": 333,
+    "ranked": 328,
     "eligible": 7,
-    "research_queue": 326,
-    "watchlist": 66,
-    "turnaround": 1,
+    "research_queue": 321,
+    "watchlist": 69,
+    "turnaround": 2,
     "invalid_valuations": 2,
-    "roic_routed": 5
+    "roic_routed": 6
   },
   "paper_portfolio_size": 7,
   "artifacts": [
