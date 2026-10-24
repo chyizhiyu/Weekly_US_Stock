@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-10-16",
-  "week_key": "2026-W42",
+  "as_of": "2026-10-23",
+  "week_key": "2026-W43",
   "universe_limit": null,
-  "generated_at": "2026-10-17T02:33:23.599434+00:00",
+  "generated_at": "2026-10-24T02:54:47.169934+00:00",
   "pipeline_version": "0.1.0",
   "provider": "composite",
   "data_source_setting": "auto",
@@ -12,14 +12,14 @@
   "stale_tickers": 0,
   "funnel": {
     "step1_universe": 515,
-    "step2_hard_filters": 310,
-    "step3_standardize": 310,
-    "step4_specialist_models": 59,
-    "step4_normalized_model": 301,
-    "step5_quality_risk": 296,
-    "step6_scenario_valuation": 269,
-    "step7_risk_adjusted_ranking": 328,
-    "step8_reports": 328
+    "step2_hard_filters": 305,
+    "step3_standardize": 305,
+    "step4_specialist_models": 58,
+    "step4_normalized_model": 296,
+    "step5_quality_risk": 291,
+    "step6_scenario_valuation": 266,
+    "step7_risk_adjusted_ranking": 324,
+    "step8_reports": 324
   },
   "index_membership": [
     "sp500",
@@ -27,7 +27,7 @@
   ],
   "universe_definition": {
     "source": "fmp:constituent",
-    "snapshot_date": "2026-10-16",
+    "snapshot_date": "2026-10-23",
     "requested": [
       "sp500",
       "nasdaq100"
@@ -40,27 +40,27 @@
     "matched_count": 515,
     "unmatched_count": 3,
     "unmatched_symbols": [
+      "BRK-B",
       "CBOE",
-      "GOOGL",
-      "PSKY"
+      "GOOGL"
     ]
   },
   "universe_fingerprint": "79ff19e592a8c461",
-  "universe_ticker_hash": "36f1e2689a8adcdc",
+  "universe_ticker_hash": "6bf88330b5d111ff",
   "config_fingerprint": "52313c1272eb8933",
   "source_sha": "a0b6724d83235551c404d7e5af46832958b14e15",
   "time_consistency": {
-    "price_as_of": "2026-10-16",
-    "material_event_checked_at": "2026-10-16",
-    "estimate_as_of": "2026-10-16",
-    "filing_age_days_median": 73,
-    "filing_age_days_max": 315,
-    "ttm_anchor_coverage": 0.9302325581395349
+    "price_as_of": "2026-10-23",
+    "material_event_checked_at": "2026-10-23",
+    "estimate_as_of": "2026-10-23",
+    "filing_age_days_median": 79,
+    "filing_age_days_max": 322,
+    "ttm_anchor_coverage": 0.918918918918919
   },
   "tag": "",
   "ref": "refs/heads/main",
-  "run_id": "38994348030",
-  "run_number": "36",
+  "run_id": "40055059171",
+  "run_number": "37",
   "run_attempt": "1",
-  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/38994348030"
+  "run_url": "https://github.com/chyizhiyu/Weekly_US_Stock/actions/runs/40055059171"
 }

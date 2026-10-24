@@ -1,0 +1,8 @@
+ticker,event_date,source,event_type,detail,revaluation_status
+AMAT,2026-10-23,price_shock,weekly_drop,-26%,requires_reunderwriting
+CIEN,2026-10-23,price_shock,weekly_drop,-29%,requires_reunderwriting
+FIX,2026-10-23,price_shock,weekly_drop,-32%,requires_reunderwriting
+FLEX,2026-10-23,price_shock,weekly_drop,-36%,requires_reunderwriting
+KLAC,2026-10-23,price_shock,weekly_drop,-26%,requires_reunderwriting
+LITE,2026-10-23,price_shock,weekly_drop,-31%,requires_reunderwriting
+LRCX,2026-10-23,price_shock,weekly_drop,-28%,requires_reunderwriting
