@@ -1,0 +1,2 @@
+ticker,event_date,source,event_type,detail,revaluation_status
+NOW,2026-10-30,price_shock,weekly_drop,-28%,requires_reunderwriting
