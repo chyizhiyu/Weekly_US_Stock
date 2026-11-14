@@ -1,0 +1,6 @@
+ticker,event_date,source,event_type,detail,revaluation_status
+DELL,2026-11-13,price_shock,drawdown_from_high,-41%,requires_reunderwriting
+LITE,2026-11-13,price_shock,drawdown_from_high,-47%,requires_reunderwriting
+MRVL,2026-11-13,price_shock,drawdown_from_high,-45%,requires_reunderwriting
+SNDK,2026-11-13,price_shock,drawdown_from_high,-53%,requires_reunderwriting
+TER,2026-11-13,price_shock,drawdown_from_high,-44%,requires_reunderwriting
