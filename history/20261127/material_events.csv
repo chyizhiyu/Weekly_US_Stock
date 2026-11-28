@@ -1,0 +1,13 @@
+ticker,event_date,source,event_type,detail,revaluation_status
+AMAT,2026-11-27,price_shock,drawdown_from_high,-40%,requires_reunderwriting
+CIEN,2026-11-27,price_shock,drawdown_from_high,-42%,requires_reunderwriting
+DDOG,2026-11-27,price_shock,drawdown_from_high,-42%,requires_reunderwriting
+DELL,2026-11-27,price_shock,drawdown_from_high,-46%,requires_reunderwriting
+FLEX,2026-11-27,price_shock,drawdown_from_high,-43%,requires_reunderwriting
+LITE,2026-11-27,price_shock,drawdown_from_high,-55%,requires_reunderwriting
+LRCX,2026-11-27,price_shock,drawdown_from_high,-45%,requires_reunderwriting
+MRVL,2026-11-27,price_shock,drawdown_from_high,-51%,requires_reunderwriting
+MU,2026-11-27,price_shock,drawdown_from_high,-40%,requires_reunderwriting
+NOW,2026-11-27,price_shock,drawdown_from_high,-41%,requires_reunderwriting
+SNDK,2026-11-27,price_shock,drawdown_from_high,-62%,requires_reunderwriting
+TER,2026-11-27,price_shock,drawdown_from_high,-50%,requires_reunderwriting
